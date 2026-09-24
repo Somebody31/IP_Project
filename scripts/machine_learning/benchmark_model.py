@@ -83,9 +83,16 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--bootstrap-resamples", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=1729)
+    parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     args = parser.parse_args()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if args.device == "auto":
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(args.device)
+    if device.type == "cpu":
+        torch.set_num_threads(6)  # leave cores for any concurrent training job
+    print(f"device: {device}", flush=True)
     pairs = FoggyPairs("data/foggy_cityscapes", "data/cityscapes_clear", args.split, crop=None).pairs
     if args.limit:
         pairs = pairs[: args.limit]

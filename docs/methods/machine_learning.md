@@ -43,8 +43,10 @@ untreated hazy input.
   decoding 2 × 2048×1024 PNGs per sample cost 0.731 s per batch of 16 —
   more than twice the GPU step. The cache holds 4 crops per pair; each
   epoch serves a different crop, preserving cross-epoch augmentation.
-- U-Net capacity presets: light `base=24,depth=3`, medium `base=32,depth=4`,
-  heavy `base=48,depth=5`.
+- U-Net capacity presets: light `base=24,depth=3` (1.1M params), medium
+  `base=32,depth=4` (7.8M), heavy `base=48,depth=4` (17.5M). The heavy
+  preset was reduced from depth 5 after measuring 70M params / 3.12 GB at
+  full-resolution validation — disproportionate for a 6 GB GPU.
 - Checkpoints: `outputs/checkpoints/<run-id>/best.pt` (best val PSNR),
   `last.pt` (resumable). Run records: `runs/machine_learning/<run-id>/`.
 

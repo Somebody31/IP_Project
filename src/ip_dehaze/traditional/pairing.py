@@ -23,8 +23,12 @@ def index_pairs(
     split: str,
     refined_manifest: str | Path | None = None,
 ) -> list[ImagePair]:
-    foggy_split = Path(foggy_root) / "leftImg8bit_foggy" / split
-    clear_split = Path(clear_root) / "leftImg8bit" / split
+    # Resolve so every caller gets absolute paths (run records store paths
+    # relative to the repository root and need absolute inputs for that).
+    foggy_root = Path(foggy_root).expanduser().resolve()
+    clear_root = Path(clear_root).expanduser().resolve()
+    foggy_split = foggy_root / "leftImg8bit_foggy" / split
+    clear_split = clear_root / "leftImg8bit" / split
     if not foggy_split.is_dir() or not clear_split.is_dir():
         raise FileNotFoundError(f"Missing Foggy Cityscapes split {split!r}")
 

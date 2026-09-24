@@ -133,6 +133,20 @@ traditional validation; final test evaluation; reports.
 
 ## Phase 3 — ML baseline (the main remaining work)
 
+**Implementation status (2026-09-24):** code built and gates passed. What
+exists now:
+`src/ip_dehaze/data/dataset.py` (FoggyPairs + memmap `CachedCrops`),
+`machine_learning/models/{unet,classifier}.py`,
+`machine_learning/losses/`, `evaluation/{metrics,provenance,pair_benchmark}.py`,
+and scripts `train_unet.py`, `train_classifier.py`, `benchmark_model.py`,
+`sanity_gates.py`, `build_crop_cache.py`, `run_paper_method.sh`.
+Sanity gates **all pass**: overfit 31.37 dB (>30), identity-vs-recorded hazy
+PSNR diff 0.00e+00, cache integrity 100%, loader panels written to
+`outputs/figures/loader_check/`. The training chain is running as the
+service `paper_method_training` (blind → classifier → 3 branches).
+Remaining: the gated model (ours) and its `d≡1` ablation, then the routed
+val evaluation.
+
 Design constraints (from paper notes §6): our fog β ∈ {0.005, 0.01, 0.02}
 differs from the paper's {0.03, 0.06, 0.09}; absolute numbers are not
 comparable to the paper — only our own within-project deltas are.
