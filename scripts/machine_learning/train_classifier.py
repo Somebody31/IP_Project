@@ -39,13 +39,18 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--val-per-beta", type=int, default=50, help="val crops per density class")
     parser.add_argument("--seed", type=int, default=1729)
+    parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--cache-dir", type=Path, default=ROOT / "data/derived/crops/train")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(
+        ("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device
+    )
+    if device.type == "cpu":
+        torch.set_num_threads(4)  # leave cores for any concurrent training job
 
     if args.cache_dir and Path(args.cache_dir).is_dir():
         train_set = CachedCrops(args.cache_dir, split="train", seed=args.seed)
@@ -152,7 +157,8 @@ def main() -> None:
         "status": "completed",
         "command": " ".join(sys.argv),
         "method": "3-class haze-density classifier (router front end)",
-        "config": vars(args),
+        "config": {key: (str(value) if isinstance(value, Path) else value)
+                   for key, value in vars(args).items()},
         "train_pairs": len(train_set),
         "best": {"epoch": best_epoch, "val_accuracy": best_accuracy},
         "class_names": CLASS_NAMES,

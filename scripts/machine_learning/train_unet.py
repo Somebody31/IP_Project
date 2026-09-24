@@ -113,6 +113,7 @@ def main() -> None:
     parser.add_argument("--val-scenes-per-beta", type=int, default=20)
     parser.add_argument("--val-every", type=int, default=5)
     parser.add_argument("--seed", type=int, default=1729)
+    parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     parser.add_argument("--limit", type=int, default=0, help="smoke-test: cap training pairs")
     parser.add_argument("--cache-dir", type=Path, default=ROOT / "data/derived/crops/train",
                         help="memmap crop cache (removes PNG-decode I/O)")
@@ -123,7 +124,11 @@ def main() -> None:
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(
+        ("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device
+    )
+    if device.type == "cpu":
+        torch.set_num_threads(4)  # leave cores for any concurrent training job
 
     if args.cache_dir and Path(args.cache_dir).is_dir():
         train_set = CachedCrops(args.cache_dir, split="train", beta_filter=args.beta_class, seed=args.seed)
@@ -161,7 +166,7 @@ def main() -> None:
 
     run_dir = ROOT / "runs" / "machine_learning" / args.run_id
     ckpt_dir = ROOT / "outputs" / "checkpoints" / args.run_id
-    run_dir.mkdir(parents=True, exist_ok=False)
+    run_dir.mkdir(parents=True, exist_ok=args.resume)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     config_path = run_dir / "config.yaml"
     config_text = "\n".join(f"{key}: {value}" for key, value in sorted(vars(args).items())) + "\n"
@@ -273,7 +278,8 @@ def main() -> None:
         "command": " ".join(sys.argv),
         "method": {"blind": "Blind U-Net", "gated": "Density-gated U-Net"}[args.model]
         + (f" ({args.beta_class} branch)" if args.beta_class else ""),
-        "config": vars(args),
+        "config": {key: (str(value) if isinstance(value, Path) else value)
+                   for key, value in vars(args).items()},
         "train_pairs": len(train_set),
         "n_parameters": n_parameters,
         "best": {
