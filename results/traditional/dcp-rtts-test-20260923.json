@@ -1,0 +1,77 @@
+{
+  "status": "completed_exploratory_test_evaluation",
+  "method": "Frozen COCO-pretrained YOLOv8n",
+  "test_usage_note": "Exploratory comparison; do not tune DCP or detector settings on this test set. Freeze the protocol before any confirmatory test claim.",
+  "split": "test",
+  "n_images": 432,
+  "n_ground_truth_boxes": 4134,
+  "comparison": {
+    "normal": {
+      "AP@0.5:0.95": 0.2928670096616624,
+      "AP@0.5": 0.4923219045741099,
+      "n_detections": 41386
+    },
+    "dcp": {
+      "AP@0.5:0.95": 0.30396061833661875,
+      "AP@0.5": 0.5193749497399527,
+      "n_detections": 49842
+    },
+    "delta_dcp_minus_normal": {
+      "AP@0.5": 0.027053045165842782,
+      "AP@0.5:0.95": 0.011093608674956346
+    }
+  },
+  "detector": {
+    "weights": "outputs/checkpoints/yolov8n.pt",
+    "sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+    "ultralytics_version": "8.4.160",
+    "torch_version": "2.14.0+cu130",
+    "device": "0",
+    "frozen": true,
+    "image_size": 640,
+    "confidence": 0.001,
+    "nms_iou": 0.7,
+    "max_detections": 300,
+    "class_mapping_rtts_to_coco": {
+      "bicycle": 1,
+      "bus": 5,
+      "car": 2,
+      "motorbike": 3,
+      "person": 0
+    }
+  },
+  "evaluation": {
+    "iou_thresholds": [
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "max_detections_per_image": 100,
+    "pycocotools_version": "2.0.11"
+  },
+  "dcp_parameters": {
+    "patch_size": 15,
+    "omega": 0.95,
+    "atmospheric_top_fraction": 0.001,
+    "guided_radius": 20,
+    "guided_epsilon": 0.001,
+    "transmission_floor": 0.1
+  },
+  "dataset_manifest_sha256": "b53b3b49e3b9933228ab7432236127a5172a1ce879223f77551cd2587ea6692a",
+  "config_sha256": "9984ae41c00c8f30e61e0d092e716ec7714650af8fbc958a6377e99c16c41b1a",
+  "source_revision": null,
+  "command": "scripts/traditional/evaluate_dcp_detection.py --run-id dcp-rtts-test-20260923",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3"
+  },
+  "started_at": "2026-09-23T15:23:47",
+  "completed_at": "2026-09-23T15:24:35"
+}

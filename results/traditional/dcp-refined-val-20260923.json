@@ -1,0 +1,188 @@
+{
+  "status": "completed",
+  "command": "scripts/traditional/benchmark_dcp.py --run-id dcp-refined-val-20260923",
+  "method": "Dark Channel Prior",
+  "split": "val",
+  "evaluation_scope": "refined_manifest_subset",
+  "manifest": {
+    "path": "data/foggy_cityscapes/foggy_trainval_refined_filenames.txt",
+    "sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001"
+  },
+  "n_images": 156,
+  "n_scenes": 52,
+  "beta_counts": {
+    "0.005": 52,
+    "0.010": 52,
+    "0.020": 52
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dcp"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 156,
+      "n_scenes": 52,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 15.13674332512068,
+      "hazy_ssim": 0.824426586429278,
+      "dcp_psnr": 16.38521642650784,
+      "dcp_ssim": 0.686096762235348,
+      "dcp_minus_hazy_psnr": {
+        "mean": 1.2484731013871593,
+        "ci95": [
+          0.7872477622549239,
+          1.676109622379267
+        ],
+        "n_scenes": 52,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dcp_minus_hazy_ssim": {
+        "mean": -0.13832982419393003,
+        "ci95": [
+          -0.14965802838022893,
+          -0.12617670460962332
+        ],
+        "n_scenes": 52,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 52,
+        "n_scenes": 52,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 19.225999311531297,
+        "hazy_ssim": 0.9083867004284492,
+        "dcp_psnr": 16.266114546039464,
+        "dcp_ssim": 0.6650136881149732,
+        "dcp_minus_hazy_psnr": {
+          "mean": -2.9598847654918314,
+          "ci95": [
+            -3.5474766663251676,
+            -2.418329189267311
+          ],
+          "n_scenes": 52,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dcp_minus_hazy_ssim": {
+          "mean": -0.24337301231347597,
+          "ci95": [
+            -0.25556811357919984,
+            -0.23080374650084057
+          ],
+          "n_scenes": 52,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 52,
+        "n_scenes": 52,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.927365984391473,
+        "hazy_ssim": 0.832940827195461,
+        "dcp_psnr": 16.49862111335537,
+        "dcp_ssim": 0.688591955946042,
+        "dcp_minus_hazy_psnr": {
+          "mean": 1.571255128963894,
+          "ci95": [
+            1.0697031076430925,
+            2.0437918925630663
+          ],
+          "n_scenes": 52,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dcp_minus_hazy_ssim": {
+          "mean": -0.144348871249419,
+          "ci95": [
+            -0.15716705416830687,
+            -0.13078739488354096
+          ],
+          "n_scenes": 52,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 52,
+        "n_scenes": 52,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 11.256864679439262,
+        "hazy_ssim": 0.731952231663924,
+        "dcp_psnr": 16.39091362012868,
+        "dcp_ssim": 0.704684642645029,
+        "dcp_minus_hazy_psnr": {
+          "mean": 5.134048940689416,
+          "ci95": [
+            4.802383781667613,
+            5.456852740402525
+          ],
+          "n_scenes": 52,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dcp_minus_hazy_ssim": {
+          "mean": -0.027267589018895075,
+          "ci95": [
+            -0.038155741932300424,
+            -0.015451027940099062
+          ],
+          "n_scenes": 52,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "parameters": {
+    "name": "dark_channel_prior",
+    "patch_size": 15,
+    "omega": 0.95,
+    "atmospheric_top_fraction": 0.001,
+    "guided_radius": 20,
+    "guided_epsilon": 0.001,
+    "transmission_floor": 0.1
+  },
+  "dataset_roots": {
+    "foggy": "/home/sathwik/Dev/Projects/IP_Project/data/foggy_cityscapes",
+    "clear": "/home/sathwik/Dev/Projects/IP_Project/data/cityscapes_clear"
+  },
+  "config_sha256": "15881ee0528b6f5bf832af17be988094318ce8cc4f53823a0585fd16c5c5d156",
+  "source_revision": null,
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "pillow": "12.3.0",
+    "scipy": "1.18.1",
+    "scikit_image": "0.26.0",
+    "pyyaml": "6.0.3"
+  },
+  "started_at": "2026-09-23T13:11:00",
+  "completed_at": "2026-09-23T13:13:47"
+}

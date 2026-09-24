@@ -1,0 +1,1 @@
+"""Traditional image dehazing methods."""

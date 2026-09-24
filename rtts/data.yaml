@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 5
+names: ['bicycle', 'bus', 'car', 'motorbike', 'person']
+
+roboflow:
+  workspace: rtts
+  project: rtts-gnk5t
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/rtts/rtts-gnk5t/dataset/1

@@ -1,0 +1,43 @@
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environment/secrets
+.env
+.env.*
+!.env.example
+
+# Raw datasets and archives
+/data/cityscapes_clear/
+/data/foggy_cityscapes/
+/data/transmittance/
+/data/derived/
+/rtts/train/
+/rtts/valid/
+/rtts/test/
+/rtts/*.zip
+/rtts/**/labels.cache
+
+# Experiment and generated outputs
+/runs/*/
+!/runs/traditional/
+!/runs/machine_learning/
+/outputs/checkpoints/
+/outputs/predictions/
+/outputs/figures/
+/results/**/*.png
+/results/**/*.jpg
+/results/**/*.pt
+/results/**/*.pth
+/results/**/*.npz
+
+# Editor/OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
