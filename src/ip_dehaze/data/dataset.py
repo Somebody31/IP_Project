@@ -1,0 +1,175 @@
+"""Paired Foggy Cityscapes dataset for dehazing training and validation.
+
+Reuses `ip_dehaze.traditional.pairing.index_pairs` for scene/β matching so
+the ML and traditional tracks agree on what a "pair" is. Pairing lives in
+the traditional package but the logic is shared; import it, never copy it.
+"""
+
+from __future__ import annotations
+
+import random
+from pathlib import Path
+
+import numpy as np
+import torch
+from PIL import Image
+from torch.utils.data import Dataset
+
+from ip_dehaze.traditional.pairing import index_pairs
+
+BETAS = (0.005, 0.01, 0.02)
+BETA_CLASSES = {"light": 0.005, "medium": 0.01, "heavy": 0.02}
+
+
+def beta_class(beta: float) -> int:
+    """Map a Foggy Cityscapes β to its density class index (0/1/2)."""
+    for index, value in enumerate(BETAS):
+        if abs(beta - value) < 1e-9:
+            return index
+    raise ValueError(f"Unexpected beta {beta!r}; expected one of {BETAS}")
+
+
+def class_name(index: int) -> str:
+    return ("light", "medium", "heavy")[index]
+
+
+class CachedCrops(Dataset):
+    """Memmap-backed pre-extracted crops — removes PNG-decode I/O from training.
+
+    Built by `scripts/machine_learning/build_crop_cache.py`. Rows are laid out
+    pair-major (pair `p` owns rows `p*K .. p*K+K-1`); each epoch serves a
+    different crop per pair, so length equals the number of pairs while crop
+    diversity still varies across epochs.
+    """
+
+    def __init__(
+        self,
+        cache_dir: str,
+        split: str = "train",
+        beta_filter: float | str | None = None,
+        hflip: bool = True,
+        seed: int = 1729,
+    ) -> None:
+        import csv
+
+        self.dir = Path(cache_dir)
+        self.crops_per_pair = int((self.dir / "crops_per_pair.txt").read_text().strip())
+        self.hazy = np.load(self.dir / "hazy.npy", mmap_mode="r")
+        self.clear = np.load(self.dir / "clear.npy", mmap_mode="r")
+        self.rows = list(csv.DictReader((self.dir / "index.csv").open()))
+        if split != self.rows[0]["split"]:
+            raise ValueError(f"Cache holds split {self.rows[0]['split']!r}, requested {split!r}")
+
+        wanted = None
+        if beta_filter is not None:
+            wanted = BETA_CLASSES[beta_filter] if isinstance(beta_filter, str) else beta_filter
+        self.pair_indices = [
+            index
+            for index in range(len(self.rows) // self.crops_per_pair)
+            if wanted is None or abs(float(self.rows[index * self.crops_per_pair]["beta"]) - wanted) < 1e-9
+        ]
+        if not self.pair_indices:
+            raise ValueError("No pairs selected from cache; check split/beta_filter")
+        self.hflip = hflip
+        self.seed = seed
+        self.epoch = 0
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = epoch
+
+    def __len__(self) -> int:
+        return len(self.pair_indices)
+
+    def __getitem__(self, index: int) -> dict:
+        pair_index = self.pair_indices[index]
+        row_index = pair_index * self.crops_per_pair + (self.epoch % self.crops_per_pair)
+        meta = self.rows[row_index]
+        hazy = np.array(self.hazy[row_index])
+        clear = np.array(self.clear[row_index])
+        if self.hflip and random.Random(self.seed * 1_000_003 + self.epoch * 10_007 + index).random() < 0.5:
+            hazy, clear = hazy[:, ::-1], clear[:, ::-1]
+        to_tensor = lambda array: torch.from_numpy(np.ascontiguousarray(array.transpose(2, 0, 1)))
+        return {
+            "hazy": to_tensor(hazy.astype(np.float32) / 255.0),
+            "clear": to_tensor(clear.astype(np.float32) / 255.0),
+            "beta": torch.tensor(float(meta["beta"]), dtype=torch.float32),
+            "density_class": torch.tensor(int(meta["density_class"]), dtype=torch.long),
+            "scene_id": f"{meta['split']}/{meta['city']}/{meta['image_id']}",
+        }
+
+
+def load_rgb(path) -> np.ndarray:
+    with Image.open(path) as image:
+        return np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
+
+
+class FoggyPairs(Dataset):
+    """Returns (hazy, clear) crops plus the pair's β and density class.
+
+    Crops are deterministic given (seed, epoch, index) so a run can be
+    reproduced exactly; call `set_epoch` between epochs to vary them.
+    """
+
+    def __init__(
+        self,
+        foggy_root: str,
+        clear_root: str,
+        split: str,
+        crop: int | None = 256,
+        beta_filter: float | str | None = None,
+        refined_manifest: str | None = None,
+        hflip: bool = True,
+        seed: int = 1729,
+        stride: int = 1,
+        offset: int = 0,
+    ) -> None:
+        self.pairs = index_pairs(foggy_root, clear_root, split, refined_manifest)
+        if beta_filter is not None:
+            wanted = BETA_CLASSES[beta_filter] if isinstance(beta_filter, str) else beta_filter
+            self.pairs = [pair for pair in self.pairs if abs(pair.beta - wanted) < 1e-9]
+        if stride > 1:
+            self.pairs = self.pairs[offset::stride]
+        elif offset:
+            self.pairs = self.pairs[offset:]
+        if not self.pairs:
+            raise ValueError("No pairs selected; check split/beta_filter/stride")
+        self.crop = crop
+        self.hflip = hflip
+        self.seed = seed
+        self.epoch = 0
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = epoch
+
+    def __len__(self) -> int:
+        return len(self.pairs)
+
+    def __getitem__(self, index: int) -> dict:
+        pair = self.pairs[index]
+        hazy = load_rgb(pair.foggy_path)
+        clear = load_rgb(pair.clear_path)
+        if hazy.shape != clear.shape:
+            raise ValueError(f"Size mismatch for {pair.foggy_path}")
+
+        if self.crop is not None:
+            # Integer seed: random.seed rejects tuples on Python 3.11+.
+            rng = random.Random(self.seed * 1_000_003 + self.epoch * 10_007 + index)
+            height, width = hazy.shape[:2]
+            if height < self.crop or width < self.crop:
+                raise ValueError(f"Image smaller than crop for {pair.foggy_path}")
+            top = rng.randrange(height - self.crop + 1)
+            left = rng.randrange(width - self.crop + 1)
+            hazy = hazy[top : top + self.crop, left : left + self.crop]
+            clear = clear[top : top + self.crop, left : left + self.crop]
+            if self.hflip and rng.random() < 0.5:
+                hazy = hazy[:, ::-1]
+                clear = clear[:, ::-1]
+
+        to_tensor = lambda array: torch.from_numpy(np.ascontiguousarray(array.transpose(2, 0, 1)))
+        return {
+            "hazy": to_tensor(hazy),
+            "clear": to_tensor(clear),
+            "beta": torch.tensor(pair.beta, dtype=torch.float32),
+            "density_class": torch.tensor(beta_class(pair.beta), dtype=torch.long),
+            "scene_id": f"{pair.split}/{pair.city}/{pair.image_id}",
+        }

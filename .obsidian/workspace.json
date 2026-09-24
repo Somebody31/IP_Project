@@ -190,16 +190,17 @@
   },
   "active": "d2caf391f36720e5",
   "lastOpenFiles": [
-    "src/ip_dehaze/evaluation/__pycache__/rtts_labels.cpython-314.pyc",
-    "tests/traditional/__pycache__/test_detection_labels.cpython-314-pytest-9.1.1.pyc",
-    "src/ip_dehaze/traditional/__pycache__/dcp.cpython-314.pyc",
-    "tests/traditional/__pycache__/test_dcp.cpython-314-pytest-9.1.1.pyc",
-    "src/ip_dehaze/evaluation/__pycache__/coco_bootstrap.cpython-314.pyc",
-    "tests/evaluation/__pycache__/test_coco_bootstrap.cpython-314-pytest-9.1.1.pyc",
-    "src/ip_dehaze/traditional/__pycache__/pairing.cpython-314.pyc",
-    "src/ip_dehaze/traditional/__pycache__/__init__.cpython-314.pyc",
-    "src/ip_dehaze/__pycache__/__init__.cpython-314.pyc",
-    "tests/data/__pycache__/test_foggy_cityscapes_pairs.cpython-314-pytest-9.1.1.pyc",
+    "scripts/machine_learning/train_unet.py",
+    "scripts/machine_learning/__init__.py",
+    "src/ip_dehaze/machine_learning/models/__init__.py",
+    "src/ip_dehaze/machine_learning/__init__.py",
+    "src/ip_dehaze/machine_learning/losses/__init__.py",
+    "src/ip_dehaze/machine_learning/models/classifier.py",
+    "src/ip_dehaze/machine_learning/models/unet.py",
+    "src/ip_dehaze/data/__init__.py",
+    "src/ip_dehaze/data/dataset.py",
+    "src/ip_dehaze/evaluation/provenance.py",
+    "src/ip_dehaze/evaluation/metrics.py",
     "docs/plan.md"
   ]
 }

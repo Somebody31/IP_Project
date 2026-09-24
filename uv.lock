@@ -747,6 +747,9 @@ detection = [
 test = [
     { name = "pytest" },
 ]
+training = [
+    { name = "torch" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -757,9 +760,10 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6" },
     { name = "scikit-image", specifier = ">=0.22" },
     { name = "scipy", specifier = ">=1.12" },
+    { name = "torch", marker = "extra == 'training'", specifier = ">=2.0" },
     { name = "ultralytics", marker = "extra == 'detection'", specifier = ">=8.3" },
 ]
-provides-extras = ["test", "detection"]
+provides-extras = ["test", "detection", "training"]
 
 [[package]]
 name = "jinja2"

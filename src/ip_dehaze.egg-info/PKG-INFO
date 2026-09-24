@@ -14,6 +14,8 @@ Requires-Dist: pytest>=8; extra == "test"
 Provides-Extra: detection
 Requires-Dist: ultralytics>=8.3; extra == "detection"
 Requires-Dist: pycocotools>=2.0.7; extra == "detection"
+Provides-Extra: training
+Requires-Dist: torch>=2.0; extra == "training"
 
 # Dehazing project
 

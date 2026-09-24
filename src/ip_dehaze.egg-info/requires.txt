@@ -10,3 +10,6 @@ pycocotools>=2.0.7
 
 [test]
 pytest>=8
+
+[training]
+torch>=2.0

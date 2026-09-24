@@ -3,96 +3,28 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
-import hashlib
 import json
-import platform
-import subprocess
-from concurrent.futures import ThreadPoolExecutor
+
 import sys
-from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
 import yaml
 from PIL import Image
-from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
-from ip_dehaze.traditional.dcp import dehaze
-from ip_dehaze.traditional.pairing import index_pairs
+from ip_dehaze.evaluation.metrics import metrics  # noqa: E402
+from ip_dehaze.evaluation.pair_benchmark import summarize  # noqa: E402
+from ip_dehaze.evaluation.provenance import environment, git_revision, sha256  # noqa: E402
+from ip_dehaze.traditional.dcp import dehaze  # noqa: E402
+from ip_dehaze.traditional.pairing import index_pairs  # noqa: E402
 
 
 def load_rgb(path: Path) -> np.ndarray:
     with Image.open(path) as image:
         return np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
-
-
-def metrics(output: np.ndarray, target: np.ndarray) -> dict[str, float]:
-    return {
-        "psnr": float(peak_signal_noise_ratio(target, output, data_range=1.0)),
-        "ssim": float(structural_similarity(target, output, data_range=1.0, channel_axis=2, win_size=11)),
-    }
-
-
-def clustered_interval(rows: list[dict], field: str, resamples: int, seed: int) -> dict:
-    by_scene: dict[str, list[float]] = defaultdict(list)
-    for row in rows:
-        by_scene[row["scene_id"]].append(row[field])
-    scene_values = np.asarray([np.mean(v) for v in by_scene.values()], dtype=np.float64)
-    if not len(scene_values):
-        raise ValueError("Cannot bootstrap an empty result set")
-    rng = np.random.default_rng(seed)
-    samples = rng.choice(scene_values, size=(resamples, len(scene_values)), replace=True).mean(axis=1)
-    return {
-        "mean": float(scene_values.mean()),
-        "ci95": [float(v) for v in np.quantile(samples, [0.025, 0.975])],
-        "n_scenes": int(len(scene_values)),
-        "resamples": resamples,
-        "seed": seed,
-    }
-
-
-def git_revision() -> str | None:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
-        ).strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def summarize(rows: list[dict], resamples: int, seed: int) -> dict:
-    by_beta: dict[str, list[dict]] = defaultdict(list)
-    for row in rows:
-        by_beta[f"{row['beta']:.3f}"].append(row)
-
-    def condition_summary(selected: list[dict]) -> dict:
-        n = len(selected)
-        result = {"n_images": n, "n_scenes": len({r["scene_id"] for r in selected})}
-        result["clear_reference"] = {"identity": True, "psnr": "infinity", "ssim": 1.0}
-        for condition in ("hazy", "dcp"):
-            for metric in ("psnr", "ssim"):
-                key = f"{condition}_{metric}"
-                result[key] = float(np.mean([r[key] for r in selected]))
-        for metric in ("psnr", "ssim"):
-            result[f"dcp_minus_hazy_{metric}"] = clustered_interval(
-                selected, f"delta_{metric}", resamples, seed
-            )
-        return result
-
-    return {
-        "pooled": condition_summary(rows),
-        "by_beta": {beta: condition_summary(values) for beta, values in sorted(by_beta.items())},
-    }
 
 
 def evaluate_pair(pair, method: dict) -> dict:
@@ -187,15 +119,8 @@ def main() -> None:
         "parameters": method,
         "dataset_roots": {"foggy": str(foggy_root), "clear": str(clear_root)},
         "config_sha256": sha256(config_path),
-        "source_revision": git_revision(),
-        "environment": {
-            "python": platform.python_version(),
-            "numpy": np.__version__,
-            "pillow": Image.__version__,
-            "scipy": __import__("scipy").__version__,
-            "scikit_image": __import__("skimage").__version__,
-            "pyyaml": yaml.__version__,
-        },
+        "source_revision": git_revision(ROOT),
+        "environment": environment(),
         "started_at": started_at,
         "completed_at": dt.datetime.now().isoformat(timespec="seconds"),
     }
