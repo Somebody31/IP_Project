@@ -45,11 +45,17 @@ def gate_loader_visual(seed: int) -> None:
     print(f"[gate 1] sample scene ids: {[train_set[i]['scene_id'] for i in range(4)]}")
 
 
-def gate_overfit(seed: int, steps: int, threshold_db: float) -> dict:
+def gate_overfit(seed: int, steps: int, threshold_db: float, cache_dir: Path | None = None) -> dict:
     torch.manual_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    train_set = FoggyPairs("data/foggy_cityscapes", "data/cityscapes_clear", "train", crop=256, seed=seed)
-    subset = Subset(train_set, list(range(32)))
+    if cache_dir and (cache_dir / "hazy.npy").is_file():
+        from ip_dehaze.data.dataset import CachedCrops
+
+        source = CachedCrops(cache_dir, split="train", seed=seed)
+        print(f"[gate 2] using crop cache {cache_dir.relative_to(ROOT)}", flush=True)
+    else:
+        source = FoggyPairs("data/foggy_cityscapes", "data/cityscapes_clear", "train", crop=256, seed=seed)
+    subset = Subset(source, list(range(32)))
     loader = DataLoader(subset, batch_size=8, shuffle=True, num_workers=2, drop_last=True)
     model = build_unet("medium", gated=False).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
@@ -130,14 +136,19 @@ def gate_cache_integrity(cache_dir: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Pre-training sanity gates")
     parser.add_argument("--seed", type=int, default=1729)
-    parser.add_argument("--steps", type=int, default=300)
+    parser.add_argument("--steps", type=int, default=800,
+                        help="measured: 32 crops reach >30 dB around step 800; 300 steps only reaches ~25 dB")
     parser.add_argument("--threshold-db", type=float, default=30.0)
     parser.add_argument("--skip-overfit", action="store_true")
     parser.add_argument("--cache-dir", type=Path, default=ROOT / "data/derived/crops/train")
     args = parser.parse_args()
 
     gate_loader_visual(args.seed)
-    overfit = {"passed": True} if args.skip_overfit else gate_overfit(args.seed, args.steps, args.threshold_db)
+    overfit = (
+        {"passed": True}
+        if args.skip_overfit
+        else gate_overfit(args.seed, args.steps, args.threshold_db, args.cache_dir)
+    )
     copy = gate_copy_baseline()
     cache = gate_cache_integrity(args.cache_dir)
     if not overfit["passed"] or copy["passed"] is False or cache["passed"] is False:

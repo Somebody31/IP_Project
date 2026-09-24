@@ -222,10 +222,13 @@ ablation column only.
      `outputs/figures/loader_check/` and eyeball alignment.
   2. Loader test: assert hazy/clear filename pairs match scene + β for a
      random 50-pair sample.
-  3. Overfit smoke test: train on ~32 pairs for ~200 steps; the model must
+  3. Overfit smoke test: train on ~32 pairs for ~800 steps; the model must
      reach near-perfect PSNR on those pairs (>30 dB). If it can't, the
      model/loss/optimizer is broken — stop and fix, do not launch the full
-     run.
+     run. **Measured 2026-09-24** (32 crops, medium U-Net, 0.195 s/step):
+     PSNR 23.4 → 27.4 → 29.4 → 30.2 → 32.9 dB at steps 200/400/600/800/1000,
+     so the step count matters — 300 steps reaches only ~25 dB and is not
+     evidence of breakage.
   4. Baseline check: a model that only copies its input must score exactly
      the hazy baseline (15.14 dB pooled) on val — proves the eval path
      scores ML outputs identically to DCP's.
@@ -245,19 +248,21 @@ ablation column only.
   in `pyproject.toml` deps — it's present transitively via the
   `detection` extra; **add a `training` extra to pyproject** in P3.3 so
   the env is declarative, don't rely on the transitive install.
-  **Training budget (estimate, not yet measured):** batch 16 on 256²
-  crops ≈ 560 steps/epoch ≈ 3–4 min/epoch on the 1660 Super → blind
-  U-Net ~2.5–3 h for 50 epochs; the gated model and the `d≡1` ablation
-  cost the same again each; the paper-style routed system adds a
-  3-class classifier (~30 min) + 3 per-class branches on 2,975 pairs
-  each (~1 h light + ~2 h medium + ~3 h heavy ≈ 6 h). **Total ≈ 15–16 h
-  ≈ two overnights** on the 1660 Super; use AMP, checkpoint every 5
-  epochs, resume on crash. AOD-Net-class backbones would cut this
-  roughly in half if needed. **Run order (decided 2026-09-24):** blind
-  U-Net (loop validation) → **theirs/routed (method 1)** → **ours/gated
-  (method 2)** → `d≡1` ablation. Fairness note for the report: our gated
-  model trains on all 8,925 pairs; routed branches see only their
-  class's 2,975 — inherent to the designs, disclose it.
+  **Training budget — MEASURED 2026-09-24 (replaces earlier estimates):**
+  on the GTX 1660 SUPER, batch 16 at 256²: fp32 GPU step **0.343 s**;
+  fp16 AMP step **1.296 s — 3.8× slower and NaN on every step**
+  (GradScaler scale collapsed 65536→64), so **AMP is disabled** and
+  `--amp` is opt-in only. Straight-from-PNG loading measured **0.731 s
+  per batch of 16** (I/O bound, 2 × 2048×1024 decodes per sample), so
+  training now reads a one-time **memmap crop cache**
+  (`data/derived/crops/train`, 35,700 crops, 14 GB, 23.6 min to build):
+  ~557 steps/epoch × ~0.35 s ≈ **3.5 min/epoch → ~3 h per 50-epoch run**.
+  Full matrix (blind + classifier + 3 branches) ≈ **10–12 h ≈ two
+  overnights**. Fairness note for the report: our gated model trains on
+  all 8,925 pairs; routed branches see only their class's 2,975 —
+  inherent to the designs, disclose it. **Run order (decided
+  2026-09-24):** blind U-Net (loop validation) → **theirs/routed (method
+  1)** → **ours/gated (method 2)** → `d≡1` ablation.
   **Local vs. Kaggle (decided 2026-09-24, updated):** train locally —
   the full matrix (~15–16 h) splits across two overnight runs on the
   1660 Super. Kaggle only if (a) a parallel sweep is wanted or (b) a

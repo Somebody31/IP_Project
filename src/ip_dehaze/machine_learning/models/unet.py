@@ -13,11 +13,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # Graded capacity for the paper-style routed branches.
+# heavy is width-48/depth-4 (17.5M params): base 48 at depth 5 measured
+# 70M params and 3.12 GB at full-res validation, which would have dominated
+# the training budget on a 6 GB GPU.
 SIZE_PRESETS = {
     "tiny": {"base": 16, "depth": 3},
-    "light": {"base": 24, "depth": 3},
-    "medium": {"base": 32, "depth": 4},
-    "heavy": {"base": 48, "depth": 5},
+    "light": {"base": 24, "depth": 3},   # 1.1M params
+    "medium": {"base": 32, "depth": 4},  # 7.8M params
+    "heavy": {"base": 48, "depth": 4},   # 17.5M params
 }
 
 

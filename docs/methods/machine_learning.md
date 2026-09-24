@@ -32,7 +32,17 @@ untreated hazy input.
 - Loss: L1 + 0.2·(1 − SSIM). The SSIM *term* is a compact differentiable
   approximation used for gradients only (`machine_learning/losses/`);
   every reported SSIM comes from `evaluation/metrics.py`, shared with DCP.
-- Batch 16, 50 epochs (classifier: 12), AMP, gradient clipping at 1.0.
+- Batch 16, 50 epochs (classifier: 12), gradient clipping at 1.0.
+- **Precision: fp32.** Measured on the GTX 1660 SUPER: an fp16 AMP step
+  takes 1.296 s versus 0.343 s in fp32 (3.8× slower — sm_75 has no tensor
+  cores) and produced NaNs on every step. `--amp` exists but is off by
+  default for that reason. The SSIM loss additionally computes in fp32 and
+  clamps variances: `E[x²] − E[x]²` cancels catastrophically in fp16.
+- **Data path:** training reads a memmap crop cache
+  (`data/derived/crops/train`, built by `build_crop_cache.py`), because
+  decoding 2 × 2048×1024 PNGs per sample cost 0.731 s per batch of 16 —
+  more than twice the GPU step. The cache holds 4 crops per pair; each
+  epoch serves a different crop, preserving cross-epoch augmentation.
 - U-Net capacity presets: light `base=24,depth=3`, medium `base=32,depth=4`,
   heavy `base=48,depth=5`.
 - Checkpoints: `outputs/checkpoints/<run-id>/best.pt` (best val PSNR),
