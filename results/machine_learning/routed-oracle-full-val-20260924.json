@@ -1,0 +1,186 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id routed-oracle-full-val-20260924 --mode routed --routing oracle --branch-light outputs/checkpoints/branch-light-20260924/best.pt --branch-medium outputs/checkpoints/branch-medium-20260924/best.pt --branch-heavy outputs/checkpoints/branch-heavy-20260924/best.pt --split val --device cuda --workers 5",
+  "method": "Paper-style routed system (classifier + 3 branches)",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dehazed_psnr": 27.18666867495113,
+      "dehazed_ssim": 0.9538118333816529,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 12.535380381573482,
+        "ci95": [
+          12.240792328081936,
+          12.810421698234514
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.12884337015946706,
+        "ci95": [
+          0.125579327638944,
+          0.1318892828176419
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dehazed_psnr": 27.939074664904425,
+        "dehazed_ssim": 0.9634559851884842,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 9.373945565222773,
+          "ci95": [
+            9.095194595270595,
+            9.617039234839346
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.056111056447029115,
+          "ci95": [
+            0.053720733150839806,
+            0.0584105521351099
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dehazed_psnr": 27.6830882143863,
+        "dehazed_ssim": 0.9578592442274093,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 13.218007473889232,
+          "ci95": [
+            12.895372446195765,
+            13.525381140389126
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.12420245718955994,
+          "ci95": [
+            0.12078479872345925,
+            0.12738492303192614
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dehazed_psnr": 25.937843145562663,
+        "dehazed_ssim": 0.9401202707290649,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 15.01418810560844,
+          "ci95": [
+            14.686466495524446,
+            15.3140249719914
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.20621659684181212,
+          "ci95": [
+            0.2018213277697563,
+            0.21022081143856047
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": "oracle",
+  "routing_counts": {
+    "light": 500,
+    "medium": 500,
+    "heavy": 500
+  },
+  "checkpoints": {
+    "model": null,
+    "classifier": null,
+    "branches": {
+      "light": "outputs/checkpoints/branch-light-20260924/best.pt",
+      "medium": "outputs/checkpoints/branch-medium-20260924/best.pt",
+      "heavy": "outputs/checkpoints/branch-heavy-20260924/best.pt"
+    }
+  },
+  "config_sha256": "59f0103faf3ea09d06f824bc12b0f94a4878010c66b0c6c5b26e59b44668f776",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "509b28e4ed9f24b6478c0f1264e05b196c1778b6",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-09-25T06:48:29",
+  "completed_at": "2026-09-25T07:07:19"
+}
