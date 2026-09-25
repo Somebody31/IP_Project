@@ -157,6 +157,22 @@ writing into a live run directory). Long runs are launched as **services**,
 and stopping one means `pkill -f <script>` after the job cancel, verified
 with `pgrep -af <script>`.
 
+**Density-classifier input format — measured (2026-09-24):** fog density is
+a *global* property, and the classifier's input format decides whether it
+can be learned at all:
+
+| Input | Train acc (2 epochs) | Val acc |
+|---|---|---|
+| 256² crops (random) | 0.55 — stuck near chance | 0.33–0.65, unstable |
+| whole image at 512×256 | 0.67 → 0.73 climbing | 0.34 → 0.73 climbing |
+
+Crop-based density classification barely learns: a single 256 patch is
+often texture-dominated and does not reveal β. The classifier therefore
+trains on **whole downscaled images** (`--resize 512x256`), matching how the
+paper's HDEN classifies whole images. The routed system's routing accuracy
+is reported alongside its PSNR/SSIM, since it bounds what routing can
+achieve.
+
 **First-chain results (2026-09-24, all five runs completed):** blind U-Net
 best val 31.41 dB / 0.9762 SSIM; branches light 26.26 / 0.9481, medium
 28.11 / 0.9638, heavy 27.36 / 0.9646 (30-image balanced val selection).

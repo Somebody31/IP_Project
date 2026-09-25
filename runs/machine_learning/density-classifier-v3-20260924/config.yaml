@@ -1,0 +1,13 @@
+batch: 32
+crop: 256
+device: auto
+epochs: 10
+limit: 0
+lr: 0.001
+resize: 512x256
+run_id: density-classifier-v3-20260924
+seed: 1729
+stride: 1
+val_per_beta: 40
+votes: 5
+workers: 10
