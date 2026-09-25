@@ -24,7 +24,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ip_dehaze.data.dataset import FoggyPairs, load_rgb  # noqa: E402
+from ip_dehaze.data.dataset import FoggyPairs, _resize, load_rgb  # noqa: E402
 from ip_dehaze.evaluation.metrics import metrics as image_metrics  # noqa: E402
 from ip_dehaze.evaluation.pair_benchmark import summarize  # noqa: E402
 from ip_dehaze.evaluation.provenance import environment, git_revision, sha256  # noqa: E402
@@ -43,17 +43,37 @@ def load_dehazer(path: Path, device: torch.device) -> tuple[torch.nn.Module, dic
     return model, args
 
 
-def load_classifier(path: Path, device: torch.device) -> torch.nn.Module:
+def load_classifier(path: Path, device: torch.device) -> tuple[torch.nn.Module, tuple[int, int] | None]:
+    """Returns the classifier plus its whole-image input size (None = crop voting).
+
+    A checkpoint trained on whole downscaled images must be *routed* the same
+    way it was trained; otherwise routing accuracy silently degrades.
+    """
     state = torch.load(path, map_location=device, weights_only=False)
     model = DensityClassifier().to(device)
     model.load_state_dict(state["model"])
     model.eval()
-    return model
+    resize = (state.get("args") or {}).get("resize") or ""
+    size = None
+    if resize:
+        width, height = (int(value) for value in resize.lower().split("x"))
+        size = (width, height)
+    return model, size
 
 
 @torch.no_grad()
-def classify(model: torch.nn.Module, hazy: np.ndarray, device: torch.device, crops: int = 5) -> int:
-    """Majority vote over centre + corner crops (training used random crops)."""
+def classify(
+    model: torch.nn.Module,
+    hazy: np.ndarray,
+    device: torch.device,
+    size: tuple[int, int] | None = None,
+    crops: int = 5,
+) -> int:
+    """Whole downscaled image if the classifier was trained that way, else crop voting."""
+    if size is not None:
+        small = _resize(hazy, size)
+        tensor = torch.from_numpy(np.ascontiguousarray(small.transpose(2, 0, 1)))[None].to(device)
+        return int(model(tensor).argmax(1))
     tensor = torch.from_numpy(np.ascontiguousarray(hazy.transpose(2, 0, 1)))[None].to(device)
     _, _, height, width = tensor.shape
     size = 256
@@ -101,7 +121,7 @@ def main() -> None:
         for name in ("classifier", "branch_light", "branch_medium", "branch_heavy"):
             if getattr(args, name) is None:
                 raise SystemExit(f"--{name.replace('_', '-')} is required in routed mode")
-        classifier = load_classifier(args.classifier, device)
+        classifier, classifier_size = load_classifier(args.classifier, device)
         branches = {
             name: load_dehazer(path, device)[0]
             for name, path in zip(
@@ -129,7 +149,7 @@ def main() -> None:
         chosen = None
         with torch.no_grad():
             if args.mode == "routed":
-                chosen = CLASS_ORDER[classify(classifier, hazy, device)]
+                chosen = CLASS_ORDER[classify(classifier, hazy, device, size=classifier_size)]
                 routing_counts[chosen] += 1
                 output, _ = branches[chosen](tensor)
             else:

@@ -133,6 +133,16 @@ traditional validation; final test evaluation; reports.
 
 ## Phase 3 — ML baseline (the main remaining work)
 
+**Recompute caches (2026-09-24):** the resize cache build initially ran
+without `--out-name` and overwrote `data/derived/crops/train` (the 256²
+dehazing crop cache) with 512×256 geometry — caught by inspecting the
+memmap shape, killed mid-write. `build_crop_cache.py` now refuses to
+overwrite an existing cache without `--force` and names resize caches
+`resize-<WxH>` by default. The 256² crop cache needs a rebuild
+(`--split train --crops-per-pair 4 --force`) before any further dehazing
+training; branches already trained are unaffected because their
+checkpoints and run records are complete.
+
 **First-chain results (2026-09-24, all five runs completed):** blind U-Net
 best val 31.41 dB / 0.9762 SSIM; branches light 26.26 / 0.9481, medium
 28.11 / 0.9638, heavy 27.36 / 0.9646 (30-image balanced val selection).

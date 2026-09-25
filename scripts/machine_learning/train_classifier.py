@@ -29,16 +29,44 @@ from ip_dehaze.machine_learning.models.classifier import DensityClassifier  # no
 CLASS_NAMES = ("light", "medium", "heavy")
 
 
+def vote_density_class(
+    model: torch.nn.Module,
+    hazy: torch.Tensor,
+    device: torch.device,
+    crop: int,
+    votes: int = 5,
+) -> int:
+    """Majority vote over centre + corner crops; matches routed inference."""
+    height, width = hazy.shape[-2:]
+    if height < crop or width < crop:
+        return int(model(hazy[None].to(device)).argmax(1))
+    top, left = (height - crop) // 2, (width - crop) // 2
+    positions = [
+        (top, left),
+        (0, 0),
+        (0, width - crop),
+        (height - crop, 0),
+        (height - crop, width - crop),
+    ]
+    tallies: list[int] = []
+    for index in range(max(1, votes)):
+        y, x = positions[index % len(positions)]
+        patch = hazy[:, y : y + crop, x : x + crop][None].to(device)
+        tallies.append(int(model(patch).argmax(1)))
+    return max(set(tallies), key=tallies.count)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train the 3-class haze-density classifier")
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--crop", type=int, default=0, help="0 = train on the whole downscaled image")
-    parser.add_argument("--resize", default="512x256", help="WxH whole-image downscale (global fog statistics)")
+    parser.add_argument("--resize", default="", help="WxH whole-image downscale; empty = train on cached crops")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--workers", type=int, default=6)
-    parser.add_argument("--val-per-beta", type=int, default=50, help="val crops per density class")
+    parser.add_argument("--val-per-beta", type=int, default=50, help="val images per density class")
+    parser.add_argument("--votes", type=int, default=5, help="crops voted per image at validation/inference")
     parser.add_argument("--seed", type=int, default=1729)
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     parser.add_argument("--limit", type=int, default=0)
@@ -52,32 +80,34 @@ def main() -> None:
     if device.type == "cpu":
         torch.set_num_threads(4)  # leave cores for any concurrent training job
 
-    width, height = (int(value) for value in args.resize.lower().split("x"))
-    cache_dir = ROOT / "data/derived" / "crops" / f"resize-{args.resize}"
-    if cache_dir.is_dir():
+    width, height = (
+        (int(value) for value in args.resize.lower().split("x")) if args.resize else (0, 0)
+    )
+    cache_dir = ROOT / "data/derived" / ("crops" / f"resize-{args.resize}" if args.resize else "crops/train")
+    if not args.resize and cache_dir.is_dir():
         train_set = CachedCrops(cache_dir, split="train", seed=args.seed)
         if args.limit:
             train_set.pair_indices = train_set.pair_indices[: args.limit]
-        print(f"using whole-image cache {cache_dir.relative_to(ROOT)} ({width}x{height})", flush=True)
+        print(f"using crop cache {cache_dir.relative_to(ROOT)}", flush=True)
     else:
         train_set = FoggyPairs(
             "data/foggy_cityscapes",
             "data/cityscapes_clear",
             "train",
-            crop=None,
-            resize=(width, height),
+            crop=None if args.resize else args.crop,
+            resize=(width, height) if args.resize else None,
             seed=args.seed,
         )
         if args.limit:
             train_set.pairs = train_set.pairs[: args.limit]
-        print(f"input: whole image downscaled on the fly to {width}x{height}", flush=True)
+        print(f"input: {'whole image ' + args.resize if args.resize else str(args.crop) + 'px crops on the fly'}", flush=True)
     val_sets = [
         FoggyPairs(
             "data/foggy_cityscapes",
             "data/cityscapes_clear",
             "val",
             crop=None,
-            resize=(width, height),
+            resize=(width, height) if args.resize else None,
             beta_filter=name,
             stride=max(1, 500 // args.val_per_beta),
             seed=args.seed,
@@ -132,8 +162,14 @@ def main() -> None:
             for class_index, val_set in enumerate(val_sets):
                 class_hits = 0
                 for index in range(len(val_set)):
-                    image = val_set[index]["hazy"][None].to(device)
-                    prediction = int(model(image).argmax(1))
+                    sample = val_set[index]
+                    if args.resize:
+                        image = sample["hazy"][None].to(device)
+                        prediction = int(model(image).argmax(1))
+                    else:
+                        prediction = vote_density_class(
+                            model, sample["hazy"], device, args.crop, args.votes
+                        )
                     class_hits += int(prediction == class_index)
                 per_class[CLASS_NAMES[class_index]] = class_hits / max(len(val_set), 1)
                 hits += class_hits

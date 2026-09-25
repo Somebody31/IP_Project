@@ -56,7 +56,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=1729)
     parser.add_argument("--workers", type=int, default=10)
     parser.add_argument("--resize", default="", help="WxH: store whole downscaled images instead of crops")
-    parser.add_argument("--out-name", default="", help="override output subdirectory (default: <split>)")
+    parser.add_argument("--out-name", default="", help="override output subdirectory")
+    parser.add_argument("--force", action="store_true", help="overwrite an existing cache")
     args = parser.parse_args()
 
     resize = None
@@ -68,7 +69,15 @@ def main() -> None:
     pairs = index_pairs(
         ROOT / "data/foggy_cityscapes", ROOT / "data/cityscapes_clear", args.split
     )
-    out_dir = CACHE_ROOT / (args.out_name or args.split)
+    # Never clobber a cache by accident: resize caches get their own
+    # directory name, and an existing cache needs --force.
+    out_dir = CACHE_ROOT / (args.out_name or (f"resize-{args.resize}" if args.resize else args.split))
+    index_path = out_dir / "index.csv"
+    if index_path.is_file() and not args.force:
+        raise SystemExit(
+            f"{out_dir.relative_to(ROOT)} already exists ({sum(1 for _ in index_path.open()) - 1} rows); "
+            "pass --force to overwrite or --out-name to write elsewhere"
+        )
     out_dir.mkdir(parents=True, exist_ok=True)
     total = len(pairs) * args.crops_per_pair
     shape = (total, resize[1], resize[0], 3) if resize else (total, args.size, args.size, 3)
