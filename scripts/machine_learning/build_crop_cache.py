@@ -79,6 +79,10 @@ def main() -> None:
             "pass --force to overwrite or --out-name to write elsewhere"
         )
     out_dir.mkdir(parents=True, exist_ok=True)
+    # Invalidate any previous cache first: an interrupted build must never
+    # look complete to a reader (index.csv alone is not proof of completion).
+    for stale in ("index.csv", "manifest.json"):
+        (out_dir / stale).unlink(missing_ok=True)
     total = len(pairs) * args.crops_per_pair
     shape = (total, resize[1], resize[0], 3) if resize else (total, args.size, args.size, 3)
     hazy_store = np.lib.format.open_memmap(out_dir / "hazy.npy", mode="w+", dtype=np.uint8, shape=shape)
@@ -124,7 +128,24 @@ def main() -> None:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
-    print(f"cache: {out_dir.relative_to(ROOT)} ({total} crops of {args.size}px)")
+    import json
+
+    (out_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "split": args.split,
+                "crops_per_pair": args.crops_per_pair,
+                "rows": total,
+                "shape": list(shape),
+                "resize": args.resize or None,
+                "seed": args.seed,
+                "complete": True,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    print(f"cache: {out_dir.relative_to(ROOT)} ({total} crops, shape {shape})")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 import csv
+import json
 
 import numpy as np
+import pytest
 import torch
 
 from ip_dehaze.data.dataset import CachedCrops
@@ -31,6 +33,9 @@ def build_cache(root, pairs=(("aachen_000001_000002", 0.005), ("aachen_000003_00
     np.save(root / "hazy.npy", np.stack(hazy))
     np.save(root / "clear.npy", np.stack(clear))
     (root / "crops_per_pair.txt").write_text(f"{crops_per_pair}\n")
+    (root / "manifest.json").write_text(
+        json.dumps({"crops_per_pair": crops_per_pair, "rows": len(rows), "complete": True})
+    )
     with (root / "index.csv").open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader()
@@ -71,3 +76,11 @@ def test_cached_crops_beta_filter(tmp_path):
     dataset = CachedCrops(tmp_path, split="train", beta_filter="heavy")
     assert len(dataset) == 1
     assert dataset[0]["density_class"].item() == 2
+
+
+def test_incomplete_cache_is_refused(tmp_path):
+    """An interrupted build must never be readable as if complete."""
+    build_cache(tmp_path, crops_per_pair=1)
+    (tmp_path / "manifest.json").unlink()
+    with pytest.raises(FileNotFoundError, match="manifest.json"):
+        CachedCrops(tmp_path, split="train")

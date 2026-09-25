@@ -51,12 +51,27 @@ class CachedCrops(Dataset):
         seed: int = 1729,
     ) -> None:
         import csv
+        import json
 
         self.dir = Path(cache_dir)
-        self.crops_per_pair = int((self.dir / "crops_per_pair.txt").read_text().strip())
+        manifest_path = self.dir / "manifest.json"
+        if not manifest_path.is_file():
+            raise FileNotFoundError(
+                f"{cache_dir} has no manifest.json — the cache is missing or was "
+                "interrupted mid-build; rebuild it with scripts/machine_learning/build_crop_cache.py"
+            )
+        manifest = json.loads(manifest_path.read_text())
+        if not manifest.get("complete"):
+            raise ValueError(f"{cache_dir} is marked incomplete; rebuild it")
+        self.crops_per_pair = int(manifest["crops_per_pair"])
         self.hazy = np.load(self.dir / "hazy.npy", mmap_mode="r")
         self.clear = np.load(self.dir / "clear.npy", mmap_mode="r")
         self.rows = list(csv.DictReader((self.dir / "index.csv").open()))
+        if len(self.rows) != int(manifest["rows"]):
+            raise ValueError(
+                f"{cache_dir} index has {len(self.rows)} rows but manifest says "
+                f"{manifest['rows']} — cache is inconsistent; rebuild it"
+            )
         if split != self.rows[0]["split"]:
             raise ValueError(f"Cache holds split {self.rows[0]['split']!r}, requested {split!r}")
 
