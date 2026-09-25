@@ -26,7 +26,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ip_dehaze.data.dataset import FoggyPairs, _resize, load_rgb  # noqa: E402
+from ip_dehaze.data.dataset import BETA_CLASSES, FoggyPairs, _resize, beta_class, load_rgb  # noqa: E402
 from ip_dehaze.evaluation.metrics import metrics as image_metrics  # noqa: E402
 from ip_dehaze.evaluation.pair_benchmark import summarize  # noqa: E402
 from ip_dehaze.evaluation.provenance import environment, git_revision, sha256  # noqa: E402
@@ -106,6 +106,8 @@ def main() -> None:
     parser.add_argument("--bootstrap-resamples", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=1729)
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
+    parser.add_argument("--routing", default="classifier", choices=["classifier", "oracle"],
+                        help="routed mode: use the learned classifier, or true beta as an upper bound")
     parser.add_argument("--workers", type=int, default=1,
                         help="threads for load/forward/metric; the serial path is ~5x slower")
     args = parser.parse_args()
@@ -122,10 +124,14 @@ def main() -> None:
         pairs = pairs[: args.limit]
 
     if args.mode == "routed":
-        for name in ("classifier", "branch_light", "branch_medium", "branch_heavy"):
+        for name in ("branch_light", "branch_medium", "branch_heavy"):
             if getattr(args, name) is None:
                 raise SystemExit(f"--{name.replace('_', '-')} is required in routed mode")
-        classifier, classifier_size = load_classifier(args.classifier, device)
+        if args.routing == "classifier" and args.classifier is None:
+            raise SystemExit("--classifier is required with --routing classifier")
+        classifier, classifier_size = (
+            load_classifier(args.classifier, device) if args.routing == "classifier" else (None, None)
+        )
         branches = {
             name: load_dehazer(path, device)[0]
             for name, path in zip(
@@ -156,7 +162,11 @@ def main() -> None:
         chosen = None
         with gpu_lock, torch.no_grad():
             if args.mode == "routed":
-                chosen = CLASS_ORDER[classify(classifier, hazy, device, size=classifier_size)]
+                chosen = (
+                    CLASS_ORDER[beta_class(pair.beta)]
+                    if args.routing == "oracle"
+                    else CLASS_ORDER[classify(classifier, hazy, device, size=classifier_size)]
+                )
                 output, _ = branches[chosen](tensor)
             else:
                 output, _ = model(tensor)
@@ -223,6 +233,7 @@ def main() -> None:
         "comparison": ["clear_reference", "hazy", "dehazed"],
         "metrics": ["PSNR", "SSIM"],
         "summary": summary,
+        "routing": args.routing if args.mode == "routed" else None,
         "routing_counts": routing_counts if args.mode == "routed" else None,
         "checkpoints": {
             "model": None if args.checkpoint is None else str(args.checkpoint),
