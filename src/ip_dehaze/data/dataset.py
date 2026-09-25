@@ -98,6 +98,12 @@ class CachedCrops(Dataset):
         }
 
 
+def _resize(array: np.ndarray, size: tuple[int, int]) -> np.ndarray:
+    """Downscale to (width, height) — fog density is a global property."""
+    image = Image.fromarray((array * 255).round().astype(np.uint8))
+    return np.asarray(image.resize(size, Image.BILINEAR), dtype=np.float32) / 255.0
+
+
 def load_rgb(path) -> np.ndarray:
     with Image.open(path) as image:
         return np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
@@ -116,6 +122,7 @@ class FoggyPairs(Dataset):
         clear_root: str,
         split: str,
         crop: int | None = 256,
+        resize: tuple[int, int] | None = None,
         beta_filter: float | str | None = None,
         refined_manifest: str | None = None,
         hflip: bool = True,
@@ -134,6 +141,7 @@ class FoggyPairs(Dataset):
         if not self.pairs:
             raise ValueError("No pairs selected; check split/beta_filter/stride")
         self.crop = crop
+        self.resize = resize
         self.hflip = hflip
         self.seed = seed
         self.epoch = 0
@@ -150,6 +158,10 @@ class FoggyPairs(Dataset):
         clear = load_rgb(pair.clear_path)
         if hazy.shape != clear.shape:
             raise ValueError(f"Size mismatch for {pair.foggy_path}")
+
+        if self.resize is not None:
+            hazy = _resize(hazy, self.resize)
+            clear = _resize(clear, self.resize)
 
         if self.crop is not None:
             # Integer seed: random.seed rejects tuples on Python 3.11+.

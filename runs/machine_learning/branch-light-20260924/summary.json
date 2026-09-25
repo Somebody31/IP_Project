@@ -1,0 +1,64 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_unet.py --run-id branch-light-20260924 --model blind --size light --beta-class light --epochs 50 --batch 16 --workers 6 --val-scenes-per-beta 10",
+  "method": "Blind U-Net (light branch)",
+  "config": {
+    "run_id": "branch-light-20260924",
+    "model": "blind",
+    "beta_class": "light",
+    "size": "light",
+    "epochs": 50,
+    "batch": 16,
+    "crop": 256,
+    "lr": 0.0002,
+    "ssim_weight": 0.2,
+    "workers": 6,
+    "val_scenes_per_beta": 10,
+    "val_every": 5,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "/home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train",
+    "amp": false,
+    "resume": false
+  },
+  "train_pairs": 2975,
+  "n_parameters": 1085787,
+  "best": {
+    "epoch": 49,
+    "val": {
+      "psnr": 26.25576380699902,
+      "ssim": 0.9480592926343282,
+      "n_images": 30,
+      "by_beta": {
+        "heavy": {
+          "psnr": 22.93536010688215,
+          "ssim": 0.9173353135585784,
+          "n_images": 10
+        },
+        "light": {
+          "psnr": 28.818587961148484,
+          "ssim": 0.9706369817256928,
+          "n_images": 10
+        },
+        "medium": {
+          "psnr": 27.013343352966427,
+          "ssim": 0.9562055826187134,
+          "n_images": 10
+        }
+      }
+    }
+  },
+  "config_sha256": "0425e0177d41fb30e7898c61ab2ad2ec7768888de8943a420d12ee8317b0af8a",
+  "source_revision": "03622f56a3e6242b5dc157cc19447ab043450112",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/branch-light-20260924/best.pt",
+  "started_at": "2026-09-25T02:07:33",
+  "completed_at": "2026-09-25T03:00:08"
+}

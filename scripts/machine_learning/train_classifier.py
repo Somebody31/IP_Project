@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ip_dehaze.data.dataset import BETA_CLASSES, CachedCrops, FoggyPairs  # noqa: E402
+from ip_dehaze.data.dataset import BETA_CLASSES, FoggyPairs  # noqa: E402
 from ip_dehaze.evaluation.provenance import environment, git_revision, sha256  # noqa: E402
 from ip_dehaze.machine_learning.models.classifier import DensityClassifier  # noqa: E402
 
@@ -34,14 +34,14 @@ def main() -> None:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--batch", type=int, default=32)
-    parser.add_argument("--crop", type=int, default=256)
+    parser.add_argument("--crop", type=int, default=0, help="0 = train on the whole downscaled image")
+    parser.add_argument("--resize", default="512x256", help="WxH whole-image downscale (global fog statistics)")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--val-per-beta", type=int, default=50, help="val crops per density class")
     parser.add_argument("--seed", type=int, default=1729)
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--cache-dir", type=Path, default=ROOT / "data/derived/crops/train")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -52,23 +52,25 @@ def main() -> None:
     if device.type == "cpu":
         torch.set_num_threads(4)  # leave cores for any concurrent training job
 
-    if args.cache_dir and Path(args.cache_dir).is_dir():
-        train_set = CachedCrops(args.cache_dir, split="train", seed=args.seed)
-        if args.limit:
-            train_set.pair_indices = train_set.pair_indices[: args.limit]
-        print(f"using crop cache {Path(args.cache_dir).relative_to(ROOT)}", flush=True)
-    else:
-        train_set = FoggyPairs(
-            "data/foggy_cityscapes", "data/cityscapes_clear", "train", crop=args.crop, seed=args.seed
-        )
-        if args.limit:
-            train_set.pairs = train_set.pairs[: args.limit]
+    width, height = (int(value) for value in args.resize.lower().split("x"))
+    train_set = FoggyPairs(
+        "data/foggy_cityscapes",
+        "data/cityscapes_clear",
+        "train",
+        crop=args.crop or None,
+        resize=(width, height),
+        seed=args.seed,
+    )
+    if args.limit:
+        train_set.pairs = train_set.pairs[: args.limit]
+    print(f"input: whole image downscaled to {width}x{height}", flush=True)
     val_sets = [
         FoggyPairs(
             "data/foggy_cityscapes",
             "data/cityscapes_clear",
             "val",
-            crop=args.crop,
+            crop=None,
+            resize=(width, height),
             beta_filter=name,
             stride=max(1, 500 // args.val_per_beta),
             seed=args.seed,

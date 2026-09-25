@@ -1,0 +1,40 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_classifier.py --run-id density-classifier-20260924 --epochs 12 --batch 32 --workers 6",
+  "method": "3-class haze-density classifier (router front end)",
+  "config": {
+    "run_id": "density-classifier-20260924",
+    "epochs": 12,
+    "batch": 32,
+    "crop": 256,
+    "lr": 0.001,
+    "workers": 6,
+    "val_per_beta": 50,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "/home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train"
+  },
+  "train_pairs": 8925,
+  "best": {
+    "epoch": 6,
+    "val_accuracy": 0.5533333333333333
+  },
+  "class_names": [
+    "light",
+    "medium",
+    "heavy"
+  ],
+  "config_sha256": "bb82d63083a9ed21496e96ef77b7c89371d1046ad68d23c8c9111ff6637af881",
+  "source_revision": "03622f56a3e6242b5dc157cc19447ab043450112",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/density-classifier-20260924/best.pt",
+  "started_at": "2026-09-25T02:01:36",
+  "completed_at": "2026-09-25T02:07:23"
+}

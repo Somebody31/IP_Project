@@ -1,0 +1,64 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_unet.py --run-id branch-medium-20260924 --model blind --size medium --beta-class medium --epochs 50 --batch 16 --workers 6 --val-scenes-per-beta 10",
+  "method": "Blind U-Net (medium branch)",
+  "config": {
+    "run_id": "branch-medium-20260924",
+    "model": "blind",
+    "beta_class": "medium",
+    "size": "medium",
+    "epochs": 50,
+    "batch": 16,
+    "crop": 256,
+    "lr": 0.0002,
+    "ssim_weight": 0.2,
+    "workers": 6,
+    "val_scenes_per_beta": 10,
+    "val_every": 5,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "/home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train",
+    "amp": false,
+    "resume": false
+  },
+  "train_pairs": 2975,
+  "n_parameters": 7766051,
+  "best": {
+    "epoch": 49,
+    "val": {
+      "psnr": 28.106217478076925,
+      "ssim": 0.9637822826703389,
+      "n_images": 30,
+      "by_beta": {
+        "heavy": {
+          "psnr": 25.77792266201893,
+          "ssim": 0.946680337190628,
+          "n_images": 10
+        },
+        "light": {
+          "psnr": 29.57961791707396,
+          "ssim": 0.9757127523422241,
+          "n_images": 10
+        },
+        "medium": {
+          "psnr": 28.961111855137894,
+          "ssim": 0.9689537584781647,
+          "n_images": 10
+        }
+      }
+    }
+  },
+  "config_sha256": "5382e2e305e3797cd93486d5a7913f6c2580ce8585ba5f54f1bc479c8934e4a9",
+  "source_revision": "03622f56a3e6242b5dc157cc19447ab043450112",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/branch-medium-20260924/best.pt",
+  "started_at": "2026-09-25T03:00:12",
+  "completed_at": "2026-09-25T03:58:03"
+}

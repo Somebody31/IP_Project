@@ -1,0 +1,11 @@
+batch: 32
+cache_dir: /home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train
+crop: 256
+device: auto
+epochs: 12
+limit: 0
+lr: 0.001
+run_id: density-classifier-20260924
+seed: 1729
+val_per_beta: 50
+workers: 6
