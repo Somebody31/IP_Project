@@ -173,11 +173,13 @@ paper's HDEN classifies whole images. The routed system's routing accuracy
 is reported alongside its PSNR/SSIM, since it bounds what routing can
 achieve.
 
-**Full-val results (2026-09-24, 1,500 images / 500 scenes, same shared eval path):**
+**Full-val results (2026-09-24, all 1,500 val images / 500 scenes, same shared
+eval path — the DCP full-split run P2.1 is complete, so every row below is the
+same sample):**
 
 | Method | hazy | dehazed | ΔPSNR (CI95) | ΔSSIM (CI95) |
 |---|---|---|---|---|
-| DCP (refined subset) | 15.14 | 16.39 | +1.25 [0.79, 1.68] | −0.138 [−0.150, −0.126] |
+| DCP | 14.65 | 15.79 | +1.14 [0.92, 1.33] | −0.1212 [−0.1264, −0.1159] |
 | **Blind U-Net** | 14.65 | **29.46** | **+14.81** [14.53, 15.08] | **+0.1414** [0.1380, 0.1446] |
 | Routed, oracle routing | 14.65 | 27.19 | +12.54 [12.24, 12.81] | +0.1288 [0.1256, 0.1319] |
 | Routed, learned routing | 14.65 | 26.42 | +11.77 [11.48, 12.03] | +0.1233 [0.1198, 0.1264] |

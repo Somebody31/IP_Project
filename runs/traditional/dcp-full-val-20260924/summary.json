@@ -1,0 +1,184 @@
+{
+  "status": "completed",
+  "command": "scripts/traditional/benchmark_dcp.py --run-id dcp-full-val-20260924",
+  "method": "Dark Channel Prior",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "manifest": null,
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dcp"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dcp_psnr": 15.78718479820989,
+      "dcp_ssim": 0.703745507756869,
+      "dcp_minus_hazy_psnr": {
+        "mean": 1.1358965048322447,
+        "ci95": [
+          0.9205535511976369,
+          1.3307163384159952
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dcp_minus_hazy_ssim": {
+        "mean": -0.12122295546531678,
+        "ci95": [
+          -0.12642473377088703,
+          -0.11585344374378523
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dcp_psnr": 15.774776238600833,
+        "dcp_ssim": 0.6887836005687714,
+        "dcp_minus_hazy_psnr": {
+          "mean": -2.7903528610808155,
+          "ci95": [
+            -3.0441461771524887,
+            -2.5635571761574854
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dcp_minus_hazy_ssim": {
+          "mean": -0.21856132817268373,
+          "ci95": [
+            -0.2234949045151472,
+            -0.21337469301223755
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dcp_psnr": 15.933236549997403,
+        "dcp_ssim": 0.7067175302505493,
+        "dcp_minus_hazy_psnr": {
+          "mean": 1.46815580950034,
+          "ci95": [
+            1.244431975063408,
+            1.6731958082564757
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dcp_minus_hazy_ssim": {
+          "mean": -0.12693925678730011,
+          "ci95": [
+            -0.13234620819687842,
+            -0.12141358525454998
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dcp_psnr": 15.653541606031435,
+        "dcp_ssim": 0.7157353924512864,
+        "dcp_minus_hazy_psnr": {
+          "mean": 4.72988656607721,
+          "ci95": [
+            4.530382984959617,
+            4.9206035241522645
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dcp_minus_hazy_ssim": {
+          "mean": -0.01816828143596649,
+          "ci95": [
+            -0.024061335989832875,
+            -0.012387882986664777
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "parameters": {
+    "name": "dark_channel_prior",
+    "patch_size": 15,
+    "omega": 0.95,
+    "atmospheric_top_fraction": 0.001,
+    "guided_radius": 20,
+    "guided_epsilon": 0.001,
+    "transmission_floor": 0.1
+  },
+  "dataset_roots": {
+    "foggy": "/home/sathwik/Dev/Projects/IP_Project/data/foggy_cityscapes",
+    "clear": "/home/sathwik/Dev/Projects/IP_Project/data/cityscapes_clear"
+  },
+  "config_sha256": "149d5eee4b3fd36378dc18e4359ec6e9c71251cbea1fa2118c751dd44723ce02",
+  "source_revision": "3b992a37d205d5c04cc0573eef7edd7421647cc9",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-09-25T07:31:59",
+  "completed_at": "2026-09-25T07:58:21"
+}
