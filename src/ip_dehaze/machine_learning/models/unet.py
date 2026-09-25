@@ -45,7 +45,7 @@ class ConvBlock(nn.Module):
 class UNet(nn.Module):
     def __init__(self, in_ch: int = 3, base: int = 32, depth: int = 4, gated: bool = False,
                  frozen_gate: bool = False, gate_init: float | None = None,
-                 gate_spatial: bool = False) -> None:
+                 gate_spatial: bool = False, gate_context: bool = False) -> None:
         super().__init__()
         if depth < 1:
             raise ValueError("depth must be at least 1")
@@ -81,10 +81,21 @@ class UNet(nn.Module):
             nn.Sequential(
                 nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(channels[-1] * 2, 1)
             )
-            if gated and not gate_spatial
+            if gated and not gate_spatial and not gate_context
             else None
         )
         self.spatial_head = nn.Conv2d(channels[0], 1, 1) if gated and gate_spatial else None
+        # gate_context: the gate reads a whole downscaled scene instead of the
+        # restoration path's field of view, so train and eval agree on scale.
+        self.context_stem = (
+            nn.Sequential(
+                nn.Conv2d(in_ch, 16, 3, padding=1), nn.ReLU(inplace=True), nn.MaxPool2d(2),
+                nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(inplace=True),
+                nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(32, 1),
+            )
+            if gated and gate_context
+            else None
+        )
         # gate_init: a default init puts the gate at d~0.4, so the very first
         # output is mostly the hazy image and the restoration head only sees a
         # d-scaled gradient. Starting at d->1 keeps the blend a no-op and leaves
@@ -93,14 +104,15 @@ class UNet(nn.Module):
             if not 0.0 < gate_init < 1.0:
                 raise ValueError("gate_init must be in (0, 1)")
             with torch.no_grad():
-                for head in (self.density_head, self.spatial_head):
+                for head in (self.density_head, self.spatial_head, self.context_stem):
                     if head is None:
                         continue
                     last = head[-1] if isinstance(head, nn.Sequential) else head
                     last.weight.zero_()
                     last.bias.fill_(math.log(gate_init / (1 - gate_init)))
 
-    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
+    def forward(self, x: torch.Tensor,
+                context: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor | None]:
         skips = []
         features = x
         for encoder in self.encoders:
@@ -113,6 +125,10 @@ class UNet(nn.Module):
             density = None
         elif self.frozen_gate:
             density = torch.ones(features.shape[0], 1, device=features.device, dtype=features.dtype)
+        elif self.context_stem is not None:
+            if context is None:
+                raise ValueError("this model gates on a whole-image context; pass context=")
+            density = torch.sigmoid(self.context_stem(context))
         elif self.spatial_head is not None:
             density = None  # per-pixel gate is computed after the decoder, at input resolution
         else:
@@ -135,6 +151,7 @@ class UNet(nn.Module):
 
 
 def build_unet(size: str = "medium", gated: bool = False, frozen_gate: bool = False,
-               gate_init: float | None = None, gate_spatial: bool = False) -> UNet:
+               gate_init: float | None = None, gate_spatial: bool = False,
+               gate_context: bool = False) -> UNet:
     return UNet(gated=gated, frozen_gate=frozen_gate, gate_init=gate_init,
-                gate_spatial=gate_spatial, **SIZE_PRESETS[size])
+                gate_spatial=gate_spatial, gate_context=gate_context, **SIZE_PRESETS[size])

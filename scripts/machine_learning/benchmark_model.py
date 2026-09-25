@@ -26,7 +26,14 @@ import torch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ip_dehaze.data.dataset import BETA_CLASSES, FoggyPairs, _resize, beta_class, load_rgb  # noqa: E402
+from ip_dehaze.data.dataset import (  # noqa: E402
+    BETA_CLASSES,
+    CONTEXT_SIZE,
+    FoggyPairs,
+    _resize,
+    beta_class,
+    load_rgb,
+)
 from ip_dehaze.evaluation.metrics import metrics as image_metrics  # noqa: E402
 from ip_dehaze.evaluation.pair_benchmark import summarize  # noqa: E402
 from ip_dehaze.evaluation.provenance import environment, git_revision, sha256  # noqa: E402
@@ -45,6 +52,7 @@ def load_dehazer(path: Path, device: torch.device) -> tuple[torch.nn.Module, dic
         frozen_gate=bool(args.get("frozen_gate")),
         gate_init=args.get("gate_init"),
         gate_spatial=bool(args.get("gate_spatial")),
+        gate_context=bool(args.get("gate_context")),
     ).to(device)
     model.load_state_dict(state["model"])
     model.eval()
@@ -175,7 +183,13 @@ def main() -> None:
                 )
                 output, _ = branches[chosen](tensor)
             else:
-                output, _ = model(tensor)
+                context = None
+                if model.context_stem is not None:
+                    whole = _resize(hazy, CONTEXT_SIZE)
+                    context = torch.from_numpy(
+                        np.ascontiguousarray(whole.transpose(2, 0, 1))
+                    )[None].to(device)
+                output, _ = model(tensor, context)
         output = output.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
         hazy_scores = image_metrics(hazy, clear)
         model_scores = image_metrics(output, clear)

@@ -153,6 +153,19 @@ def test_gate_spatial_returns_per_pixel_density_map():
     assert float(density.min()) >= 0.0 and float(density.max()) <= 1.0
 
 
+def test_gate_context_reads_the_whole_scene_and_requires_it():
+    """Context gate: scalar d from the whole scene, and no silent crop fallback."""
+    images = torch.rand(2, 3, 64, 64)
+    context = torch.rand(2, 3, 64, 128)
+    model = build_unet("tiny", gated=True, gate_context=True, gate_init=0.95)
+    with pytest.raises(ValueError, match="context"):
+        model(images)
+    output, density = model(images, context)
+    assert output.shape == images.shape
+    assert density.shape == (2, 1)
+    assert torch.allclose(density, torch.full_like(density, 0.95), atol=1e-4)
+
+
 def test_gate_options_default_off_preserve_scalar_gate_contract():
     """Default flags must keep the original single-scalar gate and blend contract."""
     images = torch.rand(2, 3, 64, 64)

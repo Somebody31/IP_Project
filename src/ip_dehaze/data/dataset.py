@@ -19,6 +19,9 @@ from ip_dehaze.traditional.pairing import index_pairs
 
 BETAS = (0.005, 0.01, 0.02)
 BETA_CLASSES = {"light": 0.005, "medium": 0.01, "heavy": 0.02}
+# Whole-scene size used by the gated model's context branch (width, height) —
+# keep the training cache and every evaluation path on this single value.
+CONTEXT_SIZE = (512, 256)
 
 
 def beta_class(beta: float) -> int:
@@ -112,6 +115,54 @@ class CachedCrops(Dataset):
             "density_class": torch.tensor(int(meta["density_class"]), dtype=torch.long),
             "scene_id": f"{meta['split']}/{meta['city']}/{meta['image_id']}",
         }
+
+
+class CachedCropsWithContext(CachedCrops):
+    """Crop cache for restoration plus a whole-image context for the gate.
+
+    A 256 crop carries a different field of view than the full scene, so a
+    crop-trained gate reads a different density than the same scene at full
+    resolution (measured: pooled d 0.80-0.88 on crops vs 0.72 full-image).
+    `context_dir` is a resize cache built over the same split
+    (`build_crop_cache.py --split train --resize 512x256 --out-name resize-512x256`)
+    whose rows line up pair-for-pair with the crop cache.
+    """
+
+    def __init__(
+        self,
+        cache_dir: str,
+        context_dir: str,
+        split: str = "train",
+        beta_filter: float | str | None = None,
+        hflip: bool = True,
+        seed: int = 1729,
+    ) -> None:
+        import json
+
+        super().__init__(cache_dir, split=split, beta_filter=beta_filter, hflip=hflip, seed=seed)
+        self.context_dir = Path(context_dir)
+        manifest_path = self.context_dir / "manifest.json"
+        if not manifest_path.is_file():
+            raise FileNotFoundError(
+                f"{context_dir} has no manifest.json — build the whole-image context cache with "
+                "scripts/machine_learning/build_crop_cache.py --resize 512x256 --out-name resize-512x256"
+            )
+        manifest = json.loads(manifest_path.read_text())
+        if not manifest.get("complete"):
+            raise ValueError(f"{context_dir} is marked incomplete; rebuild it")
+        self.context = np.load(self.context_dir / "hazy.npy", mmap_mode="r")
+        n_pairs = len(self.rows) // self.crops_per_pair
+        if self.context.shape[0] != n_pairs:
+            raise ValueError(
+                f"context cache has {self.context.shape[0]} rows but the crop cache holds "
+                f"{n_pairs} pairs — the two caches are not aligned"
+            )
+
+    def __getitem__(self, index: int) -> dict:
+        sample = super().__getitem__(index)
+        row = np.array(self.context[self.pair_indices[index]]).astype(np.float32) / 255.0
+        sample["context"] = torch.from_numpy(np.ascontiguousarray(row.transpose(2, 0, 1)))
+        return sample
 
 
 def _resize(array: np.ndarray, size: tuple[int, int]) -> np.ndarray:

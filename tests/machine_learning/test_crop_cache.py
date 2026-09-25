@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import torch
 
-from ip_dehaze.data.dataset import CachedCrops
+from ip_dehaze.data.dataset import CachedCrops, CachedCropsWithContext
 
 
 def build_cache(root, pairs=(("aachen_000001_000002", 0.005), ("aachen_000003_000004", 0.02)), crops_per_pair=2):
@@ -84,3 +84,34 @@ def test_incomplete_cache_is_refused(tmp_path):
     (tmp_path / "manifest.json").unlink()
     with pytest.raises(FileNotFoundError, match="manifest.json"):
         CachedCrops(tmp_path, split="train")
+
+
+def build_context_cache(root, pairs=2, size=(64, 128)):
+    """Whole-image context cache: one row per pair, aligned with build_cache."""
+    root.mkdir(parents=True, exist_ok=True)
+    rows = [np.arange(size[0] * size[1] * 3, dtype=np.uint8).reshape(*size, 3) + pair for pair in range(pairs)]
+    np.save(root / "hazy.npy", np.stack(rows))
+    (root / "manifest.json").write_text(json.dumps({"crops_per_pair": 1, "rows": pairs, "complete": True}))
+
+
+def test_context_dataset_pairs_each_crop_with_its_whole_image(tmp_path):
+    build_cache(tmp_path / "crops", crops_per_pair=2)
+    build_context_cache(tmp_path / "context", pairs=2)
+    dataset = CachedCropsWithContext(tmp_path / "crops", tmp_path / "context", split="train")
+    assert len(dataset) == 2
+    sample = dataset[0]
+    assert sample["context"].shape == (3, 64, 128)
+    assert sample["context"].dtype == torch.float32
+    # pair 0's context must be distinct from pair 1's (alignment, not repetition)
+    assert not torch.equal(sample["context"], dataset[1]["context"])
+
+
+def test_context_dataset_refuses_misaligned_or_incomplete_cache(tmp_path):
+    build_cache(tmp_path / "crops", crops_per_pair=2)
+    build_context_cache(tmp_path / "context", pairs=3)
+    with pytest.raises(ValueError, match="not aligned"):
+        CachedCropsWithContext(tmp_path / "crops", tmp_path / "context", split="train")
+    build_context_cache(tmp_path / "context2", pairs=2)
+    (tmp_path / "context2" / "manifest.json").unlink()
+    with pytest.raises(FileNotFoundError, match="manifest.json"):
+        CachedCropsWithContext(tmp_path / "crops", tmp_path / "context2", split="train")

@@ -28,7 +28,14 @@ from torch.utils.data import DataLoader
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ip_dehaze.data.dataset import BETA_CLASSES, CachedCrops, FoggyPairs  # noqa: E402
+from ip_dehaze.data.dataset import (  # noqa: E402
+    BETA_CLASSES,
+    CONTEXT_SIZE,
+    CachedCrops,
+    CachedCropsWithContext,
+    FoggyPairs,
+    _resize,
+)
 from ip_dehaze.evaluation.metrics import metrics as image_metrics  # noqa: E402
 from ip_dehaze.evaluation.provenance import environment, git_revision, sha256  # noqa: E402
 from ip_dehaze.machine_learning.losses import reconstruction_loss  # noqa: E402
@@ -66,7 +73,11 @@ def evaluate(model: torch.nn.Module, val_sets: list[FoggyPairs], device: torch.d
             sample = val_set[index]
             hazy = sample["hazy"][None].to(device)
             clear = sample["clear"][None].to(device)
-            output, density = model(hazy)
+            context = None
+            if model.context_stem is not None:
+                whole = _resize(sample["hazy"].permute(1, 2, 0).numpy(), CONTEXT_SIZE)
+                context = torch.from_numpy(np.ascontiguousarray(whole.transpose(2, 0, 1)))[None].to(device)
+            output, density = model(hazy, context)
             output = output.clamp(0, 1)
             scores = image_metrics(
                 output[0].permute(1, 2, 0).cpu().numpy(), clear[0].permute(1, 2, 0).cpu().numpy()
@@ -108,6 +119,10 @@ def main() -> None:
                         help="gate starting value in (0,1); d~1 keeps the blend a no-op at init")
     parser.add_argument("--gate-spatial", action="store_true",
                         help="per-pixel gate instead of one scalar per image")
+    parser.add_argument("--gate-context", action="store_true",
+                        help="gate reads a whole downscaled scene (needs --context-dir)")
+    parser.add_argument("--context-dir", type=Path, default=None,
+                        help="whole-image resize cache aligned with --cache-dir")
     parser.add_argument("--beta-class", choices=list(BETA_CLASSES), help="restrict to one density class (branch)")
     parser.add_argument("--size", default="medium", help="U-Net capacity preset")
     parser.add_argument("--epochs", type=int, default=50)
@@ -136,12 +151,25 @@ def main() -> None:
     if device.type == "cpu":
         torch.set_num_threads(4)  # leave cores for any concurrent training job
 
+    if args.gate_spatial and args.gate_context:
+        raise SystemExit("--gate-spatial and --gate-context are mutually exclusive")
+    if args.gate_context and args.context_dir is None:
+        raise SystemExit("--gate-context requires --context-dir (a whole-image resize cache)")
     if args.cache_dir and Path(args.cache_dir).is_dir():
-        train_set = CachedCrops(args.cache_dir, split="train", beta_filter=args.beta_class, seed=args.seed)
+        if args.gate_context:
+            train_set = CachedCropsWithContext(
+                args.cache_dir, args.context_dir, split="train",
+                beta_filter=args.beta_class, seed=args.seed,
+            )
+            print(f"using whole-image context {args.context_dir}", flush=True)
+        else:
+            train_set = CachedCrops(args.cache_dir, split="train", beta_filter=args.beta_class, seed=args.seed)
         if args.limit:
             train_set.pair_indices = train_set.pair_indices[: args.limit]
-        print(f"using crop cache {Path(args.cache_dir).relative_to(ROOT)}", flush=True)
+        print(f"using crop cache {args.cache_dir}", flush=True)
     else:
+        if args.gate_context:
+            raise SystemExit("--gate-context needs the crop cache (--cache-dir); the PNG path has no context")
         train_set = FoggyPairs(
             "data/foggy_cityscapes",
             "data/cityscapes_clear",
@@ -167,6 +195,7 @@ def main() -> None:
     model = build_unet(
         args.size, gated=args.model == "gated", frozen_gate=args.frozen_gate,
         gate_init=args.gate_init, gate_spatial=args.gate_spatial,
+        gate_context=args.gate_context,
     ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
@@ -217,9 +246,10 @@ def main() -> None:
         for batch in loader:
             hazy = batch["hazy"].to(device, non_blocking=True)
             clear = batch["clear"].to(device, non_blocking=True)
+            context = batch["context"].to(device, non_blocking=True) if "context" in batch else None
             optimizer.zero_grad(set_to_none=True)
             with torch.amp.autocast("cuda", enabled=use_amp):
-                output, _ = model(hazy)
+                output, _ = model(hazy, context)
                 loss = reconstruction_loss(output, clear, args.ssim_weight)
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
