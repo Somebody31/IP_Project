@@ -61,7 +61,7 @@ def main() -> None:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--batch", type=int, default=32)
-    parser.add_argument("--crop", type=int, default=0, help="0 = train on the whole downscaled image")
+    parser.add_argument("--crop", type=int, default=256, help="crop size for crop mode (ignored with --resize)")
     parser.add_argument("--resize", default="", help="WxH whole-image downscale; empty = train on cached crops")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--workers", type=int, default=6)
@@ -76,6 +76,8 @@ def main() -> None:
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+    if not args.resize and args.crop < 32:
+        raise SystemExit("--crop must be at least 32 in crop mode (use --resize for whole-image mode)")
     device = torch.device(
         ("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device
     )
