@@ -135,13 +135,27 @@ traditional validation; final test evaluation; reports.
 
 **Recompute caches (2026-09-24):** the resize cache build initially ran
 without `--out-name` and overwrote `data/derived/crops/train` (the 256²
-dehazing crop cache) with 512×256 geometry — caught by inspecting the
-memmap shape, killed mid-write. `build_crop_cache.py` now refuses to
-overwrite an existing cache without `--force` and names resize caches
-`resize-<WxH>` by default. The 256² crop cache needs a rebuild
-(`--split train --crops-per-pair 4 --force`) before any further dehazing
-training; branches already trained are unaffected because their
-checkpoints and run records are complete.
+dehazing crop cache) with 512×256 geometry — caught from the memmap shape,
+killed mid-write. `build_crop_cache.py` now refuses to overwrite an
+existing cache without `--force`, names resize caches `resize-<WxH>`, and
+writes a `manifest.json` **last**; `CachedCrops` refuses a cache without
+it (an interrupted build previously looked complete because a stale
+`index.csv` survived — readers would have silently consumed unwritten
+crops).
+
+**Measured cache economics (2026-09-24):** this machine writes the crop
+cache at ~2–10 MB/s (14 GB ≈ 25–100 min) while PNG decoding runs ~110 MB/s.
+Since the cache saves roughly 50 min of training time but costs 25–100 min
+to build, **the crop cache is no longer rebuilt for the gated run** — that
+training reads PNGs on the fly with 12 workers instead. The builder stays
+for future use; the tradeoff is a deliberate decision, not an oversight.
+
+**Process lesson (2026-09-24):** cancelling a background job kills the
+shell, not its Python children. Two incidents followed (an orphaned cache
+builder writing to a deleted inode at 3 MB/s; an orphaned classifier
+writing into a live run directory). Long runs are launched as **services**,
+and stopping one means `pkill -f <script>` after the job cancel, verified
+with `pgrep -af <script>`.
 
 **First-chain results (2026-09-24, all five runs completed):** blind U-Net
 best val 31.41 dB / 0.9762 SSIM; branches light 26.26 / 0.9481, medium
