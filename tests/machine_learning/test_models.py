@@ -130,3 +130,33 @@ def test_dataset_beta_filter_selects_one_density_class(tmp_path):
     )
     assert len(dataset) == 1
     assert dataset[0]["density_class"].item() == 2
+
+
+def test_gate_init_places_gate_at_target_for_both_heads():
+    """gate_init=0.95 must give d=0.95 exactly at init, independent of the input."""
+    images = torch.rand(2, 3, 64, 64)
+    for gate_spatial in (False, True):
+        model = build_unet("tiny", gated=True, gate_init=0.95, gate_spatial=gate_spatial)
+        _, density = model(images)
+        assert torch.allclose(density, torch.full_like(density, 0.95), atol=1e-4)
+    with pytest.raises(ValueError):
+        build_unet("tiny", gated=True, gate_init=1.5)
+
+
+def test_gate_spatial_returns_per_pixel_density_map():
+    """The spatial gate blends per pixel and reports one d per pixel."""
+    images = torch.rand(2, 3, 64, 64)
+    model = build_unet("tiny", gated=True, gate_spatial=True)
+    output, density = model(images)
+    assert output.shape == images.shape
+    assert density.shape == (2, 1, 64, 64)
+    assert float(density.min()) >= 0.0 and float(density.max()) <= 1.0
+
+
+def test_gate_options_default_off_preserve_scalar_gate_contract():
+    """Default flags must keep the original single-scalar gate and blend contract."""
+    images = torch.rand(2, 3, 64, 64)
+    output, density = build_unet("tiny", gated=True)(images)
+    assert density.shape == (2, 1)
+    assert output.shape == images.shape
+    assert float(density.min()) >= 0.0 and float(density.max()) <= 1.0

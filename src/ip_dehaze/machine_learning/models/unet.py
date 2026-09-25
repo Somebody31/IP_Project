@@ -8,6 +8,8 @@ self-supervised function of the input — no density labels needed.
 
 from __future__ import annotations
 
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -42,7 +44,8 @@ class ConvBlock(nn.Module):
 
 class UNet(nn.Module):
     def __init__(self, in_ch: int = 3, base: int = 32, depth: int = 4, gated: bool = False,
-                 frozen_gate: bool = False) -> None:
+                 frozen_gate: bool = False, gate_init: float | None = None,
+                 gate_spatial: bool = False) -> None:
         super().__init__()
         if depth < 1:
             raise ValueError("depth must be at least 1")
@@ -71,13 +74,31 @@ class UNet(nn.Module):
         # output is the raw restoration. This is the d==1 ablation used to test
         # whether the learned gate itself earns any gain.
         self.frozen_gate = frozen_gate
+        # gate_spatial: one gate value per pixel (fog is spatially varying —
+        # `t(x)` in the scattering model) instead of a single scalar per image.
+        self.gate_spatial = gate_spatial
         self.density_head = (
             nn.Sequential(
                 nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(channels[-1] * 2, 1)
             )
-            if gated
+            if gated and not gate_spatial
             else None
         )
+        self.spatial_head = nn.Conv2d(channels[0], 1, 1) if gated and gate_spatial else None
+        # gate_init: a default init puts the gate at d~0.4, so the very first
+        # output is mostly the hazy image and the restoration head only sees a
+        # d-scaled gradient. Starting at d->1 keeps the blend a no-op and leaves
+        # the gate with nothing to learn but the deviations from full strength.
+        if gated and gate_init is not None:
+            if not 0.0 < gate_init < 1.0:
+                raise ValueError("gate_init must be in (0, 1)")
+            with torch.no_grad():
+                for head in (self.density_head, self.spatial_head):
+                    if head is None:
+                        continue
+                    last = head[-1] if isinstance(head, nn.Sequential) else head
+                    last.weight.zero_()
+                    last.bias.fill_(math.log(gate_init / (1 - gate_init)))
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
         skips = []
@@ -92,6 +113,8 @@ class UNet(nn.Module):
             density = None
         elif self.frozen_gate:
             density = torch.ones(features.shape[0], 1, device=features.device, dtype=features.dtype)
+        elif self.spatial_head is not None:
+            density = None  # per-pixel gate is computed after the decoder, at input resolution
         else:
             density = torch.sigmoid(self.density_head(features))
 
@@ -101,11 +124,17 @@ class UNet(nn.Module):
                 features = F.interpolate(features, size=skip.shape[-2:], mode="nearest")
             features = decoder(torch.cat([features, skip], dim=1))
 
+        if self.spatial_head is not None and not self.frozen_gate:
+            density = torch.sigmoid(self.spatial_head(features))
+
         output = torch.sigmoid(self.head(features))
         if density is None:
             return output, None
-        return density.view(-1, 1, 1, 1) * output + (1 - density.view(-1, 1, 1, 1)) * x, density
+        gate = density if density.dim() > 2 else density.view(-1, 1, 1, 1)
+        return gate * output + (1 - gate) * x, density
 
 
-def build_unet(size: str = "medium", gated: bool = False, frozen_gate: bool = False) -> UNet:
-    return UNet(gated=gated, frozen_gate=frozen_gate, **SIZE_PRESETS[size])
+def build_unet(size: str = "medium", gated: bool = False, frozen_gate: bool = False,
+               gate_init: float | None = None, gate_spatial: bool = False) -> UNet:
+    return UNet(gated=gated, frozen_gate=frozen_gate, gate_init=gate_init,
+                gate_spatial=gate_spatial, **SIZE_PRESETS[size])

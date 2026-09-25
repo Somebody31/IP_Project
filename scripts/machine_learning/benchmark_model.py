@@ -43,6 +43,8 @@ def load_dehazer(path: Path, device: torch.device) -> tuple[torch.nn.Module, dic
         args.get("size", "medium"),
         gated=args.get("model") == "gated",
         frozen_gate=bool(args.get("frozen_gate")),
+        gate_init=args.get("gate_init"),
+        gate_spatial=bool(args.get("gate_spatial")),
     ).to(device)
     model.load_state_dict(state["model"])
     model.eval()

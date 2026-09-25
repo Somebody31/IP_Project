@@ -104,6 +104,10 @@ def main() -> None:
     parser.add_argument("--model", choices=["blind", "gated"], default="blind")
     parser.add_argument("--frozen-gate", action="store_true",
                         help="gated architecture with the gate forced to d=1 (the d==1 ablation)")
+    parser.add_argument("--gate-init", type=float, default=None,
+                        help="gate starting value in (0,1); d~1 keeps the blend a no-op at init")
+    parser.add_argument("--gate-spatial", action="store_true",
+                        help="per-pixel gate instead of one scalar per image")
     parser.add_argument("--beta-class", choices=list(BETA_CLASSES), help="restrict to one density class (branch)")
     parser.add_argument("--size", default="medium", help="U-Net capacity preset")
     parser.add_argument("--epochs", type=int, default=50)
@@ -161,7 +165,8 @@ def main() -> None:
     )
 
     model = build_unet(
-        args.size, gated=args.model == "gated", frozen_gate=args.frozen_gate
+        args.size, gated=args.model == "gated", frozen_gate=args.frozen_gate,
+        gate_init=args.gate_init, gate_spatial=args.gate_spatial,
     ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
