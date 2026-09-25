@@ -16,6 +16,8 @@ import csv
 import datetime as dt
 import json
 import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -104,6 +106,8 @@ def main() -> None:
     parser.add_argument("--bootstrap-resamples", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=1729)
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
+    parser.add_argument("--workers", type=int, default=1,
+                        help="threads for load/forward/metric; the serial path is ~5x slower")
     args = parser.parse_args()
 
     if args.device == "auto":
@@ -141,44 +145,58 @@ def main() -> None:
     config_path.write_text("\n".join(f"{k}: {v}" for k, v in sorted(vars(args).items())) + "\n")
     started_at = dt.datetime.now().isoformat(timespec="seconds")
 
-    rows, routing_counts = [], {name: 0 for name in CLASS_ORDER}
-    for index, pair in enumerate(pairs, 1):
+    gpu_lock = threading.Lock()
+    progress = {"done": 0}
+    progress_lock = threading.Lock()
+
+    def score_pair(pair) -> dict:
         hazy = load_rgb(pair.foggy_path)
         clear = load_rgb(pair.clear_path)
         tensor = torch.from_numpy(np.ascontiguousarray(hazy.transpose(2, 0, 1)))[None].to(device)
         chosen = None
-        with torch.no_grad():
+        with gpu_lock, torch.no_grad():
             if args.mode == "routed":
                 chosen = CLASS_ORDER[classify(classifier, hazy, device, size=classifier_size)]
-                routing_counts[chosen] += 1
                 output, _ = branches[chosen](tensor)
             else:
                 output, _ = model(tensor)
         output = output.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
         hazy_scores = image_metrics(hazy, clear)
         model_scores = image_metrics(output, clear)
-        rows.append(
-            {
-                "split": pair.split,
-                "city": pair.city,
-                "image_id": pair.image_id,
-                "scene_id": f"{pair.split}/{pair.city}/{pair.image_id}",
-                "beta": pair.beta,
-                "foggy_path": str(pair.foggy_path.relative_to(ROOT)),
-                "clear_path": str(pair.clear_path.relative_to(ROOT)),
-                "clear_reference_psnr": None,
-                "clear_reference_ssim": 1.0,
-                "hazy_psnr": hazy_scores["psnr"],
-                "hazy_ssim": hazy_scores["ssim"],
-                "dehazed_psnr": model_scores["psnr"],
-                "dehazed_ssim": model_scores["ssim"],
-                "delta_psnr": model_scores["psnr"] - hazy_scores["psnr"],
-                "delta_ssim": model_scores["ssim"] - hazy_scores["ssim"],
-                "routed_class": chosen or "",
-            }
-        )
-        if index % 100 == 0 or index == len(pairs):
-            print(f"scored {index}/{len(pairs)}", flush=True)
+        with progress_lock:
+            progress["done"] += 1
+            if progress["done"] % 100 == 0 or progress["done"] == len(pairs):
+                print(f"scored {progress['done']}/{len(pairs)}", flush=True)
+        return {
+            "split": pair.split,
+            "city": pair.city,
+            "image_id": pair.image_id,
+            "scene_id": f"{pair.split}/{pair.city}/{pair.image_id}",
+            "beta": pair.beta,
+            "foggy_path": str(pair.foggy_path.relative_to(ROOT)),
+            "clear_path": str(pair.clear_path.relative_to(ROOT)),
+            "clear_reference_psnr": None,
+            "clear_reference_ssim": 1.0,
+            "hazy_psnr": hazy_scores["psnr"],
+            "hazy_ssim": hazy_scores["ssim"],
+            "dehazed_psnr": model_scores["psnr"],
+            "dehazed_ssim": model_scores["ssim"],
+            "delta_psnr": model_scores["psnr"] - hazy_scores["psnr"],
+            "delta_ssim": model_scores["ssim"] - hazy_scores["ssim"],
+            "routed_class": chosen or "",
+        }
+
+    if args.workers > 1:
+        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+            rows = list(pool.map(score_pair, pairs))
+    else:
+        rows = [score_pair(pair) for pair in pairs]
+    rows.sort(key=lambda row: (row["scene_id"], row["beta"]))
+
+    routing_counts = {name: 0 for name in CLASS_ORDER}
+    for row in rows:
+        if row["routed_class"]:
+            routing_counts[row["routed_class"]] += 1
 
     with (run_dir / "per_image.csv").open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
