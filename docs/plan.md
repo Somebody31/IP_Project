@@ -180,6 +180,13 @@ achieve.
 | DCP (refined subset) | 15.14 | 16.39 | +1.25 [0.79, 1.68] | −0.138 [−0.150, −0.126] |
 | **Blind U-Net** | 14.65 | **29.46** | **+14.81** [14.53, 15.08] | **+0.1414** [0.1380, 0.1446] |
 | Routed, oracle routing | 14.65 | 27.19 | +12.54 [12.24, 12.81] | +0.1288 [0.1256, 0.1319] |
+| Routed, learned routing | 14.65 | 26.42 | +11.77 [11.48, 12.03] | +0.1233 [0.1198, 0.1264] |
+
+The learned router reaches **59.7% routing accuracy** (895/1500), confusing
+medium with light (324/500) as its dominant error — consistent with the
+measured difficulty of the density-classification task (crop-based training
+never learned; whole-image training overfits scene identity: train 0.74 /
+val 0.48 after one epoch).
 
 **Density routing underperforms a single model.** With *perfect* routing, the
 three specialized branches reach 27.19 dB versus 29.46 dB for one model
