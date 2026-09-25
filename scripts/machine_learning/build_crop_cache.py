@@ -22,16 +22,22 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ip_dehaze.data.dataset import beta_class, class_name, load_rgb  # noqa: E402
+from ip_dehaze.data.dataset import _resize, beta_class, class_name, load_rgb  # noqa: E402
 from ip_dehaze.traditional.pairing import index_pairs  # noqa: E402
 
 CACHE_ROOT = ROOT / "data" / "derived" / "crops"
 
 
 def crop_one(args: tuple) -> tuple[np.ndarray, np.ndarray]:
-    foggy_path, clear_path, size, seed = args
+    foggy_path, clear_path, size, seed, resize = args
     hazy = load_rgb(foggy_path)
     clear = load_rgb(clear_path)
+    if resize is not None:
+        # whole image, downscaled: global statistics for density classification
+        return (
+            (_resize(hazy, resize) * 255).round().astype(np.uint8),
+            (_resize(clear, resize) * 255).round().astype(np.uint8),
+        )
     height, width = hazy.shape[:2]
     rng = random.Random(seed)
     top = rng.randrange(height - size + 1)
@@ -49,15 +55,23 @@ def main() -> None:
     parser.add_argument("--size", type=int, default=256)
     parser.add_argument("--seed", type=int, default=1729)
     parser.add_argument("--workers", type=int, default=10)
+    parser.add_argument("--resize", default="", help="WxH: store whole downscaled images instead of crops")
+    parser.add_argument("--out-name", default="", help="override output subdirectory (default: <split>)")
     args = parser.parse_args()
+
+    resize = None
+    if args.resize:
+        width, height = (int(value) for value in args.resize.lower().split("x"))
+        resize = (width, height)
+        args.crops_per_pair = 1  # one whole image per pair
 
     pairs = index_pairs(
         ROOT / "data/foggy_cityscapes", ROOT / "data/cityscapes_clear", args.split
     )
-    out_dir = CACHE_ROOT / args.split
+    out_dir = CACHE_ROOT / (args.out_name or args.split)
     out_dir.mkdir(parents=True, exist_ok=True)
     total = len(pairs) * args.crops_per_pair
-    shape = (total, args.size, args.size, 3)
+    shape = (total, resize[1], resize[0], 3) if resize else (total, args.size, args.size, 3)
     hazy_store = np.lib.format.open_memmap(out_dir / "hazy.npy", mode="w+", dtype=np.uint8, shape=shape)
     clear_store = np.lib.format.open_memmap(out_dir / "clear.npy", mode="w+", dtype=np.uint8, shape=shape)
     print(f"{len(pairs)} pairs x {args.crops_per_pair} crops = {total} crops, {shape}", flush=True)
@@ -68,6 +82,7 @@ def main() -> None:
             str(pair.clear_path),
             args.size,
             args.seed * 1_000_003 + pair_index * 100 + crop_index,
+            resize,
         )
         for pair_index, pair in enumerate(pairs)
         for crop_index in range(args.crops_per_pair)

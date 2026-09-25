@@ -133,7 +133,19 @@ traditional validation; final test evaluation; reports.
 
 ## Phase 3 — ML baseline (the main remaining work)
 
-**Implementation status (2026-09-24):** code built and gates passed. What
+**First-chain results (2026-09-24, all five runs completed):** blind U-Net
+best val 31.41 dB / 0.9762 SSIM; branches light 26.26 / 0.9481, medium
+28.11 / 0.9638, heavy 27.36 / 0.9646 (30-image balanced val selection).
+The first density classifier reached only **55% val accuracy**, traced to its
+validation protocol (arbitrary 256 crops, some pure sky/road carry no density
+signal) — centre crops of the same checkpoint score 83%. Because fog density
+is a *global* property and the paper's HDEN classifies whole images, the
+classifier was rebuilt to train on whole images downscaled to 512×256
+(`density-classifier-v2-20260924`). Routing accuracy is itself a reported
+number for the routed system, so it must be trustworthy before the routed
+evaluation is meaningful.
+
+
 exists now:
 `src/ip_dehaze/data/dataset.py` (FoggyPairs + memmap `CachedCrops`),
 `machine_learning/models/{unet,classifier}.py`,

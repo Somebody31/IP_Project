@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from ip_dehaze.data.dataset import BETA_CLASSES, FoggyPairs  # noqa: E402
+from ip_dehaze.data.dataset import BETA_CLASSES, CachedCrops, FoggyPairs  # noqa: E402
 from ip_dehaze.evaluation.provenance import environment, git_revision, sha256  # noqa: E402
 from ip_dehaze.machine_learning.models.classifier import DensityClassifier  # noqa: E402
 
@@ -53,17 +53,24 @@ def main() -> None:
         torch.set_num_threads(4)  # leave cores for any concurrent training job
 
     width, height = (int(value) for value in args.resize.lower().split("x"))
-    train_set = FoggyPairs(
-        "data/foggy_cityscapes",
-        "data/cityscapes_clear",
-        "train",
-        crop=args.crop or None,
-        resize=(width, height),
-        seed=args.seed,
-    )
-    if args.limit:
-        train_set.pairs = train_set.pairs[: args.limit]
-    print(f"input: whole image downscaled to {width}x{height}", flush=True)
+    cache_dir = ROOT / "data/derived" / "crops" / f"resize-{args.resize}"
+    if cache_dir.is_dir():
+        train_set = CachedCrops(cache_dir, split="train", seed=args.seed)
+        if args.limit:
+            train_set.pair_indices = train_set.pair_indices[: args.limit]
+        print(f"using whole-image cache {cache_dir.relative_to(ROOT)} ({width}x{height})", flush=True)
+    else:
+        train_set = FoggyPairs(
+            "data/foggy_cityscapes",
+            "data/cityscapes_clear",
+            "train",
+            crop=None,
+            resize=(width, height),
+            seed=args.seed,
+        )
+        if args.limit:
+            train_set.pairs = train_set.pairs[: args.limit]
+        print(f"input: whole image downscaled on the fly to {width}x{height}", flush=True)
     val_sets = [
         FoggyPairs(
             "data/foggy_cityscapes",
