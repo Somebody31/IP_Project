@@ -101,6 +101,7 @@ def main() -> None:
             crop=None if args.resize else args.crop,
             resize=(width, height) if args.resize else None,
             stride=args.stride,
+            hazy_only=True,
             seed=args.seed,
         )
         if args.limit:

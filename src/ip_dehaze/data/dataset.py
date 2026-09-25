@@ -48,6 +48,7 @@ class CachedCrops(Dataset):
         split: str = "train",
         beta_filter: float | str | None = None,
         hflip: bool = True,
+        hazy_only: bool = False,
         seed: int = 1729,
     ) -> None:
         import csv
@@ -141,6 +142,7 @@ class FoggyPairs(Dataset):
         beta_filter: float | str | None = None,
         refined_manifest: str | None = None,
         hflip: bool = True,
+        hazy_only: bool = False,
         seed: int = 1729,
         stride: int = 1,
         offset: int = 0,
@@ -158,6 +160,7 @@ class FoggyPairs(Dataset):
         self.crop = crop
         self.resize = resize
         self.hflip = hflip
+        self.hazy_only = hazy_only
         self.seed = seed
         self.epoch = 0
 
@@ -170,6 +173,26 @@ class FoggyPairs(Dataset):
     def __getitem__(self, index: int) -> dict:
         pair = self.pairs[index]
         hazy = load_rgb(pair.foggy_path)
+        if self.hazy_only:
+            # classification only needs the input image; skipping the clear
+            # decode halves loader cost
+            if self.crop is not None:
+                rng = random.Random(self.seed * 1_000_003 + self.epoch * 10_007 + index)
+                height, width = hazy.shape[:2]
+                top = rng.randrange(height - self.crop + 1)
+                left = rng.randrange(width - self.crop + 1)
+                hazy = hazy[top : top + self.crop, left : left + self.crop]
+                if self.hflip and rng.random() < 0.5:
+                    hazy = hazy[:, ::-1]
+            if self.resize is not None:
+                hazy = _resize(hazy, self.resize)
+            return {
+                "hazy": torch.from_numpy(np.ascontiguousarray(hazy.transpose(2, 0, 1))),
+                "clear": torch.zeros(3, 1, 1),
+                "beta": torch.tensor(pair.beta, dtype=torch.float32),
+                "density_class": torch.tensor(beta_class(pair.beta), dtype=torch.long),
+                "scene_id": f"{pair.split}/{pair.city}/{pair.image_id}",
+            }
         clear = load_rgb(pair.clear_path)
         if hazy.shape != clear.shape:
             raise ValueError(f"Size mismatch for {pair.foggy_path}")
