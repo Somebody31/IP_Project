@@ -179,6 +179,20 @@ achieve.
 |---|---|---|---|---|
 | DCP (refined subset) | 15.14 | 16.39 | +1.25 [0.79, 1.68] | −0.138 [−0.150, −0.126] |
 | **Blind U-Net** | 14.65 | **29.46** | **+14.81** [14.53, 15.08] | **+0.1414** [0.1380, 0.1446] |
+| Routed, oracle routing | 14.65 | 27.19 | +12.54 [12.24, 12.81] | +0.1288 [0.1256, 0.1319] |
+
+**Density routing underperforms a single model.** With *perfect* routing, the
+three specialized branches reach 27.19 dB versus 29.46 dB for one model
+trained on all pairs (−2.27 dB). Per-density comparison against the single
+model on the same class (10-image selection, noisy): light 28.82 vs 31.11,
+medium 28.96 vs 29.89, heavy 27.61 vs 27.38 — specialization only breaks even
+at the heaviest fog. The most likely cause is that each branch trains on only
+its 2,975-pair class subset (1/3 of the blind model's 8,925), i.e. the routing
+design pays a data-starvation cost that outweighs any specialization benefit
+at this scale. This is a genuine negative result for the paper's premise on
+Foggy Cityscapes, and the fairness caveat is inherent to the design (stated in
+the report).
+
 
 Blind U-Net per β: light +12.55 dB (18.57→31.11), medium +15.42
 (14.47→29.89), heavy +16.45 dB (10.92→27.38) — again largest gains under
