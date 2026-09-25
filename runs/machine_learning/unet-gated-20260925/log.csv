@@ -1,0 +1,2 @@
+epoch,train_loss,lr,seconds,val_psnr,val_ssim,d_mean,d_min,d_max
+0,0.11381576974714037,0.00019980267284282717,332.7,,,,,
