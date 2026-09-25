@@ -173,7 +173,20 @@ paper's HDEN classifies whole images. The routed system's routing accuracy
 is reported alongside its PSNR/SSIM, since it bounds what routing can
 achieve.
 
-**First-chain results (2026-09-24, all five runs completed):** blind U-Net
+**Full-val results (2026-09-24, 1,500 images / 500 scenes, same shared eval path):**
+
+| Method | hazy | dehazed | ΔPSNR (CI95) | ΔSSIM (CI95) |
+|---|---|---|---|---|
+| DCP (refined subset) | 15.14 | 16.39 | +1.25 [0.79, 1.68] | −0.138 [−0.150, −0.126] |
+| **Blind U-Net** | 14.65 | **29.46** | **+14.81** [14.53, 15.08] | **+0.1414** [0.1380, 0.1446] |
+
+Blind U-Net per β: light +12.55 dB (18.57→31.11), medium +15.42
+(14.47→29.89), heavy +16.45 dB (10.92→27.38) — again largest gains under
+heavy fog. A learned dehazer beats the classical prior by ~13 dB on the same
+data and eval code; the open question the routed system answers is whether
+*density-routed* processing improves on this plain model.
+
+**Trained-model val selection (30-image balanced subset):** blind U-Net
 best val 31.41 dB / 0.9762 SSIM; branches light 26.26 / 0.9481, medium
 28.11 / 0.9638, heavy 27.36 / 0.9646 (30-image balanced val selection).
 The first density classifier reached only **55% val accuracy**, traced to its

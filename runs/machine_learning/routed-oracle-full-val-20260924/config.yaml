@@ -1,0 +1,14 @@
+bootstrap_resamples: 2000
+branch_heavy: outputs/checkpoints/branch-heavy-20260924/best.pt
+branch_light: outputs/checkpoints/branch-light-20260924/best.pt
+branch_medium: outputs/checkpoints/branch-medium-20260924/best.pt
+checkpoint: None
+classifier: None
+device: cuda
+limit: 0
+mode: routed
+routing: oracle
+run_id: routed-oracle-full-val-20260924
+seed: 1729
+split: val
+workers: 5
