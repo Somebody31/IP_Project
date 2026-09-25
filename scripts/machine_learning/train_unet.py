@@ -102,6 +102,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Train a dehazing U-Net (blind, gated, or routed branch)")
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--model", choices=["blind", "gated"], default="blind")
+    parser.add_argument("--frozen-gate", action="store_true",
+                        help="gated architecture with the gate forced to d=1 (the d==1 ablation)")
     parser.add_argument("--beta-class", choices=list(BETA_CLASSES), help="restrict to one density class (branch)")
     parser.add_argument("--size", default="medium", help="U-Net capacity preset")
     parser.add_argument("--epochs", type=int, default=50)
@@ -158,7 +160,9 @@ def main() -> None:
         persistent_workers=args.workers > 0,
     )
 
-    model = build_unet(args.size, gated=args.model == "gated").to(device)
+    model = build_unet(
+        args.size, gated=args.model == "gated", frozen_gate=args.frozen_gate
+    ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     use_amp = args.amp and device.type == "cuda"
@@ -277,6 +281,7 @@ def main() -> None:
         "status": "completed",
         "command": " ".join(sys.argv),
         "method": {"blind": "Blind U-Net", "gated": "Density-gated U-Net"}[args.model]
+        + (" (gate frozen to d=1)" if args.frozen_gate else "")
         + (f" ({args.beta_class} branch)" if args.beta_class else ""),
         "config": {key: (str(value) if isinstance(value, Path) else value)
                    for key, value in vars(args).items()},

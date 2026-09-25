@@ -41,7 +41,8 @@ class ConvBlock(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, in_ch: int = 3, base: int = 32, depth: int = 4, gated: bool = False) -> None:
+    def __init__(self, in_ch: int = 3, base: int = 32, depth: int = 4, gated: bool = False,
+                 frozen_gate: bool = False) -> None:
         super().__init__()
         if depth < 1:
             raise ValueError("depth must be at least 1")
@@ -66,6 +67,10 @@ class UNet(nn.Module):
 
         self.head = nn.Conv2d(channels[0], 3, 1)
         self.gated = gated
+        # frozen_gate: keep the density head in place but force d=1, i.e. the
+        # output is the raw restoration. This is the d==1 ablation used to test
+        # whether the learned gate itself earns any gain.
+        self.frozen_gate = frozen_gate
         self.density_head = (
             nn.Sequential(
                 nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(channels[-1] * 2, 1)
@@ -83,7 +88,12 @@ class UNet(nn.Module):
             features = self.pool(features)
 
         features = self.bottleneck(features)
-        density = torch.sigmoid(self.density_head(features)) if self.gated else None
+        if not self.gated:
+            density = None
+        elif self.frozen_gate:
+            density = torch.ones(features.shape[0], 1, device=features.device, dtype=features.dtype)
+        else:
+            density = torch.sigmoid(self.density_head(features))
 
         for upconv, decoder, skip in zip(self.upconvs, self.decoders, reversed(skips)):
             features = upconv(features)
@@ -97,5 +107,5 @@ class UNet(nn.Module):
         return density.view(-1, 1, 1, 1) * output + (1 - density.view(-1, 1, 1, 1)) * x, density
 
 
-def build_unet(size: str = "medium", gated: bool = False) -> UNet:
-    return UNet(gated=gated, **SIZE_PRESETS[size])
+def build_unet(size: str = "medium", gated: bool = False, frozen_gate: bool = False) -> UNet:
+    return UNet(gated=gated, frozen_gate=frozen_gate, **SIZE_PRESETS[size])

@@ -39,7 +39,11 @@ CLASS_ORDER = ("light", "medium", "heavy")
 def load_dehazer(path: Path, device: torch.device) -> tuple[torch.nn.Module, dict]:
     state = torch.load(path, map_location=device, weights_only=False)
     args = state.get("args", {})
-    model = build_unet(args.get("size", "medium"), gated=args.get("model") == "gated").to(device)
+    model = build_unet(
+        args.get("size", "medium"),
+        gated=args.get("model") == "gated",
+        frozen_gate=bool(args.get("frozen_gate")),
+    ).to(device)
     model.load_state_dict(state["model"])
     model.eval()
     return model, args
