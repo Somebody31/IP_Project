@@ -1,0 +1,186 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id routed-learned-full-val-20260924 --mode routed --routing classifier --classifier outputs/checkpoints/density-classifier-20260924/best.pt --branch-light outputs/checkpoints/branch-light-20260924/best.pt --branch-medium outputs/checkpoints/branch-medium-20260924/best.pt --branch-heavy outputs/checkpoints/branch-heavy-20260924/best.pt --split val --device cuda --workers 5",
+  "method": "Paper-style routed system (classifier + 3 branches)",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dehazed_psnr": 26.419331400564687,
+      "dehazed_ssim": 0.9482346980969111,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 11.768043107187038,
+        "ci95": [
+          11.477274514751578,
+          12.034389536624063
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.12326623487472534,
+        "ci95": [
+          0.11980714039405187,
+          0.12641979274948437
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dehazed_psnr": 27.94559479144133,
+        "dehazed_ssim": 0.9638956903219223,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 9.38046569175968,
+          "ci95": [
+            9.106357802606365,
+            9.627951882718184
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.05655076158046722,
+          "ci95": [
+            0.054150411626696586,
+            0.05886626570522785
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dehazed_psnr": 26.155593716355032,
+        "dehazed_ssim": 0.9480750231742859,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 11.690512975857969,
+          "ci95": [
+            11.392478289948437,
+            11.966932403304886
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.11441823613643647,
+          "ci95": [
+            0.11094140495657921,
+            0.11788543678820133
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dehazed_psnr": 25.156805693897695,
+        "dehazed_ssim": 0.9327333807945252,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 14.233150653943472,
+          "ci95": [
+            13.874073597578402,
+            14.581458742090405
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.19882970690727234,
+          "ci95": [
+            0.19411666872501374,
+            0.20323096711933614
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": "classifier",
+  "routing_counts": {
+    "light": 837,
+    "medium": 194,
+    "heavy": 469
+  },
+  "checkpoints": {
+    "model": null,
+    "classifier": "outputs/checkpoints/density-classifier-20260924/best.pt",
+    "branches": {
+      "light": "outputs/checkpoints/branch-light-20260924/best.pt",
+      "medium": "outputs/checkpoints/branch-medium-20260924/best.pt",
+      "heavy": "outputs/checkpoints/branch-heavy-20260924/best.pt"
+    }
+  },
+  "config_sha256": "bf8ac31e9480b1333c0944202a7a61b0d97a7f1753fbdbe494f020bdb241878d",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "1a5f1a7b21ec487bdf996d679d978d110dc4ea5f",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-09-25T07:07:39",
+  "completed_at": "2026-09-25T07:27:24"
+}

@@ -3,7 +3,7 @@ dataset:
   clear_root: data/cityscapes_clear
   split: val
   refined_manifest: data/foggy_cityscapes/foggy_trainval_refined_filenames.txt
-  refined_only: true
+  refined_only: false
 
 workers: 12
 
