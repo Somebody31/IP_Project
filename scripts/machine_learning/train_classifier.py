@@ -67,6 +67,8 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--val-per-beta", type=int, default=50, help="val images per density class")
     parser.add_argument("--votes", type=int, default=5, help="crops voted per image at validation/inference")
+    parser.add_argument("--stride", type=int, default=1,
+                        help="sample every Nth training pair (spread over the split without a cache)")
     parser.add_argument("--seed", type=int, default=1729)
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
     parser.add_argument("--limit", type=int, default=0)
@@ -96,6 +98,7 @@ def main() -> None:
             "train",
             crop=None if args.resize else args.crop,
             resize=(width, height) if args.resize else None,
+            stride=args.stride,
             seed=args.seed,
         )
         if args.limit:
