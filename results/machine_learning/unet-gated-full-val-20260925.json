@@ -1,0 +1,178 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id unet-gated-full-val-20260925 --mode gated --checkpoint outputs/checkpoints/unet-gated-20260925/best.pt --split val --workers 4",
+  "method": "Density-gated U-Net",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dehazed_psnr": 24.393815758789668,
+      "dehazed_ssim": 0.9395098139444987,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 9.742527465412023,
+        "ci95": [
+          9.548104393219786,
+          9.932698503452347
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.11454135072231293,
+        "ci95": [
+          0.11194598113894463,
+          0.11697854113181433
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dehazed_psnr": 25.999911715398675,
+        "dehazed_ssim": 0.9621048458814621,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 7.434782615717024,
+          "ci95": [
+            7.270352937667594,
+            7.592316506682197
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.05475991714000702,
+          "ci95": [
+            0.052985704031586645,
+            0.056437099879980086
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dehazed_psnr": 24.309791236560997,
+        "dehazed_ssim": 0.9420951244831085,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 9.844710496063929,
+          "ci95": [
+            9.647964501866083,
+            10.03392592144609
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.10843833744525909,
+          "ci95": [
+            0.10574725837111473,
+            0.11097630647420882
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dehazed_psnr": 22.87174432440934,
+        "dehazed_ssim": 0.9143294714689255,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 11.948089284455115,
+          "ci95": [
+            11.698922507826152,
+            12.19480161146432
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.18042579758167268,
+          "ci95": [
+            0.1766621769964695,
+            0.1839761067301035
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": null,
+  "routing_counts": null,
+  "checkpoints": {
+    "model": "outputs/checkpoints/unet-gated-20260925/best.pt",
+    "classifier": null,
+    "branches": null
+  },
+  "config_sha256": "4fa1cace45f45e810b46738e967465c7721be8ca83a9159391cb8612f30d5616",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "a209542bf3b407e016f393555a0f0654f84c36bf",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-09-25T14:28:46",
+  "completed_at": "2026-09-25T15:02:05"
+}

@@ -1,0 +1,70 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_unet.py --run-id unet-gated-20260925 --model gated --size medium --epochs 50 --batch 16 --workers 3 --val-scenes-per-beta 10 --val-every 5 --resume",
+  "method": "Density-gated U-Net",
+  "config": {
+    "run_id": "unet-gated-20260925",
+    "model": "gated",
+    "frozen_gate": false,
+    "beta_class": null,
+    "size": "medium",
+    "epochs": 50,
+    "batch": 16,
+    "crop": 256,
+    "lr": 0.0002,
+    "ssim_weight": 0.2,
+    "workers": 3,
+    "val_scenes_per_beta": 10,
+    "val_every": 5,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "/home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train",
+    "amp": false,
+    "resume": true
+  },
+  "train_pairs": 8925,
+  "n_parameters": 7766564,
+  "best": {
+    "epoch": 24,
+    "val": {
+      "psnr": 25.23378999198112,
+      "ssim": 0.9494386812051138,
+      "n_images": 30,
+      "by_beta": {
+        "heavy": {
+          "psnr": 24.186357865825272,
+          "ssim": 0.9292685389518738,
+          "n_images": 10
+        },
+        "light": {
+          "psnr": 26.62641647955325,
+          "ssim": 0.968649959564209,
+          "n_images": 10
+        },
+        "medium": {
+          "psnr": 24.888595630564836,
+          "ssim": 0.9503975450992584,
+          "n_images": 10
+        }
+      },
+      "density": {
+        "mean": 0.5966245631376902,
+        "min": 0.44127070903778076,
+        "max": 0.7590204477310181
+      }
+    }
+  },
+  "config_sha256": "beefdd3c849e13f3dde1f7808b9827893ae6d51f98f71d19af4f682eb02d3cda",
+  "source_revision": "a209542bf3b407e016f393555a0f0654f84c36bf",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/unet-gated-20260925/best.pt",
+  "started_at": "2026-09-25T09:35:29",
+  "completed_at": "2026-09-25T11:58:20"
+}

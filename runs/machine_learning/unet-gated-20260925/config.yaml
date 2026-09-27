@@ -9,11 +9,11 @@ frozen_gate: False
 limit: 0
 lr: 0.0002
 model: gated
-resume: False
+resume: True
 run_id: unet-gated-20260925
 seed: 1729
 size: medium
 ssim_weight: 0.2
 val_every: 5
 val_scenes_per_beta: 10
-workers: 12
+workers: 3

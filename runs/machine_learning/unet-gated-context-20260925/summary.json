@@ -1,0 +1,74 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_unet.py --run-id unet-gated-context-20260925 --model gated --gate-context --cache-dir data/derived/crops/train --context-dir data/derived/crops/resize-512x256 --gate-init 0.95 --size medium --epochs 50 --batch 16 --workers 3 --val-scenes-per-beta 10 --val-every 5 --resume",
+  "method": "Density-gated U-Net",
+  "config": {
+    "run_id": "unet-gated-context-20260925",
+    "model": "gated",
+    "frozen_gate": false,
+    "gate_init": 0.95,
+    "gate_spatial": false,
+    "gate_context": true,
+    "context_dir": "data/derived/crops/resize-512x256",
+    "beta_class": null,
+    "size": "medium",
+    "epochs": 50,
+    "batch": 16,
+    "crop": 256,
+    "lr": 0.0002,
+    "ssim_weight": 0.2,
+    "workers": 3,
+    "val_scenes_per_beta": 10,
+    "val_every": 5,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "data/derived/crops/train",
+    "amp": false,
+    "resume": true
+  },
+  "train_pairs": 8925,
+  "n_parameters": 7771172,
+  "best": {
+    "epoch": 49,
+    "val": {
+      "psnr": 31.73749752277028,
+      "ssim": 0.9762077530225118,
+      "n_images": 30,
+      "by_beta": {
+        "heavy": {
+          "psnr": 29.910801541615978,
+          "ssim": 0.9654954075813293,
+          "n_images": 10
+        },
+        "light": {
+          "psnr": 33.30396881627818,
+          "ssim": 0.9842696964740754,
+          "n_images": 10
+        },
+        "medium": {
+          "psnr": 31.997722210416697,
+          "ssim": 0.9788581550121307,
+          "n_images": 10
+        }
+      },
+      "density": {
+        "mean": 0.8824022392431895,
+        "min": 0.8760109543800354,
+        "max": 0.8896840810775757
+      }
+    }
+  },
+  "config_sha256": "5a48b195ae4e2a2e268abe4a182a423a2ac8288bb487fca6d67f46308116cf01",
+  "source_revision": "a209542bf3b407e016f393555a0f0654f84c36bf",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/unet-gated-context-20260925/best.pt",
+  "started_at": "2026-09-27T08:46:58",
+  "completed_at": "2026-09-27T10:05:34"
+}

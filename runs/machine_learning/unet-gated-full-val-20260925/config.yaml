@@ -1,0 +1,14 @@
+bootstrap_resamples: 2000
+branch_heavy: None
+branch_light: None
+branch_medium: None
+checkpoint: outputs/checkpoints/unet-gated-20260925/best.pt
+classifier: None
+device: auto
+limit: 0
+mode: gated
+routing: classifier
+run_id: unet-gated-full-val-20260925
+seed: 1729
+split: val
+workers: 4

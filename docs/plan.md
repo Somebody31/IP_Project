@@ -1,6 +1,6 @@
 # Project plan — Dehazing: traditional vs. machine learning
 
-**Last updated:** 2026-09-24 · **Owner:** fill in · **Status legend:** ☐ todo · ◐ in progress · ✅ done
+**Last updated:** 2026-09-27 · **Owner:** fill in · **Status legend:** ☐ todo · ◐ in progress · ✅ done
 
 This is the single forward-looking checklist for the project. One row = one
 concrete, verifiable action. When a step finishes, tick it and add the run ID
@@ -183,6 +183,8 @@ same sample):**
 | **Blind U-Net** | 14.65 | **29.46** | **+14.81** [14.53, 15.08] | **+0.1414** [0.1380, 0.1446] |
 | Routed, oracle routing | 14.65 | 27.19 | +12.54 [12.24, 12.81] | +0.1288 [0.1256, 0.1319] |
 | Routed, learned routing | 14.65 | 26.42 | +11.77 [11.48, 12.03] | +0.1233 [0.1198, 0.1264] |
+| Gated U-Net, crop gate (as trained) | 14.65 | 24.39 | +9.74 [9.55, 9.93] | +0.1145 [0.1119, 0.1170] |
+| Gated U-Net, whole-scene gate (fixed) | 14.65 | 29.63 | +14.98 [14.70, 15.25] | +0.1411 [0.1384, 0.1439] |
 
 The learned router reaches **59.7% routing accuracy** (895/1500), confusing
 medium with light (324/500) as its dominant error — consistent with the
@@ -202,6 +204,34 @@ at this scale. This is a genuine negative result for the paper's premise on
 Foggy Cityscapes, and the fairness caveat is inherent to the design (stated in
 the report).
 
+
+**Method 2 (ours) — status 2026-09-27.** Density-gated U-Net: one backbone plus
+a scalar gate `d`, output `J = d·f(P) + (1−d)·P`, self-supervised (no density
+labels anywhere). Two variants, both on the same 1,500-image full val:
+
+- **Crop gate (as first trained): 24.39 dB** (+9.74 [+9.55, +9.93], ΔSSIM
+  +0.1145). The gate was trained on 256² crops but evaluated on whole images.
+  Measured cause: the same scene reads pooled `d` 0.718 full-image versus
+  0.80–0.88 on a 256² crop — the *ordering* is scale-invariant, the *level* is
+  not, so at eval time the gate under-reads fog and blends ~40% of the hazy
+  input back in (`d_mean` 0.576). A train/eval distribution mismatch, not a
+  failure to discriminate density.
+- **Whole-scene gate (fixed): 29.63 dB** (+14.98 [14.70, 15.25], ΔSSIM
+  +0.1411). `--gate-context` gives the gate a 512×256 whole-image view
+  (identical transform in the training cache and in evaluation);
+  `--gate-init 0.95` starts it high instead of the measured default 0.386.
+  Same architecture (7,771,172 params), same protocol. Per density vs the
+  blind model: +0.43 / +0.13 / −0.05 dB (light/medium/heavy) — **parity with a
+  single model, +2.44 dB over the paper's oracle-routed ceiling**. The pooled
+  0.17 dB edge over blind is within the noise (overlapping CIs).
+
+**What the blend can and cannot do.** At `d = 1` the output is the blind model's
+restoration; below that it mixes hazy pixels back in, so the gate trades
+restoration error against residual-haze error per image. At light fog the
+restoration is worse than the near-clean input and blending back gains
+(+0.43 dB at β=0.005); at heavy fog the gate stays near `d ≈ 1` (pooled
+`d_mean` 0.88). Net across densities: parity with the blind model on PSNR,
++2.44 dB over the routed design.
 
 Blind U-Net per β: light +12.55 dB (18.57→31.11), medium +15.42
 (14.47→29.89), heavy +16.45 dB (10.92→27.38) — again largest gains under
