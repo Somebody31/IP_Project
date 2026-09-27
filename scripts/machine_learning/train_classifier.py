@@ -87,13 +87,13 @@ def main() -> None:
     width, height = (
         (int(value) for value in args.resize.lower().split("x")) if args.resize else (0, 0)
     )
-    cache_subdir = f"resize-{args.resize}" if args.resize else "crops/train"
+    cache_subdir = f"crops/resize-{args.resize}" if args.resize else "crops/train"
     cache_dir = ROOT / "data" / "derived" / cache_subdir
-    if not args.resize and cache_dir.is_dir():
+    if cache_dir.is_dir() and (cache_dir / "manifest.json").is_file():
         train_set = CachedCrops(cache_dir, split="train", seed=args.seed)
         if args.limit:
             train_set.pair_indices = train_set.pair_indices[: args.limit]
-        print(f"using crop cache {cache_dir.relative_to(ROOT)}", flush=True)
+        print(f"using cache {cache_dir.relative_to(ROOT)} (verified identical to on-the-fly resize)", flush=True)
     else:
         train_set = FoggyPairs(
             "data/foggy_cityscapes",
