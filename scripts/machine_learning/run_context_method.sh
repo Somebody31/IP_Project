@@ -26,6 +26,7 @@ export MKL_NUM_THREADS="${MKL_NUM_THREADS:-2}"
 export OPENBLAS_NUM_THREADS="${OPENBLAS_NUM_THREADS:-2}"
 
 UV="$(command -v uv || echo "$HOME/.local/bin/uv")"
+SEED="${SEED:-1729}"
 extra=()
 if [[ -d "runs/machine_learning/${RUN}" ]]; then
   extra=(--resume)
@@ -38,7 +39,7 @@ echo "  workers=${WORKERS} nice=${NICE_LEVEL} threads=${OMP_NUM_THREADS}"
 nice -n "$NICE_LEVEL" "$UV" run python scripts/machine_learning/train_unet.py \
   --run-id "$RUN" --model gated --gate-context \
   --cache-dir "$CACHE_DIR" --context-dir "$CONTEXT_DIR" --gate-init 0.95 \
-  --size medium --epochs 50 --batch 16 --workers "$WORKERS" \
+  --size medium --epochs 50 --batch 16 --workers "$WORKERS" --seed "$SEED" \
   --val-scenes-per-beta 10 --val-every 5 "${extra[@]}"
 
 if [[ -f "results/machine_learning/${SCORE_RUN}.json" ]]; then
