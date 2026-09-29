@@ -1,0 +1,10 @@
+checkpoint: outputs/checkpoints/unet-gated-context-20260925/best.pt
+config: /home/sathwik/Dev/Projects/IP_Project/configs/traditional/dcp_rtts_detection.yaml
+device: cuda
+inference: whole
+limit: 0
+run_id: unet-gated-context-rtts-full-20260929
+skip_dcp: False
+skip_hazy: False
+stride: 128
+tile: 256
