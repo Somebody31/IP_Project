@@ -160,8 +160,22 @@ def main() -> None:
             if index % 50 == 0:
                 print(f"β={target}: {index}/{len(sources)} scenes "
                       f"({time.time() - started:.0f}s)", flush=True)
-        for name in methods:
-            results[name] = summarize(rows[name][target], args.resamples, args.seed, condition=name)
+    for name in methods:
+        results[name] = summarize(
+            [row for target in args.betas for row in rows[name][target]],
+            args.resamples, args.seed, condition=name,
+        )
+    # Fail loudly *before* writing a payload: summarize() groups by row["beta"], so a
+    # summary missing a level means the beta loop was mis-structured (as it was once,
+    # silently writing only the last level after 110 min of compute).
+    expected = {f"{beta:.3f}" for beta in args.betas}
+    for name in methods:
+        if set(results[name]["by_beta"]) != expected:
+            raise SystemExit(
+                f"{name}: by_beta incomplete "
+                f"({sorted(results[name]['by_beta'])} != {sorted(expected)})"
+            )
+
 
     payload = {
         "status": "completed_regime_extension",
