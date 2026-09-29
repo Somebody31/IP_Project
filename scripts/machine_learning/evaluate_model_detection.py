@@ -37,7 +37,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "traditional"))
 
 from ip_dehaze.data.dataset import CONTEXT_SIZE, _resize  # noqa: E402
 from ip_dehaze.traditional.dcp import dehaze as dcp_dehaze  # noqa: E402
-from benchmark_model import load_dehazer  # noqa: E402
+from benchmark_model import classify, load_classifier, load_dehazer  # noqa: E402
 # Shared COCO path: scores our dehazer exactly as the DCP baseline was scored.
 from evaluate_dcp_detection import coco_metrics, load_ground_truth, sha256  # noqa: E402
 
@@ -124,6 +124,12 @@ def main() -> None:
     parser.add_argument("--config", type=Path,
                         default=ROOT / "configs/traditional/dcp_rtts_detection.yaml")
     parser.add_argument("--checkpoint", type=Path, required=True)
+    parser.add_argument("--dataset-split", default="",
+                        help="override the config's RTTS split dir (e.g. valid); test stays frozen")
+    parser.add_argument("--routed-classifier", type=Path,
+                        help="classifier checkpoint; adds the paper-style routed column")
+    parser.add_argument("--routed-branches", nargs=3, type=Path, metavar=("LIGHT", "MEDIUM", "HEAVY"),
+                        help="light/medium/heavy branch checkpoints for the routed column")
     parser.add_argument("--run-id", default=dt.datetime.now().strftime("model-rtts-%Y%m%d-%H%M%S"))
     parser.add_argument("--limit", type=int, default=0, help="smoke-test image limit")
     parser.add_argument("--tile", type=int, default=256)
@@ -146,6 +152,10 @@ def main() -> None:
     config_path = args.config.resolve()
     config = yaml.safe_load(config_path.read_text())
     dataset_root = (ROOT / config["dataset"]["root"]).resolve()
+    dataset_split = config["dataset"]["split"]
+    if args.dataset_split:
+        dataset_root = (ROOT / "rtts" / args.dataset_split).resolve()
+        dataset_split = args.dataset_split
     images_dir, labels_dir = dataset_root / "images", dataset_root / "labels"
     image_paths = sorted(p for p in images_dir.iterdir() if p.suffix.lower() in {".jpg", ".jpeg", ".png"})
     if args.limit:
@@ -162,6 +172,15 @@ def main() -> None:
     images, annotations, image_lookup = load_ground_truth(image_paths, labels_dir, class_map)
 
     model, model_args = load_dehazer(args.checkpoint, device)
+    routed = None
+    routing_counts: dict[int, int] = {}
+    if args.routed_classifier is not None:
+        if not args.routed_branches:
+            raise SystemExit("--routed-classifier requires --routed-branches LIGHT MEDIUM HEAVY")
+        routed = (
+            load_classifier(args.routed_classifier, device),
+            [load_dehazer(path, device)[0] for path in args.routed_branches],
+        )
     detector_weights = str(detector["weights"])
     yolo = YOLO(detector_weights)
     yolo.eval()
@@ -176,11 +195,12 @@ def main() -> None:
         "hazy": [] if not args.skip_hazy else None,
         "dcp": [] if not args.skip_dcp else None,
         "ours": [],
+        "routed": [] if routed else None,
     }
     batch_size = int(detector["batch_size"])
     for start in range(0, len(image_paths), batch_size):
         batch_paths = image_paths[start : start + batch_size]
-        prepared = {"hazy": [], "dcp": [], "ours": []}
+        prepared = {"hazy": [], "dcp": [], "ours": [], "routed": []}
         for path in batch_paths:
             with Image.open(path) as handle:
                 rgb = np.asarray(handle.convert("RGB"), dtype=np.float32) / 255.0
@@ -203,6 +223,13 @@ def main() -> None:
                 else dehaze_tiled(model, rgb, device, tile=args.tile, stride=args.stride)
             )
             prepared["ours"].append(Image.fromarray((ours * 255).round().astype(np.uint8)))
+            if routed:
+                (classifier, classifier_size), branches = routed
+                chosen = classify(classifier, rgb, device, size=classifier_size)
+                routing_counts[chosen] = routing_counts.get(chosen, 0) + 1
+                routed_output = dehaze_whole(branches[chosen], rgb, device)
+                prepared["routed"].append(
+                    Image.fromarray((routed_output * 255).round().astype(np.uint8)))
 
         for name, collection in collections.items():
             if collection is None:
@@ -251,7 +278,7 @@ def main() -> None:
             "Exploratory comparison on RTTS test; do not tune on this split. "
             "RTTS has no clear counterpart, so dehazing quality is only measurable through detection AP."
         ),
-        "split": config["dataset"]["split"],
+        "split": dataset_split,
         "n_images": len(image_paths),
         "n_ground_truth_boxes": len(annotations),
         "inference": {"mode": args.inference, "tile": args.tile, "stride": args.stride,
@@ -262,6 +289,14 @@ def main() -> None:
             "delta_ours_minus_hazy": delta("ours", "hazy"),
             "delta_dcp_minus_hazy": delta("dcp", "hazy"),
             "delta_ours_minus_dcp": delta("ours", "dcp"),
+            "delta_routed_minus_hazy": delta("routed", "hazy"),
+            "delta_routed_minus_ours": delta("routed", "ours"),
+        },
+        "routed": None if not routed else {
+            "classifier": str(args.routed_classifier),
+            "branches": {"light": str(args.routed_branches[0]), "medium": str(args.routed_branches[1]),
+                         "heavy": str(args.routed_branches[2])},
+            "routing_counts": {str(k): v for k, v in sorted(routing_counts.items())},
         },
         "detector": {
             "weights": detector_weights,
