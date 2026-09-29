@@ -7,8 +7,10 @@ the traditional package but the logic is shared; import it, never copy it.
 
 from __future__ import annotations
 
-import random
+import multiprocessing
 from pathlib import Path
+
+import random
 
 import numpy as np
 import torch
@@ -91,10 +93,18 @@ class CachedCrops(Dataset):
             raise ValueError("No pairs selected from cache; check split/beta_filter")
         self.hflip = hflip
         self.seed = seed
-        self.epoch = 0
+        # ponytail: fork-shared epoch counter — persistent DataLoader workers
+        # never see main-process set_epoch(); a Value created before fork is
+        # inherited by fork workers, so crop rotation reaches them.
+        self._epoch = multiprocessing.Value("i", 0)
 
     def set_epoch(self, epoch: int) -> None:
-        self.epoch = epoch
+        with self._epoch.get_lock():
+            self._epoch.value = epoch
+
+    @property
+    def epoch(self) -> int:
+        return self._epoch.value
 
     def __len__(self) -> int:
         return len(self.pair_indices)
@@ -213,10 +223,15 @@ class FoggyPairs(Dataset):
         self.hflip = hflip
         self.hazy_only = hazy_only
         self.seed = seed
-        self.epoch = 0
+        self._epoch = multiprocessing.Value("i", 0)
 
     def set_epoch(self, epoch: int) -> None:
-        self.epoch = epoch
+        with self._epoch.get_lock():
+            self._epoch.value = epoch
+
+    @property
+    def epoch(self) -> int:
+        return self._epoch.value
 
     def __len__(self) -> int:
         return len(self.pairs)

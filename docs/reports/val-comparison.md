@@ -187,3 +187,20 @@ above (run `unet-gated-context-full-val-20260927`).
 - `--gate-context` and `--gate-init` are default-off options; with defaults the
   network is unchanged, so the blind and routed rows remain directly comparable
   to the gate variants.
+
+- **Crop-rotation bug (fixed 2026-09-29, affects every completed run).** The
+  datasets rotate crops and re-roll flips per epoch via `set_epoch()`, but with
+  `persistent_workers=True` the forked loader workers never see that call — a
+  plain attribute write in the main process is invisible to them. Measured:
+  with `crops_per_pair=4` every epoch after the first re-served crop #0 of each
+  pair with the same flips, so all runs trained on 8,925 frozen crops instead
+  of rotating through 35,700. No validation leakage (val pairs are a disjoint
+  scene split), and since blind / gated / context-gated / routed branches all
+  trained with the same loader settings, the comparisons stay internally
+  consistent. But each model saw ¼ of its intended data diversity, and the
+  seed-variance caveat above applies a fortiori. Fixed by moving the epoch
+  counter into shared memory (`multiprocessing.Value`), regression-tested in
+  `tests/machine_learning/test_crop_cache.py::test_set_epoch_reaches_persistent_workers`.
+  A future retrain would likely move every absolute PSNR number slightly, but
+  the ordering of methods should hold: the gap between the paper's design and
+  ours (+2.4 dB pooled) is far larger than any plausible effect of this bug.

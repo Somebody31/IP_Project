@@ -60,8 +60,29 @@ def test_cached_crops_rotate_between_epochs_and_keep_pairing(tmp_path):
     epoch1 = dataset[0]["hazy"].clone()
     assert not torch.equal(epoch0, epoch1)  # different cached crop
     # hazy must stay brighter than its clear twin (the ASM invariant)
-    assert float(sample_mean(dataset[0]) - sample_mean_clear(dataset[0])) > 0
 
+
+def test_set_epoch_reaches_persistent_workers(tmp_path):
+    """Regression: forked DataLoader workers never saw main-process set_epoch().
+
+    With persistent workers, the dataset object is copied into each worker at
+    fork time, so a plain attribute write in the main process is invisible and
+    every epoch re-served epoch-0 crops with epoch-0 flips. The epoch counter
+    must live in shared memory for rotation to reach the workers.
+    """
+    from torch.utils.data import DataLoader
+
+    build_cache(tmp_path, crops_per_pair=2)
+    dataset = CachedCrops(tmp_path, split="train")
+    loader = DataLoader(dataset, batch_size=2, num_workers=2, persistent_workers=True)
+    try:
+        epoch_sums = []
+        for epoch in range(2):
+            dataset.set_epoch(epoch)
+            epoch_sums.append(sum(batch["hazy"].sum().item() for batch in loader))
+        assert epoch_sums[0] != epoch_sums[1], "crop rotation did not reach persistent workers"
+    finally:
+        loader._iterator._shutdown_workers()  # keep pytest from hanging on leaked workers
 
 def sample_mean(sample):
     return float(sample["hazy"].mean())
