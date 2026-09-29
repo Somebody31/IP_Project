@@ -65,6 +65,12 @@ def coco_metrics(images, annotations, categories, predictions, iou_thresholds):
     from pycocotools.coco import COCO
     from pycocotools.cocoeval import COCOeval
 
+    if not predictions:
+        # pycocotools' loadRes indexes anns[0] and raises IndexError on an empty
+        # set; no detections at all is a legitimate all-zero result (AP 0), and
+        # it happens in per-image scoring and in heavily restored conditions.
+        return {"AP@0.5:0.95": 0.0, "AP@0.5": 0.0, "n_detections": 0}
+
     ground_truth = COCO()
     ground_truth.dataset = {
         "info": {"description": "RTTS test subset", "version": "1"},
