@@ -475,6 +475,40 @@ ablation column only.
     would tune (density range, tint, magnitude, spatial structure of β or A) is
     measured above and does not bind. Decision remains the user's; recorded here
     with the evidence and the alternative (content/domain adaptation) named.
+- ☐ **P3.7 RTTS transferability fix — plan and data discipline (recorded 2026-09-29).**
+  The measured failure (ours 0.4740 < hazy 0.4923 < DCP 0.5194 AP@0.5 on the
+  432-image test split) is a content/domain-shift limitation of a model trained
+  on synthetic fog over a single content world, not a fog-physics error (P3.6).
+  The fix therefore imports what works on real fog instead of retraining fog.
+  **Data discipline (user rule, 2026-09-29):** supervision only ever on our
+  synthetic pairs and `rtts/train`; hyperparameters and winner selection on our
+  synthetic val and `rtts/valid`; `rtts/test` scored once, post-freeze, later
+  (P4.1). Split integrity verified 2026-09-29: no filename or stem collisions
+  across the three RTTS splits.
+  - ☐ **Step 0 (in progress)** — per-image damage diagnosis on 200 `rtts/train`
+    images × {hazy, ours, DCP}: per-image AP@0.5 deltas correlated against
+    input statistics (luminance, contrast, dark channel, saturation). Decides
+    whether the harm localizes (trust gate viable) or not (go to step 2).
+  - ☐ **Step 1** — trust gate: small head on distribution-stable features,
+    supervised by per-image AP deltas computed on `rtts/train`; falls back to
+    the base output when harm is predicted. Acceptance: valid AP ≥ hazy-valid
+    (never worse than doing nothing).
+  - ☐ **Step 2** — physical base + learned residual (or DCP transmission as an
+    input channel), trained on our synthetic pairs. Acceptance: in-domain
+    pooled ≥ 29.4 dB; valid AP ≥ DCP-valid.
+  - ☐ **Step 3** — task-driven fine-tune on `rtts/train` with the frozen
+    YOLOv8n in the loss (mixed synthetic-reconstruction + real-fog-detection
+    batches), selected on `rtts/valid`. **Requires a decision-record entry:**
+    it makes ours a domain-adaptation track and no longer a paper reproduction
+    (the paper trains on FogIntensity-25K only and adapts nowhere), so its
+    numbers are never merged into the paper-comparison table.
+  - ☐ **Step 4** — score the paper's routed design on RTTS (`rtts/valid`, and
+    one test touch at the end): the headline table currently judges their design
+    in-domain only while ours is scored on RW data. The routed column is
+    implemented (`evaluate_model_detection.py --routed-classifier/--routed-branches`,
+    commit `a3bbe66`).
+  - ☐ **Step 5** — single frozen `rtts/test` score of the valid-selected winner,
+    then freeze; every claim re-runs under P4.1.
 - **Exit criterion:** `results/machine_learning/` has val dehazing runs +
   RTTS detection runs for **both** ML methods (gated + routed) plus the
   `d≡1` ablation, same schema as the traditional ones.
