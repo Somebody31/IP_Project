@@ -125,20 +125,29 @@ not carry it.
    blind 0.4786 (−0.014), gated (whole-scene) 0.4740 (−0.018). The failure is
    the restoration itself, not the gate: blind and gated degrade equally
    within noise, and the gate's per-image ordering is correct in-domain. Its
-   failure mode is **over-removal, not under-restoration**: on real RTTS images
-   the gate reads heavy fog (`d` ≈ 0.87 on every image probed) and the shared
-   head drives output luminance to 0.21–0.55× of the input — 2–5× too dark.
+   failure mode looks like mild **over-removal**: on real RTTS images the gate
+   reads heavy fog (`d` ≈ 0.87 on every image probed) and the shared head drives
+   output to 0.449× the input luminance on average (per-image 0.21–0.55 over 20
+   images) against the 0.48–0.52 that our own well-restored renders produce —
+   about 8% darker than a healthy restoration in the mean, with a long dark tail.
+   The ratio alone is weak evidence, since a correct restoration is itself about
+   half the luminance of its hazy input; the detection loss is the stronger
+   signal, and it too is modest (−0.018 AP) rather than catastrophic.
    The training regime (synthetic β ≤ 0.02, atmospheric light exactly white)
-   never covers real fog, but measured, that gap is narrower than assumed:
-   RTTS's atmospheric light is neutral to within 1% — A ≈ (0.902, 0.895, 0.887),
-   tint (1.008, 1.000, 0.991) — so it is *not* the grey/blue cast this report
-   first hypothesized, differing from our renders only in magnitude (0.90 vs
-   1.00). RTTS's global luminance (0.507) also sits *between* our clear
-   reference (0.341) and our β = 0.02 render (0.592), so real fog there is not
-   globally denser than the fog we trained on. In-domain PSNR and real-fog
-   detection are different questions; the honest summary is that our +2.44 dB
-   pooled advantage does not transfer, and the axes this leaves open are taken
-   up in finding 8.
+   never covers real fog. Two *suggestive but confounded* measurements point at
+   the gap being narrower than assumed: RTTS's atmospheric light is neutral to
+   within 1% (A ≈ (0.902, 0.895, 0.887), tint (1.008, 1.000, 0.991)), so it is
+   not the grey/blue cast this report first hypothesized; and both RTTS's global
+   luminance (0.507) and its dark-channel haze lift (0.303) fall *below* our
+   β = 0.02 render (0.592 / 0.435) — consistent with real fog there being
+   milder, not denser, than our training fog. Neither comparison is independent
+   evidence and they do not support each other: RTTS's clear-scene content is
+   unknown, and content differences alone move both statistics (our own *clear*
+   images score the highest haze-lift spread of any set, 0.709, precisely
+   because haze compresses range). The unconfounded statements are the
+   within-scene results in finding 8. In-domain PSNR and real-fog detection are
+   different questions; the honest summary is that our +2.44 dB pooled advantage
+   does not transfer, and the axes this leaves open are taken up in finding 8.
 
 8. **Out of regime, the restoration is density-robust and our gate is not.**
    Re-rendering the val split at the paper's fog levels from the shipped
@@ -194,6 +203,44 @@ not carry it.
    β = 0.09), and the small-sample columns track the 500-scene table above
    (blend 16.99 vs 16.62 at β = 0.06, 12.38 vs 12.58 at β = 0.09; `d` = 0.877 at
    β = 0.02 against the documented in-regime 0.87–0.88).
+
+9. **What the RTTS failure is not.** Four probes, each measured rather than
+   inferred, remove every fog-physics axis we can vary:
+
+   | probe | measurement | removes |
+   |---|---|---|
+   | density to 4.5× training β (val, 500 scenes) | learned models still gain +7.3…+9.8 dB; gate `d` within 0.004 of oracle | density-range mismatch |
+   | RTTS atmospheric light | neutral to ±1%, A ≈ (0.902, 0.895, 0.887) | colour cast |
+   | model on fog-free real photos | 29.73 dB (blind) / 31.08 dB (gated) vs identity, lum ratio 0.93 / 0.94 | blanket domain shift |
+   | patchy-β and patchy-A renders (6 scenes, mean preserved) | both hurt learned models ~3× more than DCP (β: −0.77 vs −0.29; A: −4.19 vs −1.37 dB) but **neither reproduces RTTS's signature** | spatial fog variation as the mechanism |
+
+   The last row's second half matters as much as its first: sensitivity to
+   spatial fog variation is real and asymmetric — the learned restoration
+   degrades ~3× more than the classical prior under identical perturbation — but
+   it fails in the *opposite direction* to RTTS. The patchy-A arm, the most
+   damaging perturbation tested, *under*-removes (luminance ratio rises to
+   0.54/0.57 from 0.48/0.52, i.e. it leaves fog in), whereas RTTS over-removes.
+   A perturbation that breaks the model the wrong way does not explain the
+   failure. The observational counterpart agrees: RTTS's haze-lift spread (0.505)
+   sits *below* what our own β = 0.02 renders predict at the same lift (≈0.57),
+   so there is no sign of real fog carrying anomalous spatial structure.
+
+   The residual explanation is **content/scene-domain shift** — the learned
+   inverse physics is tuned to synthetic-fog-on-Cityscapes statistics and
+   overshoots on a different real-world content distribution. A fifth probe
+   leans that way without settling it: given DCP-dehazed RTTS imagery — the same
+   scenes with most of the fog removed — the model still applies substantial
+   restoration (18.82 dB against its own input, luminance ratio 0.742), whereas
+   on fog-free Cityscapes photos it preserved the input (29.73 / 31.08 dB,
+   ratio 0.93 / 0.94). That is consistent with the model reading RTTS scene
+   statistics as fog. It is not conclusive: DCP's output keeps residual haze and
+   carries its own artifacts (halos, saturation), so part of that response may be
+   legitimate restoration of what DCP left behind. Making it conclusive needs
+   paired real-fog data with clean references, which RTTS does not provide —
+   hence "inference by elimination", not a demonstrated mechanism. The practical
+   consequence is that the RTTS gap is a **transferability limitation rather than
+   a resynthesis target**: the axes a heavier-β or tinted-A resynthesis would
+   tune are precisely the ones measured here and found not to bind.
 
 ## Method 2 — density-gated U-Net (ours)
 

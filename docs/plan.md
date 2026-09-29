@@ -447,21 +447,34 @@ ablation column only.
     only ever trained as one factor of a blend), and the blend absorbs that fully
     in regime (parity) but only partly beyond it.
   - **Tint is ruled out** (RTTS atmospheric light neutral to ±1%, magnitude 0.90
-    vs our 1.00) and **global density is ruled out** (RTTS mean luminance 0.507
-    sits between our clear 0.341 and our β = 0.02 render 0.592). RTTS's failure
-    mode is *over-removal* (output luminance 0.21–0.55× input).
-  - **Standing hypotheses:** fog *heterogeneity* (our render is homogeneous,
-    real fog is not) and scene statistics (Cityscapes vs RTTS content).
-  - **Proposed next experiment (no GPU, ≈2 h CPU):** render heterogeneous fog on
-    val — per-scene transmittance with spatially varying β (smooth random field
-    and a depth-correlated gradient) — and re-run the regime eval with the
-    existing checkpoints. If the learned models collapse there as they do on
-    RTTS while DCP holds, heterogeneity is the binding axis and justifies
-    training on heterogeneous fog; if not, the residual is domain/scene
-    statistics and belongs in the report as a documented limitation.
-  - **Decision on the resynthesis: pending** (GPU committed to the follow-up
-    chain). The original "heavier β + tinted A" design targets axes this
-    evidence removes, so it should not be run as specified.
+    vs our 1.00). **Cross-dataset density comparisons are suggestive only**: RTTS
+    luminance (0.507) and haze lift (0.303) both sit below our β = 0.02 render
+    (0.592 / 0.435), but RTTS's clear-scene content is unknown and content alone
+    moves both statistics, so they are not independent evidence of milder fog.
+    The *unconfounded* density result is the within-domain one above. RTTS's
+    failure mode is mild *over-removal*: 0.449× input luminance on average over
+    20 images (per-image 0.21–0.55) against the 0.48–0.52 our own well-restored
+    renders produce, and the detection loss is modest (−0.018 AP).
+  - **Spatial structure tested — not supported as the mechanism.** Rendering
+    patchy fog on val at matched mean β (6 scenes, CPU): patchy β costs blind
+    −0.77 dB and patchy atmospheric light −4.19 dB, each ~3× DCP's loss, so
+    sensitivity to spatial variation is real and asymmetric. But the failures do
+    not look like RTTS's: the patchy-A arm *under*-removes (luminance ratio rises
+    to 0.54/0.57 from 0.48/0.52) whereas RTTS over-removes. Observationally,
+    RTTS's haze-lift spread (0.505) is below what our own β = 0.02 renders predict
+    at the same lift (≈0.57), so real fog shows no anomalous spatial structure.
+  - **Content/domain leans, is not proven.** On DCP-dehazed RTTS content (same
+    scenes, fog largely cut) the model still alters the image substantially
+    (18.82 dB against its own input, luminance ratio 0.742), where on fog-free
+    Cityscapes photos it preserved the input (29.73/31.08 dB, ratio 0.93/0.94) —
+    consistent with the model reading RTTS scene statistics as fog, but DCP's
+    output retains haze and artifacts, so it is not decisive. A conclusive test
+    needs paired real-fog data with clean references; RTTS provides none.
+  - **Recommendation: do not run the resynthesis as specified, and report the
+    RTTS gap as a transferability limitation.** Every axis such a resynthesis
+    would tune (density range, tint, magnitude, spatial structure of β or A) is
+    measured above and does not bind. Decision remains the user's; recorded here
+    with the evidence and the alternative (content/domain adaptation) named.
 - **Exit criterion:** `results/machine_learning/` has val dehazing runs +
   RTTS detection runs for **both** ML methods (gated + routed) plus the
   `d≡1` ablation, same schema as the traditional ones.
