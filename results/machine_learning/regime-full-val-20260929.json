@@ -1,0 +1,579 @@
+{
+  "status": "completed_regime_extension",
+  "purpose": "Evaluate every method beyond its training fog density, on rendered heavier fog.",
+  "split": "val",
+  "source_beta": 0.02,
+  "target_betas": [
+    0.03,
+    0.06,
+    0.09
+  ],
+  "n_scenes": 500,
+  "render": {
+    "model": "atmospheric scattering, I = J\u00b7t + A\u00b7(1\u2212t), A = 1, t_new = t_old^(\u03b2_new/\u03b2_old)",
+    "source": "data/transmittance/leftImg8bit_transmittance (val split)",
+    "validation_mean_abs_error_255": 1.766503787599504,
+    "validation_note": "re-rendering the shipped \u03b2 reproduces the shipped image; see validation_mean_abs_error_255"
+  },
+  "results": {
+    "gated": {
+      "pooled": {
+        "n_images": 1500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 6.692885511352957,
+        "hazy_ssim": 0.5558318754633268,
+        "gated_psnr": 17.874283182852583,
+        "gated_ssim": 0.8416921482483546,
+        "gated_minus_hazy_psnr": {
+          "mean": 11.181397671499623,
+          "ci95": [
+            10.92984424739562,
+            11.435928753583445
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "gated_minus_hazy_ssim": {
+          "mean": 0.2858602727850278,
+          "ci95": [
+            0.28106590083390476,
+            0.29050638475120066
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "by_beta": {
+        "0.030": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 8.569833181757412,
+          "hazy_ssim": 0.6548802105188369,
+          "gated_psnr": 24.421904494805208,
+          "gated_ssim": 0.9300176914930344,
+          "gated_minus_hazy_psnr": {
+            "mean": 15.852071313047793,
+            "ci95": [
+              15.503199777631066,
+              16.199004508358307
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "gated_minus_hazy_ssim": {
+            "mean": 0.2751374809741974,
+            "ci95": [
+              0.2710678412467241,
+              0.2789339911669493
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.060": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 6.257266792040566,
+          "hazy_ssim": 0.5369694119691849,
+          "gated_psnr": 16.6200925073113,
+          "gated_ssim": 0.8398617042303085,
+          "gated_minus_hazy_psnr": {
+            "mean": 10.362825715270736,
+            "ci95": [
+              10.057069656249121,
+              10.685502685991205
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "gated_minus_hazy_ssim": {
+            "mean": 0.30289229226112363,
+            "ci95": [
+              0.29701911435723305,
+              0.3084957609042525
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.090": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 5.251556560260893,
+          "hazy_ssim": 0.4756460039019585,
+          "gated_psnr": 12.58085254644123,
+          "gated_ssim": 0.7551970490217209,
+          "gated_minus_hazy_psnr": {
+            "mean": 7.3292959861803375,
+            "ci95": [
+              7.073527381804044,
+              7.588610544633886
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "gated_minus_hazy_ssim": {
+            "mean": 0.2795510451197624,
+            "ci95": [
+              0.273093654358387,
+              0.2859767647847533
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        }
+      }
+    },
+    "blind": {
+      "pooled": {
+        "n_images": 1500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 6.692885511352957,
+        "hazy_ssim": 0.5558318754633268,
+        "blind_psnr": 19.20372919073327,
+        "blind_ssim": 0.8557115161418914,
+        "blind_minus_hazy_psnr": {
+          "mean": 12.510843679380311,
+          "ci95": [
+            12.266393557540933,
+            12.756087999750012
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "blind_minus_hazy_ssim": {
+          "mean": 0.2998796406785647,
+          "ci95": [
+            0.2950435957347353,
+            0.30457904635369776
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "by_beta": {
+        "0.030": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 8.569833181757412,
+          "hazy_ssim": 0.6548802105188369,
+          "blind_psnr": 25.118380180009023,
+          "blind_ssim": 0.9350151065587997,
+          "blind_minus_hazy_psnr": {
+            "mean": 16.548546998251613,
+            "ci95": [
+              16.244588996452393,
+              16.850102812422353
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "blind_minus_hazy_ssim": {
+            "mean": 0.2801348960399628,
+            "ci95": [
+              0.2760856546759605,
+              0.28405629646480085
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.060": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 6.257266792040566,
+          "hazy_ssim": 0.5369694119691849,
+          "blind_psnr": 18.352974742967845,
+          "blind_ssim": 0.8559425860643387,
+          "blind_minus_hazy_psnr": {
+            "mean": 12.095707950927281,
+            "ci95": [
+              11.785804041241295,
+              12.406730830504953
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "blind_minus_hazy_ssim": {
+            "mean": 0.3189731740951538,
+            "ci95": [
+              0.3131055893808603,
+              0.3245255444273352
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.090": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 5.251556560260893,
+          "hazy_ssim": 0.4756460039019585,
+          "blind_psnr": 14.139832649222939,
+          "blind_ssim": 0.776176855802536,
+          "blind_minus_hazy_psnr": {
+            "mean": 8.888276088962046,
+            "ci95": [
+              8.633496422615954,
+              9.153520291325018
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "blind_minus_hazy_ssim": {
+            "mean": 0.30053085190057754,
+            "ci95": [
+              0.2941502231389284,
+              0.306849562355876
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        }
+      }
+    },
+    "routed": {
+      "pooled": {
+        "n_images": 1500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 6.692885511352957,
+        "hazy_ssim": 0.5558318754633268,
+        "routed_psnr": 19.288133629648836,
+        "routed_ssim": 0.8449313800732294,
+        "routed_minus_hazy_psnr": {
+          "mean": 12.59524811829588,
+          "ci95": [
+            12.371932626167688,
+            12.823201562598939
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "routed_minus_hazy_ssim": {
+          "mean": 0.28909950460990275,
+          "ci95": [
+            0.2844040026292205,
+            0.2936793103451531
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "by_beta": {
+        "0.030": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 8.569833181757412,
+          "hazy_ssim": 0.6548802105188369,
+          "routed_psnr": 24.33606804525542,
+          "routed_ssim": 0.9227269971370697,
+          "routed_minus_hazy_psnr": {
+            "mean": 15.766234863498006,
+            "ci95": [
+              15.47098741950846,
+              16.063710524919617
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "routed_minus_hazy_ssim": {
+            "mean": 0.26784678661823275,
+            "ci95": [
+              0.26351365189552306,
+              0.2719491485446691
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.060": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 6.257266792040566,
+          "hazy_ssim": 0.5369694119691849,
+          "routed_psnr": 18.53172683612349,
+          "routed_ssim": 0.8437581989765167,
+          "routed_minus_hazy_psnr": {
+            "mean": 12.274460044082923,
+            "ci95": [
+              12.022276083833363,
+              12.533325915866504
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "routed_minus_hazy_ssim": {
+            "mean": 0.30678878700733186,
+            "ci95": [
+              0.3014758359000087,
+              0.3120567876935005
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.090": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 5.251556560260893,
+          "hazy_ssim": 0.4756460039019585,
+          "routed_psnr": 14.996606007567603,
+          "routed_ssim": 0.768308944106102,
+          "routed_minus_hazy_psnr": {
+            "mean": 9.74504944730671,
+            "ci95": [
+              9.523334829495983,
+              9.963988266768554
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "routed_minus_hazy_ssim": {
+            "mean": 0.2926629402041435,
+            "ci95": [
+              0.2865089019820094,
+              0.2986840839296579
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        }
+      }
+    },
+    "dcp": {
+      "pooled": {
+        "n_images": 1500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 6.692885511352957,
+        "hazy_ssim": 0.5558318754633268,
+        "dcp_psnr": 11.59638961913336,
+        "dcp_ssim": 0.6653072699308396,
+        "dcp_minus_hazy_psnr": {
+          "mean": 4.903504107780403,
+          "ci95": [
+            4.746627498513772,
+            5.067451563774289
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dcp_minus_hazy_ssim": {
+          "mean": 0.10947539446751278,
+          "ci95": [
+            0.10235607355435689,
+            0.11639140424480042
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "by_beta": {
+        "0.030": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 8.569833181757412,
+          "hazy_ssim": 0.6548802105188369,
+          "dcp_psnr": 14.50989309872616,
+          "dcp_ssim": 0.7091888585090638,
+          "dcp_minus_hazy_psnr": {
+            "mean": 5.940059916968747,
+            "ci95": [
+              5.7623452627618565,
+              6.1130773231710505
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "dcp_minus_hazy_ssim": {
+            "mean": 0.05430864799022674,
+            "ci95": [
+              0.04805898484289646,
+              0.06059282376766204
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.060": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 6.257266792040566,
+          "hazy_ssim": 0.5369694119691849,
+          "dcp_psnr": 11.198883401616847,
+          "dcp_ssim": 0.6618883237838745,
+          "dcp_minus_hazy_psnr": {
+            "mean": 4.941616609576282,
+            "ci95": [
+              4.752077309616547,
+              5.139838384645207
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "dcp_minus_hazy_ssim": {
+            "mean": 0.12491891181468964,
+            "ci95": [
+              0.11686672601848841,
+              0.13271933612376452
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        },
+        "0.090": {
+          "n_images": 500,
+          "n_scenes": 500,
+          "clear_reference": {
+            "identity": true,
+            "psnr": "infinity",
+            "ssim": 1.0
+          },
+          "hazy_psnr": 5.251556560260893,
+          "hazy_ssim": 0.4756460039019585,
+          "dcp_psnr": 9.080392357057073,
+          "dcp_ssim": 0.6248446274995804,
+          "dcp_minus_hazy_psnr": {
+            "mean": 3.8288357967961812,
+            "ci95": [
+              3.6679419318319,
+              3.9886673107101354
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          },
+          "dcp_minus_hazy_ssim": {
+            "mean": 0.14919862359762193,
+            "ci95": [
+              0.14118778594583273,
+              0.15713736025840042
+            ],
+            "n_scenes": 500,
+            "resamples": 2000,
+            "seed": 1729
+          }
+        }
+      }
+    }
+  },
+  "provenance": {
+    "git_revision": null,
+    "started_at": "2026-09-29T13:51:58",
+    "checkpoints": [
+      "gated=outputs/checkpoints/unet-gated-context-20260925/best.pt",
+      "blind=outputs/checkpoints/unet-blind-20260924/best.pt"
+    ],
+    "normalized_context_size": [
+      512,
+      256
+    ],
+    "resamples": 2000,
+    "seed": 1729,
+    "dcp_config_sha256": "149d5eee4b3fd36378dc18e4359ec6e9c71251cbea1fa2118c751dd44723ce02"
+  }
+}
