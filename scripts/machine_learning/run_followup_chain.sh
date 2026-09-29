@@ -67,15 +67,18 @@ if [[ ! -f "results/machine_learning/unet-gated-spatial-full-val-20260929.json" 
       --workers 6 --seed 1729 --val-scenes-per-beta 10 --val-every 5 \
       > outputs/logs/train-spatial.log 2>&1
   fi
-  log "stage 5: mask-collapse probe"
-  OMP_NUM_THREADS=4 uv run python scripts/machine_learning/probe_gate_mask.py \
-    --checkpoint "outputs/checkpoints/${SPATIAL_RUN}/best.pt" \
-    > outputs/logs/spatial-mask-probe.log 2>&1
+  # Score first: the probe is a diagnostic and must never cost the 3 h training
+  # (it asserts against a collapsed mask, and `set -e` would abort the chain).
   log "stage 5: full-val score"
   nice -n 10 uv run python scripts/machine_learning/benchmark_model.py \
     --run-id unet-gated-spatial-full-val-20260929 --mode gated \
     --checkpoint "outputs/checkpoints/${SPATIAL_RUN}/best.pt" \
     --split val --workers 4 > outputs/logs/score-spatial.log 2>&1
+  log "stage 5: mask-collapse probe"
+  OMP_NUM_THREADS=4 uv run python scripts/machine_learning/probe_gate_mask.py \
+    --checkpoint "outputs/checkpoints/${SPATIAL_RUN}/best.pt" \
+    > outputs/logs/spatial-mask-probe.log 2>&1 \
+    || log "WARNING: mask-collapse probe failed; read outputs/logs/spatial-mask-probe.log before trusting the score"
 fi
 
 log "chain complete"

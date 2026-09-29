@@ -342,3 +342,7 @@ above (run `unet-gated-context-full-val-20260927`).
   A future retrain would likely move every absolute PSNR number slightly, but
   the ordering of methods should hold: the gap between the paper's design and
   ours (+2.4 dB pooled) is far larger than any plausible effect of this bug.
+  **Measured 2026-09-29 (post-fix retrain, seed 1729, context-gated): 29.999 dB
+  pooled vs 29.632 pre-fix — +0.37 dB.** So the bug's cost was real but small,
+  and the ordering claim holds; the pre-fix numbers remain usable for method
+  comparison, with absolute values understated by ~0.4 dB.
