@@ -434,6 +434,32 @@ ablation column only.
   accuracy on unlabeled real data is itself a reportable number). This
   gives the final head-to-head: DCP vs. ours (gated) vs. theirs (routed)
   for detection.
+- ☐ **P3.6 Domain transfer — what the evidence rules out (recorded 2026-09-29).**
+  The out-of-regime run (`results/machine_learning/regime-full-val-20260929.json`,
+  finding 8 of `docs/reports/val-comparison.md`) plus two measurement probes
+  narrow the RTTS gap considerably:
+  - **Density-range mismatch is not the binding constraint.** At 4.5× the
+    training density on our own scenes every learned model still gains
+    7.3–9.8 dB, and the gate's `d` sits within 0.004 of the oracle scalar blend
+    at every level. A heavier-β resynthesis has no gate mis-calibration to fix;
+    the out-of-regime deficit against the plain model is the head's restoration
+    quality (standalone head trails blind by 1.7–2.8 dB).
+  - **Tint is ruled out** (RTTS atmospheric light neutral to ±1%, magnitude 0.90
+    vs our 1.00) and **global density is ruled out** (RTTS mean luminance 0.507
+    sits between our clear 0.341 and our β = 0.02 render 0.592). RTTS's failure
+    mode is *over-removal* (output luminance 0.21–0.55× input).
+  - **Standing hypotheses:** fog *heterogeneity* (our render is homogeneous,
+    real fog is not) and scene statistics (Cityscapes vs RTTS content).
+  - **Proposed next experiment (no GPU, ≈2 h CPU):** render heterogeneous fog on
+    val — per-scene transmittance with spatially varying β (smooth random field
+    and a depth-correlated gradient) — and re-run the regime eval with the
+    existing checkpoints. If the learned models collapse there as they do on
+    RTTS while DCP holds, heterogeneity is the binding axis and justifies
+    training on heterogeneous fog; if not, the residual is domain/scene
+    statistics and belongs in the report as a documented limitation.
+  - **Decision on the resynthesis: pending** (GPU committed to the follow-up
+    chain). The original "heavier β + tinted A" design targets axes this
+    evidence removes, so it should not be run as specified.
 - **Exit criterion:** `results/machine_learning/` has val dehazing runs +
   RTTS detection runs for **both** ML methods (gated + routed) plus the
   `d≡1` ablation, same schema as the traditional ones.

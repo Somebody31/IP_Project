@@ -114,7 +114,9 @@ not carry it.
    +0.43 / +0.13 / −0.05 dB relative to the blind model, so it is best
    described as **parity with a single model, 2.44 dB ahead of the paper's
    design at its ceiling** — the pooled 0.17 dB edge over blind is inside the
-   noise (overlapping CIs) and must not be claimed as a win.
+   noise (overlapping CIs) and must not be claimed as a win. This parity is a
+   *within-regime* result: at densities above the training range the gate loses
+   to the plain model (finding 8).
 
 7. **The paired-data advantage reverses on real fog.** On the 432-image RTTS
    test split with the frozen COCO YOLOv8n (the paper's own headline metric,
@@ -122,14 +124,66 @@ not carry it.
    AP@0.5 hazy 0.4923 → DCP 0.5194 (+0.027), while both learned models hurt —
    blind 0.4786 (−0.014), gated (whole-scene) 0.4740 (−0.018). The failure is
    the restoration itself, not the gate: blind and gated degrade equally
-   within noise, and the gate's per-image ordering is correct in-domain. The
-   training regime (synthetic β ≤ 0.02, atmospheric light exactly white) never
-   covers RTTS's dense grey real fog — the paper's β ∈ {0.03, 0.06, 0.09} range
-   is closer to it than ours, so this axis of the comparison favours their
-   setup. In-domain PSNR and real-fog detection are different questions; the
-   honest summary is that our +2.44 dB pooled advantage does not transfer,
-   and a physics-consistent resynthesis of heavier, tinted fog is the
-   candidate fix being evaluated next.
+   within noise, and the gate's per-image ordering is correct in-domain. Its
+   failure mode is **over-removal, not under-restoration**: on real RTTS images
+   the gate reads heavy fog (`d` ≈ 0.87 on every image probed) and the shared
+   head drives output luminance to 0.21–0.55× of the input — 2–5× too dark.
+   The training regime (synthetic β ≤ 0.02, atmospheric light exactly white)
+   never covers real fog, but measured, that gap is narrower than assumed:
+   RTTS's atmospheric light is neutral to within 1% — A ≈ (0.902, 0.895, 0.887),
+   tint (1.008, 1.000, 0.991) — so it is *not* the grey/blue cast this report
+   first hypothesized, differing from our renders only in magnitude (0.90 vs
+   1.00). RTTS's global luminance (0.507) also sits *between* our clear
+   reference (0.341) and our β = 0.02 render (0.592), so real fog there is not
+   globally denser than the fog we trained on. In-domain PSNR and real-fog
+   detection are different questions; the honest summary is that our +2.44 dB
+   pooled advantage does not transfer, and the axes this leaves open are taken
+   up in finding 8.
+
+8. **Out of regime, the restoration is density-robust and our gate is not.**
+   Re-rendering the val split at the paper's fog levels from the shipped
+   transmittance maps — homogeneous fog, atmospheric light exactly 1, so
+   *only* density changes — 500 scenes, ΔPSNR vs hazy with clustered 95% CIs:
+
+   | method | β=0.03 | β=0.06 | β=0.09 | pooled |
+   |---|---|---|---|---|
+   | blind | 25.12 (+16.55) | 18.35 (+12.10) | 14.14 (+8.89) | +12.51 [12.27, 12.76] |
+   | routed (paper) | 24.34 (+15.77) | 18.53 (+12.27) | 15.00 (+9.75) | +12.60 [12.37, 12.82] |
+   | gated (ours) | 24.42 (+15.85) | 16.62 (+10.36) | 12.58 (+7.33) | +11.18 [10.93, 11.44] |
+   | dcp | 14.51 (+5.94) | 11.20 (+4.94) | 9.08 (+3.83) | +4.90 [4.75, 5.07] |
+
+   (hazy 8.57 / 6.26 / 5.25 dB; render validation 1.77/255 mean absolute error
+   against the shipped fog, so the levels really are the ones claimed.) Every
+   learned model still gains 7.3–9.8 dB at 4.5× the training density: the
+   *restoration* extrapolates in density, and DCP — the only method that helps
+   detection on RTTS — is by far the weakest here. What does not extrapolate is
+   our gate's edge. In regime the gated variant edged blind (+0.17 dB,
+   overlapping CIs) and beat the paper's design by 2.44 dB; out of regime it is
+   the weakest learned column, losing to blind at all three levels (pooled
+   −1.33 dB), while the routed system edges *ahead* of blind at the heavy
+   levels. The ordering reverses, so the "parity with a single model" claim in
+   finding 6 is a within-regime statement.
+
+   **Mechanism: the blend is right, the head is the weak term.** The gate's `d`
+   is flat at ≈0.87 across densities (0.877 / 0.869 / 0.865 at β = 0.02 / 0.06 /
+   0.09) and sits within 0.004 of the oracle scalar blend for the model's *own*
+   head at every level (0.865 / 0.868 / 0.863). Out-of-regime mis-calibration is
+   therefore not the cause, and a resynthesis that only extends the β range has
+   nothing to fix here — the gate already reports the level a scalar blend should
+   use. Forcing `d ≡ 1` (the head standing alone) scores *worse* than the natural
+   blend (11.76 vs 12.38 dB at β = 0.09; 15.98 vs 16.99 at β = 0.06) and the
+   standalone head trails blind by 1.7–2.8 dB, so the deficit is the head's
+   restoration quality rather than the blend level: the gate is already doing
+   what a scalar blend can do for the head it has. That head was only ever
+   trained as part of the blend, and the resulting co-adaptation cost is what the
+   blend no longer fully absorbs once the head is out of its density range.
+
+   *Diagnostic detail:* 4 scenes on CPU, every arm on the same scenes with the
+   same whole-scene protocol; two independent code paths agree exactly on the
+   head column (blend inversion vs a forced-`d ≡ 1` forward, both 11.76 at
+   β = 0.09), and the small-sample columns track the 500-scene table above
+   (blend 16.99 vs 16.62 at β = 0.06, 12.38 vs 12.58 at β = 0.09; `d` = 0.877 at
+   β = 0.02 against the documented in-regime 0.87–0.88).
 
 ## Method 2 — density-gated U-Net (ours)
 
@@ -178,6 +232,18 @@ full-val row for this variant is the `_pending_` entry in the pooled table
 above (run `unet-gated-context-full-val-20260927`).
 
 ## Caveats
+
+- The out-of-regime table (finding 8) varies **density only**: the render is
+  homogeneous fog with atmospheric light exactly 1, so it isolates β by
+  construction but cannot speak to spatially varying fog, tint, or scene
+  statistics — the axes that finding 7's measurements leave standing. It is also
+  PSNR against a clean reference we generated, whereas the RTTS verdict is
+  detection AP without any reference, so the two are not directly comparable.
+- The mechanism result in finding 8 rests on a **4-scene CPU diagnostic**, not
+  the 500-scene grid, because the training chain owned the GPU. It is cross-checked
+  against that grid (blend column within 0.2–0.4 dB, gate level reproducing the
+  documented 0.87–0.88) and two independent code paths agree exactly on the head
+  column, but small-sample absolutes should not be quoted as results.
 
 - This is a **mechanism reimplementation** of ADAM-Dehaze (U-Net branches
   instead of CORUN, L1+SSIM instead of their 3-term loss, fitted thresholds
