@@ -208,7 +208,6 @@ def main() -> None:
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     config_path = run_dir / "config.yaml"
     config_text = "\n".join(f"{key}: {value}" for key, value in sorted(vars(args).items())) + "\n"
-    config_path.write_text(config_text)
 
     start_epoch = 0
     best_psnr = -math.inf
@@ -222,6 +221,14 @@ def main() -> None:
         best_psnr = state["best_psnr"]
         print(f"resumed from epoch {start_epoch}", flush=True)
 
+    if start_epoch >= args.epochs:
+        # A RESUME=1 re-invocation of an already-complete chain must not
+        # rewrite its run record — that would clobber the real training
+        # timestamps and source revision with the re-run's.
+        print(f"run {args.run_id} is already complete ({start_epoch}/{args.epochs} epochs); nothing to do", flush=True)
+        return
+
+    config_path.write_text(config_text)
     log_path = run_dir / "log.csv"
     log_stream = log_path.open("a", newline="")
     writer = csv.writer(log_stream)
