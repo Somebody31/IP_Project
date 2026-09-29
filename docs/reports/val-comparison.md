@@ -116,6 +116,21 @@ not carry it.
    design at its ceiling** — the pooled 0.17 dB edge over blind is inside the
    noise (overlapping CIs) and must not be claimed as a win.
 
+7. **The paired-data advantage reverses on real fog.** On the 432-image RTTS
+   test split with the frozen COCO YOLOv8n (the paper's own headline metric,
+   paired conditions per image), DCP is the *only* method that helps detection:
+   AP@0.5 hazy 0.4923 → DCP 0.5194 (+0.027), while both learned models hurt —
+   blind 0.4786 (−0.014), gated (whole-scene) 0.4740 (−0.018). The failure is
+   the restoration itself, not the gate: blind and gated degrade equally
+   within noise, and the gate's per-image ordering is correct in-domain. The
+   training regime (synthetic β ≤ 0.02, atmospheric light exactly white) never
+   covers RTTS's dense grey real fog — the paper's β ∈ {0.03, 0.06, 0.09} range
+   is closer to it than ours, so this axis of the comparison favours their
+   setup. In-domain PSNR and real-fog detection are different questions; the
+   honest summary is that our +2.44 dB pooled advantage does not transfer,
+   and a physics-consistent resynthesis of heavier, tinted fog is the
+   candidate fix being evaluated next.
+
 ## Method 2 — density-gated U-Net (ours)
 
 One U-Net backbone plus a scalar gate `d` predicted from the input, output
