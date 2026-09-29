@@ -443,7 +443,9 @@ ablation column only.
     7.3–9.8 dB, and the gate's `d` sits within 0.004 of the oracle scalar blend
     at every level. A heavier-β resynthesis has no gate mis-calibration to fix;
     the out-of-regime deficit against the plain model is the head's restoration
-    quality (standalone head trails blind by 1.7–2.8 dB).
+    quality — standalone it trails blind by 1.6–3.2 dB at every density (it was
+    only ever trained as one factor of a blend), and the blend absorbs that fully
+    in regime (parity) but only partly beyond it.
   - **Tint is ruled out** (RTTS atmospheric light neutral to ±1%, magnitude 0.90
     vs our 1.00) and **global density is ruled out** (RTTS mean luminance 0.507
     sits between our clear 0.341 and our β = 0.02 render 0.592). RTTS's failure

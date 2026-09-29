@@ -167,16 +167,26 @@ not carry it.
    **Mechanism: the blend is right, the head is the weak term.** The gate's `d`
    is flat at ≈0.87 across densities (0.877 / 0.869 / 0.865 at β = 0.02 / 0.06 /
    0.09) and sits within 0.004 of the oracle scalar blend for the model's *own*
-   head at every level (0.865 / 0.868 / 0.863). Out-of-regime mis-calibration is
-   therefore not the cause, and a resynthesis that only extends the β range has
-   nothing to fix here — the gate already reports the level a scalar blend should
-   use. Forcing `d ≡ 1` (the head standing alone) scores *worse* than the natural
-   blend (11.76 vs 12.38 dB at β = 0.09; 15.98 vs 16.99 at β = 0.06) and the
-   standalone head trails blind by 1.7–2.8 dB, so the deficit is the head's
-   restoration quality rather than the blend level: the gate is already doing
-   what a scalar blend can do for the head it has. That head was only ever
-   trained as part of the blend, and the resulting co-adaptation cost is what the
-   blend no longer fully absorbs once the head is out of its density range.
+   head at every level (0.865 / 0.868 / 0.863), so out-of-regime mis-calibration
+   is not the cause — the gate already reports the level a scalar blend should
+   use, and a resynthesis that only extends the β range has nothing to fix there.
+   Two further arms on the same scenes isolate where the loss sits (dB):
+
+   | β | blind | gated head alone (`d ≡ 1`) | gated blend (natural) |
+   |---|---|---|---|
+   | 0.02 | 28.09 | 24.86 | 28.02 |
+   | 0.06 | 18.81 | 15.98 | 16.99 |
+   | 0.09 | 13.41 | 11.76 | 12.38 |
+
+   The head standing alone is 1.6–3.2 dB *below* the plain model at *every*
+   density, so this is not a head that decays out of regime — it is a weaker
+   restoration head throughout, having only ever been trained as one factor of a
+   blend. What changes at the regime boundary is what the blend can absorb: in
+   regime it recovers the entire 3.2 dB deficit (parity, −0.07 dB), beyond it
+   only part (1.0 of 2.8 dB at β = 0.06; 0.6 of 1.7 dB at β = 0.09). The
+   out-of-regime deficit against the plain model is that unabsorbed remainder —
+   which is also why forcing `d ≡ 1` scores *worse* than the natural blend: the
+   blend is doing real work, just not enough of it.
 
    *Diagnostic detail:* 4 scenes on CPU, every arm on the same scenes with the
    same whole-scene protocol; two independent code paths agree exactly on the
