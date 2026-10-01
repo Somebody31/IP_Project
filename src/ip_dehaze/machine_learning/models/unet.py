@@ -48,6 +48,9 @@ class UNet(nn.Module):
                  gate_spatial: bool = False, gate_context: bool = False,
                  dcp_t: bool = False) -> None:
         super().__init__()
+        # Exposed for eval-side wiring: callers check model.dcp_t to decide
+        # whether to compute and prepend the DCP transmission channel.
+        self.dcp_t = bool(dcp_t)
         if dcp_t:
             # The 4th input channel is DCP's per-image transmission estimate —
             # the physical cue that transfers to real fog (P3.7 step 2). The
