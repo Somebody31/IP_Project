@@ -1,0 +1,92 @@
+evaluated 8/432
+evaluated 16/432
+evaluated 24/432
+evaluated 32/432
+evaluated 40/432
+evaluated 48/432
+evaluated 56/432
+evaluated 64/432
+evaluated 72/432
+evaluated 80/432
+evaluated 88/432
+evaluated 96/432
+evaluated 104/432
+evaluated 112/432
+evaluated 120/432
+[W929 10:07:50.717997307 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 402653184 bytes (free: 448790528, total: 6034096128).
+evaluated 128/432
+evaluated 136/432
+evaluated 144/432
+evaluated 152/432
+evaluated 160/432
+evaluated 168/432
+evaluated 176/432
+evaluated 184/432
+evaluated 192/432
+evaluated 200/432
+evaluated 208/432
+evaluated 216/432
+evaluated 224/432
+evaluated 232/432
+evaluated 240/432
+evaluated 248/432
+evaluated 256/432
+evaluated 264/432
+evaluated 272/432
+evaluated 280/432
+evaluated 288/432
+evaluated 296/432
+evaluated 304/432
+evaluated 312/432
+evaluated 320/432
+evaluated 328/432
+evaluated 336/432
+evaluated 344/432
+evaluated 352/432
+evaluated 360/432
+evaluated 368/432
+evaluated 376/432
+evaluated 384/432
+evaluated 392/432
+evaluated 400/432
+evaluated 408/432
+evaluated 416/432
+evaluated 424/432
+evaluated 432/432
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=0.03s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=3.03s).
+Accumulating evaluation results...
+DONE (t=0.20s).
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=0.18s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=3.23s).
+Accumulating evaluation results...
+DONE (t=0.22s).
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=0.20s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=3.22s).
+Accumulating evaluation results...
+DONE (t=0.23s).
+  hazy: AP@0.5 0.4923 | AP@0.5:0.95 0.2929 | 41386 detections
+   dcp: AP@0.5 0.5194 | AP@0.5:0.95 0.3040 | 49842 detections
+  ours: AP@0.5 0.4740 | AP@0.5:0.95 0.2834 | 50816 detections
+summary: results/machine_learning/unet-gated-context-rtts-full-20260929.json

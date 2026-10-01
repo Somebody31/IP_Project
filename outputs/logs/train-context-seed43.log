@@ -1,0 +1,8 @@
+== unet-gated-context-seed43-20260929 ==
+  workers=6 nice=10 threads=2
+using whole-image context data/derived/crops/resize-512x256
+using crop cache data/derived/crops/train
+train pairs 8925 | val {'light': 10, 'medium': 10, 'heavy': 10} | params 7,771,172 | device cuda | amp False
+[W929 17:17:35.485396395 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 908066816 bytes (free: 915865600, total: 6034096128).
+epoch 1/50 loss 0.1320
+epoch 2/50 loss 0.0855
