@@ -28,15 +28,34 @@ from ip_dehaze.traditional.pairing import index_pairs  # noqa: E402
 CACHE_ROOT = ROOT / "data" / "derived" / "crops"
 
 
-def crop_one(args: tuple) -> tuple[np.ndarray, np.ndarray]:
-    foggy_path, clear_path, size, seed, resize = args
+def crop_one(args: tuple) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
+    foggy_path, clear_path, size, seed, resize, want_dcp_t = args
     hazy = load_rgb(foggy_path)
     clear = load_rgb(clear_path)
+    # DCP's per-image transmission estimate, computed on the FULL hazy image and
+    # cropped at the same offsets — a per-crop DCP would see a different field
+    # of view than the whole-image DCP the network will get at RTTS eval time.
+    # Consistency with inference is the whole point of the channel.
+    dcp_t = None
+    if want_dcp_t:
+        from ip_dehaze.traditional.dcp import (
+            dark_channel,
+            estimate_atmospheric_light,
+            estimate_transmission,
+        )
+
+        # Same call sequence as dehaze(): dark channel on the full image, then
+        # the atmospheric light, then transmission. Patch/floor defaults match
+        # the traditional track's config so train and eval agree.
+        dark = dark_channel(hazy, 15)
+        atmosphere = estimate_atmospheric_light(hazy, dark)
+        dcp_t = estimate_transmission(hazy, atmosphere)  # (H, W) float32 in [0,1]
     if resize is not None:
         # whole image, downscaled: global statistics for density classification
         return (
             (_resize(hazy, resize) * 255).round().astype(np.uint8),
             (_resize(clear, resize) * 255).round().astype(np.uint8),
+            None if dcp_t is None else (_resize(dcp_t[..., None], resize)[..., 0] * 255).round().astype(np.uint8),
         )
     height, width = hazy.shape[:2]
     rng = random.Random(seed)
@@ -45,6 +64,7 @@ def crop_one(args: tuple) -> tuple[np.ndarray, np.ndarray]:
     return (
         (hazy[top : top + size, left : left + size] * 255).round().astype(np.uint8),
         (clear[top : top + size, left : left + size] * 255).round().astype(np.uint8),
+        None if dcp_t is None else (dcp_t[top : top + size, left : left + size] * 255).round().astype(np.uint8),
     )
 
 
@@ -58,6 +78,9 @@ def main() -> None:
     parser.add_argument("--resize", default="", help="WxH: store whole downscaled images instead of crops")
     parser.add_argument("--out-name", default="", help="override output subdirectory")
     parser.add_argument("--force", action="store_true", help="overwrite an existing cache")
+    parser.add_argument("--dcp-t", action="store_true",
+                        help="also store DCP's transmission estimate per crop (the "
+                             "physical cue for the hybrid model's 4th input channel)")
     args = parser.parse_args()
 
     resize = None
@@ -87,6 +110,11 @@ def main() -> None:
     shape = (total, resize[1], resize[0], 3) if resize else (total, args.size, args.size, 3)
     hazy_store = np.lib.format.open_memmap(out_dir / "hazy.npy", mode="w+", dtype=np.uint8, shape=shape)
     clear_store = np.lib.format.open_memmap(out_dir / "clear.npy", mode="w+", dtype=np.uint8, shape=shape)
+    dcp_store = (
+        np.lib.format.open_memmap(out_dir / "dcp_t.npy", mode="w+", dtype=np.uint8, shape=shape[:3])
+        if args.dcp_t
+        else None
+    )
     print(f"{len(pairs)} pairs x {args.crops_per_pair} crops = {total} crops, {shape}", flush=True)
 
     jobs = [
@@ -96,6 +124,7 @@ def main() -> None:
             args.size,
             args.seed * 1_000_003 + pair_index * 100 + crop_index,
             resize,
+            args.dcp_t,
         )
         for pair_index, pair in enumerate(pairs)
         for crop_index in range(args.crops_per_pair)
@@ -103,9 +132,11 @@ def main() -> None:
 
     rows = []
     with ProcessPoolExecutor(max_workers=args.workers) as pool:
-        for job_index, (hazy_crop, clear_crop) in enumerate(pool.map(crop_one, jobs, chunksize=16)):
+        for job_index, (hazy_crop, clear_crop, dcp_crop) in enumerate(pool.map(crop_one, jobs, chunksize=16)):
             hazy_store[job_index] = hazy_crop
             clear_store[job_index] = clear_crop
+            if dcp_store is not None:
+                dcp_store[job_index] = dcp_crop
             pair = pairs[job_index // args.crops_per_pair]
             rows.append(
                 {
@@ -123,6 +154,8 @@ def main() -> None:
 
     hazy_store.flush()
     clear_store.flush()
+    if dcp_store is not None:
+        dcp_store.flush()
     (out_dir / "crops_per_pair.txt").write_text(f"{args.crops_per_pair}\n")
     with (out_dir / "index.csv").open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
@@ -138,6 +171,7 @@ def main() -> None:
                 "rows": total,
                 "shape": list(shape),
                 "resize": args.resize or None,
+                "dcp_t": bool(args.dcp_t),
                 "seed": args.seed,
                 "complete": True,
             },

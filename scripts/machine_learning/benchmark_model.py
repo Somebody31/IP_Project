@@ -53,6 +53,7 @@ def load_dehazer(path: Path, device: torch.device) -> tuple[torch.nn.Module, dic
         gate_init=args.get("gate_init"),
         gate_spatial=bool(args.get("gate_spatial")),
         gate_context=bool(args.get("gate_context")),
+        dcp_t=bool(args.get("dcp_t")),
     ).to(device)
     model.load_state_dict(state["model"])
     model.eval()
@@ -189,6 +190,20 @@ def main() -> None:
                     context = torch.from_numpy(
                         np.ascontiguousarray(whole.transpose(2, 0, 1))
                     )[None].to(device)
+                if getattr(model, "dcp_t", False):
+                    # Same channel at train and eval: DCP's transmission on the
+                    # full image, computed exactly as the traditional track does.
+                    from ip_dehaze.traditional.dcp import (
+                        dark_channel,
+                        estimate_atmospheric_light,
+                        estimate_transmission,
+                    )
+
+                    dark = dark_channel(hazy, 15)
+                    t = estimate_transmission(hazy, estimate_atmospheric_light(hazy, dark))
+                    channel = torch.from_numpy(
+                        np.ascontiguousarray(t[None, None, :, :])).to(device)
+                    tensor = torch.cat([tensor, channel], dim=1)
                 output, _ = model(tensor, context)
         output = output.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
         hazy_scores = image_metrics(hazy, clear)

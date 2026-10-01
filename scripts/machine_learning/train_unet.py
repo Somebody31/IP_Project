@@ -33,6 +33,7 @@ from ip_dehaze.data.dataset import (  # noqa: E402
     CONTEXT_SIZE,
     CachedCrops,
     CachedCropsWithContext,
+    CachedCropsWithDcpT,
     FoggyPairs,
     _resize,
 )
@@ -62,6 +63,16 @@ def build_val_set(val_scenes_per_beta: int, seed: int) -> list[FoggyPairs]:
     return sets
 
 
+def _prepare_input(model: torch.nn.Module, hazy: torch.Tensor,
+                   dcp_t: torch.Tensor | None) -> torch.Tensor:
+    """Concatenate the DCP transmission channel when the model was built with it."""
+    if getattr(model, "dcp_t", False):
+        if dcp_t is None:
+            raise ValueError("model expects a DCP transmission channel; pass dcp_t=")
+        return torch.cat([hazy, dcp_t], dim=1)
+    return hazy
+
+
 @torch.no_grad()
 def evaluate(model: torch.nn.Module, val_sets: list[FoggyPairs], device: torch.device) -> dict:
     model.eval()
@@ -71,7 +82,8 @@ def evaluate(model: torch.nn.Module, val_sets: list[FoggyPairs], device: torch.d
         name = ("light", "medium", "heavy")[int(val_set[0]["density_class"])]
         for index in range(len(val_set)):
             sample = val_set[index]
-            hazy = sample["hazy"][None].to(device)
+            dcp_t = sample["dcp_t"][None].to(device) if "dcp_t" in sample else None
+            hazy = _prepare_input(model, sample["hazy"][None].to(device), dcp_t)
             clear = sample["clear"][None].to(device)
             context = None
             if model.context_stem is not None:
@@ -121,6 +133,10 @@ def main() -> None:
                         help="per-pixel gate instead of one scalar per image")
     parser.add_argument("--gate-context", action="store_true",
                         help="gate reads a whole downscaled scene (needs --context-dir)")
+    parser.add_argument("--dcp-t", action="store_true",
+                        help="4th input channel: DCP's per-crop transmission estimate "
+                             "(needs a cache built with build_crop_cache.py --dcp-t); "
+                             "the model receives cat([hazy, dcp_t]) and in_ch widens")
     parser.add_argument("--context-dir", type=Path, default=None,
                         help="whole-image resize cache aligned with --cache-dir")
     parser.add_argument("--beta-class", choices=list(BETA_CLASSES), help="restrict to one density class (branch)")
@@ -162,6 +178,11 @@ def main() -> None:
                 beta_filter=args.beta_class, seed=args.seed,
             )
             print(f"using whole-image context {args.context_dir}", flush=True)
+        elif args.dcp_t:
+            train_set = CachedCropsWithDcpT(
+                args.cache_dir, split="train", beta_filter=args.beta_class, seed=args.seed,
+            )
+            print("using DCP transmission as a 4th input channel", flush=True)
         else:
             train_set = CachedCrops(args.cache_dir, split="train", beta_filter=args.beta_class, seed=args.seed)
         if args.limit:
@@ -195,7 +216,7 @@ def main() -> None:
     model = build_unet(
         args.size, gated=args.model == "gated", frozen_gate=args.frozen_gate,
         gate_init=args.gate_init, gate_spatial=args.gate_spatial,
-        gate_context=args.gate_context,
+        gate_context=args.gate_context, dcp_t=args.dcp_t,
     ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
@@ -254,9 +275,10 @@ def main() -> None:
             hazy = batch["hazy"].to(device, non_blocking=True)
             clear = batch["clear"].to(device, non_blocking=True)
             context = batch["context"].to(device, non_blocking=True) if "context" in batch else None
+            dcp_t = batch["dcp_t"].to(device, non_blocking=True) if "dcp_t" in batch else None
             optimizer.zero_grad(set_to_none=True)
             with torch.amp.autocast("cuda", enabled=use_amp):
-                output, _ = model(hazy, context)
+                output, _ = model(_prepare_input(model, hazy, dcp_t), context)
                 loss = reconstruction_loss(output, clear, args.ssim_weight)
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)

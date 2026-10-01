@@ -45,8 +45,14 @@ class ConvBlock(nn.Module):
 class UNet(nn.Module):
     def __init__(self, in_ch: int = 3, base: int = 32, depth: int = 4, gated: bool = False,
                  frozen_gate: bool = False, gate_init: float | None = None,
-                 gate_spatial: bool = False, gate_context: bool = False) -> None:
+                 gate_spatial: bool = False, gate_context: bool = False,
+                 dcp_t: bool = False) -> None:
         super().__init__()
+        if dcp_t:
+            # The 4th input channel is DCP's per-image transmission estimate —
+            # the physical cue that transfers to real fog (P3.7 step 2). The
+            # channel is prepended by the caller: x = cat([hazy, dcp_t]).
+            in_ch = in_ch + 1
         if depth < 1:
             raise ValueError("depth must be at least 1")
         channels = [base * 2**level for level in range(depth)]
@@ -113,6 +119,11 @@ class UNet(nn.Module):
 
     def forward(self, x: torch.Tensor,
                 context: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor | None]:
+        # The gated blend falls back to the HAZY IMAGE, not the raw input: with
+        # the DCP-transmission channel prepended, x is 4-channel while output
+        # is 3-channel, and blending against x would broadcast-fail (or, worse,
+        # silently broadcast). Slice off the channel after the encoders read it.
+        hazy = x[:, :3]
         skips = []
         features = x
         for encoder in self.encoders:
@@ -147,11 +158,12 @@ class UNet(nn.Module):
         if density is None:
             return output, None
         gate = density if density.dim() > 2 else density.view(-1, 1, 1, 1)
-        return gate * output + (1 - gate) * x, density
+        return gate * output + (1 - gate) * hazy, density
 
 
 def build_unet(size: str = "medium", gated: bool = False, frozen_gate: bool = False,
                gate_init: float | None = None, gate_spatial: bool = False,
-               gate_context: bool = False) -> UNet:
+               gate_context: bool = False, dcp_t: bool = False) -> UNet:
     return UNet(gated=gated, frozen_gate=frozen_gate, gate_init=gate_init,
-                gate_spatial=gate_spatial, gate_context=gate_context, **SIZE_PRESETS[size])
+                gate_spatial=gate_spatial, gate_context=gate_context, dcp_t=dcp_t,
+                **SIZE_PRESETS[size])

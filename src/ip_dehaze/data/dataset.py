@@ -127,6 +127,37 @@ class CachedCrops(Dataset):
         }
 
 
+class CachedCropsWithDcpT(CachedCrops):
+    """Crop cache plus DCP's per-crop transmission estimate as a 4th channel.
+
+    The channel is the physical cue that transfers to real fog: at RTTS eval
+    time the model can read a per-image DCP transmission estimate it never had
+    before, while in-domain the network is free to ignore it. The channel is
+    flipped with the same coin as hazy/clear so its gradients stay aligned.
+    """
+
+    def __init__(self, cache_dir: str, **kwargs) -> None:
+        super().__init__(cache_dir, **kwargs)
+        import json
+
+        self.dcp_t = np.load(self.dir / "dcp_t.npy", mmap_mode="r")
+        manifest = json.loads((self.dir / "manifest.json").read_text())
+        if not manifest.get("dcp_t"):
+            raise ValueError("cache was not built with --dcp-t; rebuild it")
+        if self.dcp_t.shape[:3] != self.hazy.shape[:3]:
+            raise ValueError("dcp_t.npy shape does not match the hazy cache")
+
+    def __getitem__(self, index: int) -> dict:
+        sample = super().__getitem__(index)
+        pair_index = self.pair_indices[index]
+        row_index = pair_index * self.crops_per_pair + (self.epoch % self.crops_per_pair)
+        transmission = np.array(self.dcp_t[row_index]).astype(np.float32) / 255.0
+        if self.hflip and random.Random(self.seed * 1_000_003 + self.epoch * 10_007 + index).random() < 0.5:
+            transmission = transmission[:, ::-1]
+        sample["dcp_t"] = torch.from_numpy(np.ascontiguousarray(transmission[None, :, :]))  # (1, H, W)
+        return sample
+
+
 class CachedCropsWithContext(CachedCrops):
     """Crop cache for restoration plus a whole-image context for the gate.
 

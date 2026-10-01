@@ -64,6 +64,18 @@ def dehaze_tiled(
     """Restore a whole image with 256-tiled inference, averaged in overlaps."""
     height, width = image.shape[:2]
     context = None
+    dcp_channel = None
+    if getattr(model, "dcp_t", False):
+        from ip_dehaze.traditional.dcp import (
+            dark_channel,
+            estimate_atmospheric_light,
+            estimate_transmission,
+        )
+
+        # Compute once on the whole image (same sequence as dehaze()), crop per tile.
+        dark = dark_channel(image, 15)
+        t = estimate_transmission(image, estimate_atmospheric_light(image, dark))
+        dcp_channel = t
     if model.context_stem is not None:
         whole = _resize(image, CONTEXT_SIZE)
         context = torch.from_numpy(np.ascontiguousarray(whole.transpose(2, 0, 1)))[None].to(device)
@@ -83,6 +95,18 @@ def dehaze_tiled(
                 patch = padded
             patches.append(np.ascontiguousarray(patch.transpose(2, 0, 1)))
         tensor = torch.from_numpy(np.stack(patches)).to(device)
+        if dcp_channel is not None:
+            channels = []
+            for top, left in chunk:
+                t_patch = dcp_channel[top : top + tile, left : left + tile]
+                if t_patch.shape != (tile, tile):
+                    padded = np.zeros((tile, tile), dtype=t_patch.dtype)
+                    padded[: t_patch.shape[0], : t_patch.shape[1]] = t_patch
+                    t_patch = padded
+                channels.append(t_patch)
+            tensor = torch.cat(
+                [tensor, torch.from_numpy(np.ascontiguousarray(
+                    np.stack(channels)[:, None, :, :])).to(device)], dim=1)
         ctx = context.repeat(len(chunk), 1, 1, 1) if context is not None else None
         restored, _ = model(tensor, ctx)
         restored = restored.clamp(0, 1).cpu().numpy()
@@ -114,6 +138,17 @@ def dehaze_whole(
     pad_h, pad_w = (-height) % 16, (-width) % 16
     padded = np.pad(image, ((0, pad_h), (0, pad_w), (0, 0)), mode="reflect")
     tensor = torch.from_numpy(np.ascontiguousarray(padded.transpose(2, 0, 1)))[None].to(device)
+    if getattr(model, "dcp_t", False):
+        from ip_dehaze.traditional.dcp import (
+            dark_channel,
+            estimate_atmospheric_light,
+            estimate_transmission,
+        )
+
+        dark = dark_channel(image, 15)
+        t = estimate_transmission(image, estimate_atmospheric_light(image, dark))
+        channel = torch.from_numpy(np.ascontiguousarray(t[None, None, :, :])).to(device)
+        tensor = torch.cat([tensor, channel], dim=1)
     restored, _ = model(tensor, context)
     restored = restored.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
     return restored[:height, :width]
