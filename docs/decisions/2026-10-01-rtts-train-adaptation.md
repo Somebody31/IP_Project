@@ -1,7 +1,12 @@
 # Decision record — 2026-10-01: RTTS-train adaptation track
 
-**Status: DRAFT — awaiting user approval.** Nothing below is executed until
-the user marks it approved in this file.
+**Status: APPROVED (user, 2026-10-02, in chat).** Execution is sequenced
+*after* the results report lands: the reporting block finishes first
+(post-chain analysis, val-comparison headline table, step-5 frozen test
+score, P4.1), then the fine-tune launches on the freed GPU.
+
+Approved scope is decision item 1 below; items 2-4 are the reporting
+constraints that come with it.
 
 ## Context
 
@@ -17,12 +22,13 @@ RTTS ships with **train (8,557) / valid (865) / test (432)** splits, fully
 disjoint (verified 2026-09-29: no filename or stem collisions), with
 detection labels on all three.
 
-## Decision (proposed)
+## Decision (approved 2026-10-02)
 
-1. **Task-driven adaptation on RTTS-train is approved / rejected** (user to
-   mark). If approved: fine-tune the best dehazer with the frozen COCO
-   YOLOv8n in the loss, on a fixed subsample of `rtts/train`, mixed with
-   synthetic-reconstruction batches to preserve restoration ability.
+1. **Task-driven adaptation on RTTS-train: APPROVED** (user, 2026-10-02, in
+   chat; execution sequenced after the results report). Fine-tune the best
+   dehazer with the frozen COCO YOLOv8n in the loss, on a fixed subsample of
+   `rtts/train`, mixed with synthetic-reconstruction batches to preserve
+   restoration ability.
 2. The adapted system is reported as a **separate labelled track** —
    "ours + real-fog adaptation" — never merged into the paper-reproduction
    comparison table (the paper trains on FogIntensity-25K and adapts
