@@ -1,0 +1,62 @@
+== unet-spatial-rtts-adapt-20261002 ==
+rtts-train crops 8557 | synth pairs 8925 | lr 2e-05
+[W1002 18:48:31.005374141 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 22609920, total: 6034096128).
+[W1002 18:48:31.005530748 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 22609920, total: 6034096128).
+Traceback (most recent call last):
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_task_adapt.py", line 334, in <module>
+    main()
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_task_adapt.py", line 255, in main
+    task = detection_loss(yolo, restored, boxes_rtts, device)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_task_adapt.py", line 144, in detection_loss
+    raw = yolo(resized)
+          ^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/ultralytics/nn/tasks.py", line 161, in forward
+    return self.predict(x, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/ultralytics/nn/tasks.py", line 177, in predict
+    return self._predict_once(x, profile, embed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/ultralytics/nn/tasks.py", line 198, in _predict_once
+    x = m(x)  # run
+        ^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/ultralytics/nn/modules/conv.py", line 78, in forward
+    return self.act(self.bn(self.conv(x)))
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+           ^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/functional.py", line 2904, in batch_norm
+    return torch.batch_norm(
+           ^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 26.00 MiB. GPU 0 has a total capacity of 5.62 GiB of which 21.56 MiB is free. Process 2057 has 44.26 MiB memory in use. Process 157761 has 3.89 GiB memory in use. Including non-PyTorch memory, this process has 1.25 GiB memory in use. Of the allocated memory 1.13 GiB is allocated by PyTorch, and 40.69 MiB is reserved by PyTorch but unallocated.
+== unet-spatial-rtts-adapt-20261002 ==
+rtts-train crops 8557 | synth pairs 8925 | lr 2e-05
+  epoch 1/10 step 0/400 task 0.9999 recon 0.0243
+  epoch 1/10 step 50/400 task 0.9999 recon 0.0349
+  epoch 1/10 step 100/400 task 0.9999 recon 0.0345
+  epoch 1/10 step 150/400 task 0.9999 recon 0.0361
+  epoch 1/10 step 200/400 task 0.9999 recon 0.0362
+  epoch 1/10 step 250/400 task 0.9999 recon 0.0356
+  epoch 1/10 step 300/400 task 0.9999 recon 0.0359
+  epoch 1/10 step 350/400 task 0.9999 recon 0.0360
+epoch 1/10 recon 0.0362 task 0.9999 synth_val_psnr 30.17
+  epoch 2/10 step 0/400 task 0.9999 recon 0.0254
