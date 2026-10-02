@@ -13,16 +13,17 @@ bootstrap, 2,000 resamples, seed 1729):
 
 | | ΔPSNR | ΔSSIM |
 |---|---|---|
-| DCP vs hazy, pooled | **+1.14** [0.92, 1.33] | **−0.121** [−0.126, −0.116] |
+| DCP vs hazy, pooled val | **+1.14** [0.92, 1.33] | **−0.121** [−0.126, −0.116] |
+| DCP vs hazy, pooled Foggy **test** (4,575 pairs) | **+1.46** [1.31, 1.62] | **−0.125** [−0.128, −0.121] |
 
 The pooled PSNR gain hides a sign change across density, and the SSIM
-regression is unambiguous:
+regression is unambiguous — on test as on val:
 
-| β | ΔPSNR | ΔSSIM |
+| β | ΔPSNR (test) | ΔPSNR (val) |
 |---|---|---|
-| 0.005 (light) | **−2.79** [−3.04, −2.56] | −0.219 |
-| 0.010 (medium) | +1.47 | −0.127 |
-| 0.020 (heavy) | +4.73 | −0.018 |
+| 0.005 (light) | **−2.61** | −2.79 [−3.04, −2.56] |
+| 0.010 (medium) | +1.88 | +1.47 |
+| 0.020 (heavy) | +5.11 | +4.73 |
 
 DCP *degrades* light fog on both metrics and only earns its PSNR gain at
 heavier densities, where its structural damage also shrinks. It is a
@@ -77,11 +78,15 @@ regime and only part of it beyond.
 
 | method | val pooled PSNR | Foggy test pooled PSNR | params | inference |
 |---|---|---|---|---|
-| DCP | 15.79 (+1.14) | — | 0 (no learning) | 561 ms/img (CPU) |
+| DCP | 15.79 (+1.14) | 16.25 (+1.46) | 0 (no learning) | 561 ms/img (CPU) |
 | blind U-Net | 29.46 | — | 7,766,051 | 215 ms/img |
 | routed (paper-style) | 26.42 (learned) / 27.19 (oracle) | **27.55** | **26,378,804** (61,059 classifier + 3 × 7.77 M) | 240 ms/img |
 | gated, context | 29.63 / 30.00 (post-fix) | — | 7,771,172 | 242 ms/img |
 | **gated, spatial (ours, winner)** | **30.40** | **31.61** | 7,766,084 | 230 ms/img |
+
+(The blind/context variants were not scored on test: the valid-selected
+winner was the spatial gate, and the frozen test pass was single-touch by
+protocol.)
 
 **Detection delta** (ΔAP@0.5 vs hazy): DCP +0.018/+0.027; ours −0.008/−0.007;
 routed −0.011/−0.013; adaptation −0.002 (valid).

@@ -1,0 +1,24 @@
+dataset:
+  foggy_root: data/foggy_cityscapes
+  clear_root: data/cityscapes_clear
+  split: val
+  refined_manifest: data/foggy_cityscapes/foggy_trainval_refined_filenames.txt
+  refined_only: false
+
+workers: 12
+
+method:
+  name: dark_channel_prior
+  patch_size: 15
+  omega: 0.95
+  atmospheric_top_fraction: 0.001
+  guided_radius: 20
+  guided_epsilon: 0.001
+  transmission_floor: 0.1
+
+metrics:
+  - psnr
+  - ssim
+bootstrap:
+  resamples: 2000
+  seed: 1729

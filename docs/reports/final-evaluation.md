@@ -19,6 +19,15 @@ number (scene-clustered bootstrap, 2,000 resamples, seed 1729).
 | 0.020 (heavy) | 29.39 |
 | **pooled** | **31.61 dB** (Δ vs hazy +16.82 [16.66, 16.98], ΔSSIM +0.1552 [0.1529, 0.1574]) |
 
+Same split, same protocol, the two non-learned/paper comparators:
+
+| method | pooled test PSNR | Δ vs hazy |
+|---|---|---|
+| hazy | 14.79 | — |
+| DCP | 16.25 | +1.46 [1.31, 1.62] (ΔSSIM −0.125) |
+| paper-style routed | 27.55 | +12.76 |
+| **ours (spatial gate)** | **31.61** | **+16.82** |
+
 The test number sits 1.2 dB above the val pooled result (30.40) — test
 scenes are marginally easier, the method's ordering and per-β pattern are
 unchanged, and no hyperparameter was touched between selection and this
