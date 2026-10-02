@@ -1,0 +1,82 @@
+device: cuda
+scored 100/4575
+scored 200/4575
+scored 300/4575
+scored 400/4575
+scored 500/4575
+scored 600/4575
+scored 700/4575
+scored 800/4575
+scored 900/4575
+scored 1000/4575
+scored 1100/4575
+scored 1200/4575
+scored 1300/4575
+scored 1400/4575
+scored 1500/4575
+scored 1600/4575
+scored 1700/4575
+scored 1800/4575
+scored 1900/4575
+scored 2000/4575
+scored 2100/4575
+scored 2200/4575
+scored 2300/4575
+scored 2400/4575
+scored 2500/4575
+scored 2600/4575
+scored 2700/4575
+scored 2800/4575
+scored 2900/4575
+scored 3000/4575
+scored 3100/4575
+scored 3200/4575
+scored 3300/4575
+scored 3400/4575
+scored 3500/4575
+scored 3600/4575
+scored 3700/4575
+scored 3800/4575
+scored 3900/4575
+scored 4000/4575
+scored 4100/4575
+scored 4200/4575
+scored 4300/4575
+scored 4400/4575
+scored 4500/4575
+scored 4575/4575
+{
+  "n_images": 4575,
+  "n_scenes": 1525,
+  "clear_reference": {
+    "identity": true,
+    "psnr": "infinity",
+    "ssim": 1.0
+  },
+  "hazy_psnr": 14.786251526797086,
+  "hazy_ssim": 0.8209337586522754,
+  "dehazed_psnr": 31.60640656217667,
+  "dehazed_ssim": 0.9761152768004787,
+  "dehazed_minus_hazy_psnr": {
+    "mean": 16.820155035379585,
+    "ci95": [
+      16.659245065603304,
+      16.97573919130099
+    ],
+    "n_scenes": 1525,
+    "resamples": 2000,
+    "seed": 1729
+  },
+  "dehazed_minus_hazy_ssim": {
+    "mean": 0.15518151814820336,
+    "ci95": [
+      0.15287612161642866,
+      0.15736742734713632
+    ],
+    "n_scenes": 1525,
+    "resamples": 2000,
+    "seed": 1729
+  }
+}
+run: runs/machine_learning/spatial-test-frozen-20261002
+summary: results/machine_learning/spatial-test-frozen-20261002.json

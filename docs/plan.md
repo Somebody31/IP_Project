@@ -523,10 +523,11 @@ ablation column only.
 
 ## Phase 4 — Final evaluation & reporting
 
-- ☐ **P4.1 Final test evaluation, once:** both tracks on Foggy Cityscapes
-  test (dehazing PSNR/SSIM vs. clear targets — requires generating foggy
-  test pairs or using the dataset's own test fog) and RTTS test (detection).
-  Single pass, no reruns, results in `docs/reports/final-evaluation.md`.
+- ☑ **P4.1 Final test evaluation, done 2026-10-02** (`docs/reports/final-evaluation.md`):
+  Foggy Cityscapes test dehazing (winner: spatial-gated U-Net, pooled
+  31.61 dB, Δ +16.82 [16.66, 16.98]) and RTTS test detection (0.4850 vs hazy
+  0.4923, DCP 0.5194 — only method that helps). Single pass, no reruns;
+  test splits burned for claims.
 - ☐ **P4.2 Analysis write-up:** answer the project's questions with CIs —
   - Does DCP improve perception metrics? (val says: PSNR yes at β ≥ 0.01,
     SSIM no.)
