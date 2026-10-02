@@ -1,0 +1,51 @@
+device: cuda
+scored 100/1500
+scored 200/1500
+scored 300/1500
+scored 400/1500
+scored 500/1500
+scored 600/1500
+scored 700/1500
+scored 800/1500
+scored 900/1500
+scored 1000/1500
+scored 1100/1500
+scored 1200/1500
+scored 1300/1500
+scored 1400/1500
+scored 1500/1500
+{
+  "n_images": 1500,
+  "n_scenes": 500,
+  "clear_reference": {
+    "identity": true,
+    "psnr": "infinity",
+    "ssim": 1.0
+  },
+  "hazy_psnr": 14.651288293377647,
+  "hazy_ssim": 0.8249684632221858,
+  "dehazed_psnr": 25.486637910829284,
+  "dehazed_ssim": 0.9492331505616506,
+  "dehazed_minus_hazy_psnr": {
+    "mean": 10.835349617451637,
+    "ci95": [
+      10.655631645731274,
+      11.013812419536698
+    ],
+    "n_scenes": 500,
+    "resamples": 2000,
+    "seed": 1729
+  },
+  "dehazed_minus_hazy_ssim": {
+    "mean": 0.12426468733946483,
+    "ci95": [
+      0.12165612071553866,
+      0.1267228510886431
+    ],
+    "n_scenes": 500,
+    "resamples": 2000,
+    "seed": 1729
+  }
+}
+run: runs/machine_learning/unet-hybrid-dcpt-full-val-20261002
+summary: results/machine_learning/unet-hybrid-dcpt-full-val-20261002.json

@@ -1,5 +1,5 @@
 {
-  "complete": false,
+  "complete": true,
   "rows": {
     "baseline_seed1729": {
       "pooled_psnr": 29.999,
@@ -25,7 +25,12 @@
       "status": "completed",
       "n_images": 1500
     },
-    "hybrid_dcp_t": null
+    "hybrid_dcp_t": {
+      "pooled_psnr": 25.487,
+      "hazy_psnr": 14.651,
+      "status": "completed",
+      "n_images": 1500
+    }
   },
   "seed_variance": {
     "values": [

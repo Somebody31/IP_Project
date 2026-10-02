@@ -1,0 +1,74 @@
+using DCP transmission as a 4th input channel
+using crop cache data/derived/crops/dcp-t-train
+train pairs 8925 | val {'light': 20, 'medium': 20, 'heavy': 20} | params 7,766,852 | device cuda | amp False
+epoch 1/50 loss 0.1142
+epoch 2/50 loss 0.0841
+epoch 3/50 loss 0.0757
+epoch 4/50 loss 0.0733
+Traceback (most recent call last):
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_unet.py", line 371, in <module>
+    main()
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_unet.py", line 300, in main
+    val = evaluate(model, val_sets, device)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_unet.py", line 86, in evaluate
+    hazy = _prepare_input(model, sample["hazy"][None].to(device), dcp_t)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_unet.py", line 71, in _prepare_input
+    raise ValueError("model expects a DCP transmission channel; pass dcp_t=")
+ValueError: model expects a DCP transmission channel; pass dcp_t=
+using DCP transmission as a 4th input channel
+using crop cache data/derived/crops/dcp-t-train
+resumed from epoch 4
+train pairs 8925 | val {'light': 20, 'medium': 20, 'heavy': 20} | params 7,766,852 | device cuda | amp False
+epoch 5/50 loss 0.0673 val_psnr 21.68 val_ssim 0.9132 d[0.371,0.786]
+epoch 6/50 loss 0.0657
+epoch 7/50 loss 0.0630
+epoch 8/50 loss 0.0618
+epoch 9/50 loss 0.0583
+epoch 10/50 loss 0.0574 val_psnr 23.26 val_ssim 0.9308 d[0.552,0.800]
+epoch 11/50 loss 0.0557
+epoch 12/50 loss 0.0542
+epoch 13/50 loss 0.0516
+epoch 14/50 loss 0.0507
+epoch 15/50 loss 0.0494 val_psnr 24.07 val_ssim 0.9367 d[0.474,0.784]
+epoch 16/50 loss 0.0486
+epoch 17/50 loss 0.0465
+epoch 18/50 loss 0.0461
+epoch 19/50 loss 0.0445
+epoch 20/50 loss 0.0433 val_psnr 24.77 val_ssim 0.9413 d[0.437,0.759]
+epoch 21/50 loss 0.0419
+epoch 22/50 loss 0.0415
+epoch 23/50 loss 0.0410
+epoch 24/50 loss 0.0403
+epoch 25/50 loss 0.0385 val_psnr 24.73 val_ssim 0.9444 d[0.486,0.739]
+epoch 26/50 loss 0.0382
+epoch 27/50 loss 0.0372
+epoch 28/50 loss 0.0364
+epoch 29/50 loss 0.0358
+epoch 30/50 loss 0.0360 val_psnr 25.33 val_ssim 0.9482 d[0.471,0.763]
+epoch 31/50 loss 0.0349
+epoch 32/50 loss 0.0342
+epoch 33/50 loss 0.0334
+epoch 34/50 loss 0.0333
+epoch 35/50 loss 0.0330 val_psnr 25.78 val_ssim 0.9524 d[0.503,0.749]
+epoch 36/50 loss 0.0323
+epoch 37/50 loss 0.0312
+epoch 38/50 loss 0.0313
+epoch 39/50 loss 0.0310
+epoch 40/50 loss 0.0306 val_psnr 25.84 val_ssim 0.9530 d[0.487,0.737]
+epoch 41/50 loss 0.0298
+epoch 42/50 loss 0.0300
+epoch 43/50 loss 0.0295
+epoch 44/50 loss 0.0292
+epoch 45/50 loss 0.0286 val_psnr 25.66 val_ssim 0.9530 d[0.456,0.746]
+epoch 46/50 loss 0.0287
+epoch 47/50 loss 0.0288
+epoch 48/50 loss 0.0287
+epoch 49/50 loss 0.0281
+epoch 50/50 loss 0.0286 val_psnr 26.11 val_ssim 0.9547 d[0.483,0.748]
+run: runs/machine_learning/unet-hybrid-dcpt-20261002
+best checkpoint: outputs/checkpoints/unet-hybrid-dcpt-20261002/best.pt

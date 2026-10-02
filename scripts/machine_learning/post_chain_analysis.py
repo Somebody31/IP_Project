@@ -63,7 +63,7 @@ def main() -> None:
     baseline = pooled_gated(args.baseline)
     seeds = {seed: pooled_gated(path) for seed, path in seed_paths.items()}
     spatial = pooled_gated(RESULTS / "unet-gated-spatial-full-val-20260929.json")
-    hybrid = pooled_gated(RESULTS / "unet-hybrid-dcpt-full-val.json")
+    hybrid = pooled_gated(RESULTS / "unet-hybrid-dcpt-full-val-20261002.json")
 
     missing = [name for name, value in
                [("baseline", baseline), ("spatial", spatial), ("hybrid", hybrid)]

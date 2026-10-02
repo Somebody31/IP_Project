@@ -1,0 +1,178 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id unet-hybrid-dcpt-full-val-20261002 --mode gated --checkpoint outputs/checkpoints/unet-hybrid-dcpt-20261002/best.pt --split val --workers 4",
+  "method": "Density-gated U-Net",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dehazed_psnr": 25.486637910829284,
+      "dehazed_ssim": 0.9492331505616506,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 10.835349617451637,
+        "ci95": [
+          10.655631645731274,
+          11.013812419536698
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.12426468733946483,
+        "ci95": [
+          0.12165612071553866,
+          0.1267228510886431
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dehazed_psnr": 27.06240989121754,
+        "dehazed_ssim": 0.967465148448944,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 8.49728079153589,
+          "ci95": [
+            8.327617925177636,
+            8.652094270768586
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.060120219707489014,
+          "ci95": [
+            0.05818573764562607,
+            0.061979623410105704
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dehazed_psnr": 25.41174670001196,
+        "dehazed_ssim": 0.9513534259796143,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 10.946665959514897,
+          "ci95": [
+            10.766992517925285,
+            11.123886095637838
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.11769663894176483,
+          "ci95": [
+            0.11491515749394894,
+            0.12034989350140095
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dehazed_psnr": 23.98575714125835,
+        "dehazed_ssim": 0.9288808772563935,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 13.06210210130412,
+          "ci95": [
+            12.846530987682513,
+            13.26984598406785
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.19497720336914062,
+          "ci95": [
+            0.19128524262607097,
+            0.1984700344055891
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": null,
+  "routing_counts": null,
+  "checkpoints": {
+    "model": "outputs/checkpoints/unet-hybrid-dcpt-20261002/best.pt",
+    "classifier": null,
+    "branches": null
+  },
+  "config_sha256": "7e603d87d2248f0ceae5f32755f0307bcbe700696c60c0caef47bc29174f907b",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "33c410c696142c8ee8ea27b86f83004780d2a39f",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-10-02T16:29:46",
+  "completed_at": "2026-10-02T16:49:59"
+}

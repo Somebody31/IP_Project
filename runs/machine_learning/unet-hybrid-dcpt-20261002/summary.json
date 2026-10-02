@@ -1,0 +1,75 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_unet.py --run-id unet-hybrid-dcpt-20261002 --model gated --dcp-t --cache-dir data/derived/crops/dcp-t-train --size medium --epochs 50 --batch 16 --workers 6 --seed 1729 --val-every 5 --resume",
+  "method": "Density-gated U-Net",
+  "config": {
+    "run_id": "unet-hybrid-dcpt-20261002",
+    "model": "gated",
+    "frozen_gate": false,
+    "gate_init": null,
+    "gate_spatial": false,
+    "gate_context": false,
+    "dcp_t": true,
+    "context_dir": null,
+    "beta_class": null,
+    "size": "medium",
+    "epochs": 50,
+    "batch": 16,
+    "crop": 256,
+    "lr": 0.0002,
+    "ssim_weight": 0.2,
+    "workers": 6,
+    "val_scenes_per_beta": 20,
+    "val_every": 5,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "data/derived/crops/dcp-t-train",
+    "amp": false,
+    "resume": true
+  },
+  "train_pairs": 8925,
+  "n_parameters": 7766852,
+  "best": {
+    "epoch": 49,
+    "val": {
+      "psnr": 26.110619349683816,
+      "ssim": 0.954717003305753,
+      "n_images": 60,
+      "by_beta": {
+        "heavy": {
+          "psnr": 24.79649808519741,
+          "ssim": 0.936020627617836,
+          "n_images": 20
+        },
+        "light": {
+          "psnr": 27.642770198144945,
+          "ssim": 0.9720675110816955,
+          "n_images": 20
+        },
+        "medium": {
+          "psnr": 25.8925897657091,
+          "ssim": 0.9560628712177277,
+          "n_images": 20
+        }
+      },
+      "density": {
+        "mean": 0.6305940677722295,
+        "min": 0.4825977683067322,
+        "max": 0.7479823231697083
+      }
+    }
+  },
+  "config_sha256": "96953dddbc147d14183f5d7190f8eb23e6be67a33cdec819cce0dae3e027260d",
+  "source_revision": "485bde130abe6a3c65040ac9da2b1d7363b6b9e2",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/unet-hybrid-dcpt-20261002/best.pt",
+  "started_at": "2026-10-02T11:10:06",
+  "completed_at": "2026-10-02T13:47:23"
+}
