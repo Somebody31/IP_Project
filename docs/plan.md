@@ -534,19 +534,26 @@ ablation column only.
   31.61 dB, Δ +16.82 [16.66, 16.98]) and RTTS test detection (0.4850 vs hazy
   0.4923, DCP 0.5194 — only method that helps). Single pass, no reruns;
   test splits burned for claims.
-- ☐ **P4.2 Analysis write-up:** answer the project's questions with CIs —
-  - Does DCP improve perception metrics? (val says: PSNR yes at β ≥ 0.01,
-    SSIM no.)
-  - Does dehazing help detection? (exploratory says: yes, +2.7 AP@0.5.)
-  - Does the gain vary with fog density? (yes — larger at heavier fog.)
+- ☑ **P4.2 Analysis write-up — done 2026-10-02** (`docs/reports/analysis.md`):
+  all four questions answered with CIs and the mechanism-vs-machinery
+  conclusion.
+  - Does DCP improve perception metrics? **PSNR yes (+1.14 val, +1.46 test),
+    SSIM no (−0.121 / −0.125); it degrades light fog on both.**
+  - Does dehazing help detection? **Only classical DCP** (+0.018 valid,
+    +0.027 test); every learned system, ours and the paper's, is below
+    doing nothing.
+  - Does the gain vary with fog density? **Yes** — learned gains rise with
+    β; DCP flips sign (−2.79 light → +4.73 heavy).
   - **Gated (ours) vs. routed (paper-style) vs. blind U-Net vs. DCP:**
-    quality, speed, params, and detection delta — with the
-    mechanism-vs-machinery conclusion (does self-supervised gating match
-    supervised 3-way routing?) and the disclosed data-asymmetry note.
-- ☐ **P4.5 Freeze the traditional track before final eval:** after P2, tag
-  the code revision and pin the DCP config — no parameter edits between the
-  val benchmark and the test eval, or the test number measures something
-  different from what val promised.
+    quality/params/speed table in `analysis.md` Q4; conclusion: supervised
+    3-way routing loses to a single model (per-branch data starvation),
+    while a self-supervised continuous gate beats both with 3.4× fewer
+    parameters; data asymmetry disclosed (FogIntensity-25K unreleased,
+    mechanism reimplementation).
+- ☑ **P4.5 Freeze the traditional track — done 2026-10-02:** annotated tag
+  `frozen-final-eval-20261002` on the revision used for every frozen test
+  score and the analysis write-up (DCP config untouched between the val
+  benchmark and the test eval). No parameter or config edits after the tag.
 - ☐ **P4.3 Update the deck** (`decks/project_deck.pptx`) with the final
   tables and 2–3 qualitative figure panels
   (`outputs/figures/` — hazy vs. DCP vs. blind U-Net vs. ours (gated) vs.
