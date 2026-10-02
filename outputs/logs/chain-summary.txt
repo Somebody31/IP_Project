@@ -1,0 +1,71 @@
+=== chain stopped 2026-10-02 09:34:41 state=inactive invocation=d8d1fbf640444e7f9e62f590cff91a50
+
+=== stage transitions (this invocation only)
+[23:52:03] stage 4: seed 43 train + score
+[03:07:34] stage 4: seed 7 train + score
+[06:22:08] stage 5: per-pixel gate training
+[09:08:26] stage 5: full-val score
+[09:28:29] stage 5: mask-collapse probe
+[09:33:53] chain complete
+
+=== stage logs (tail)
+--- outputs/logs/train-context-seed1729.log
+  }
+}
+run: runs/machine_learning/unet-gated-context-full-val-20260929
+summary: results/machine_learning/unet-gated-context-full-val-20260929.json
+== context-gated chain complete: results/machine_learning/unet-gated-context-full-val-20260929.json ==
+--- outputs/logs/train-context-seed43.log
+  }
+}
+run: runs/machine_learning/unet-gated-context-full-val-seed43
+summary: results/machine_learning/unet-gated-context-full-val-seed43.json
+== context-gated chain complete: results/machine_learning/unet-gated-context-full-val-seed43.json ==
+--- outputs/logs/train-context-seed7.log
+  }
+}
+run: runs/machine_learning/unet-gated-context-full-val-seed7
+summary: results/machine_learning/unet-gated-context-full-val-seed7.json
+== context-gated chain complete: results/machine_learning/unet-gated-context-full-val-seed7.json ==
+--- outputs/logs/train-spatial.log
+epoch 48/50 loss 0.0255
+epoch 49/50 loss 0.0249
+epoch 50/50 loss 0.0254 val_psnr 32.35 val_ssim 0.9806 d[0.366,0.696]
+run: runs/machine_learning/unet-gated-spatial-20260929
+best checkpoint: outputs/checkpoints/unet-gated-spatial-20260929/best.pt
+--- outputs/logs/score-spatial.log
+    "seed": 1729
+  }
+}
+run: runs/machine_learning/unet-gated-spatial-full-val-20260929
+summary: results/machine_learning/unet-gated-spatial-full-val-20260929.json
+--- outputs/logs/spatial-mask-probe.log
+ medium   0.548   0.269   0.000   0.958     0.131     0.056
+  heavy   0.637   0.248   0.000   0.960     0.178     0.045
+
+pooled: mean 0.550 std 0.272 | >0.9: 0.125 | <0.1: 0.057
+VERDICT: genuinely spatial — mask varies within images; the PSNR number is meaningful
+--- outputs/logs/train-spatial.log
+epoch 48/50 loss 0.0255
+epoch 49/50 loss 0.0249
+epoch 50/50 loss 0.0254 val_psnr 32.35 val_ssim 0.9806 d[0.366,0.696]
+run: runs/machine_learning/unet-gated-spatial-20260929
+best checkpoint: outputs/checkpoints/unet-gated-spatial-20260929/best.pt
+
+=== errors/tracebacks in this invocation (if any)
+
+=== results (newest first)
+-rw-r--r-- 1 sathwik sathwik  4748 Oct  2 09:28 results/machine_learning/unet-gated-spatial-full-val-20260929.json
+-rw-r--r-- 1 sathwik sathwik   881 Oct  2 08:19 results/machine_learning/post-chain-analysis-2026-10-02.json
+-rw-r--r-- 1 sathwik sathwik  4756 Oct  2 06:22 results/machine_learning/unet-gated-context-full-val-seed7.json
+-rw-r--r-- 1 sathwik sathwik  4763 Oct  2 03:07 results/machine_learning/unet-gated-context-full-val-seed43.json
+-rw-r--r-- 1 sathwik sathwik  2437 Oct  1 18:06 results/machine_learning/probe-rtts-damage.json
+-rw-r--r-- 1 sathwik sathwik  4752 Sep 29 17:17 results/machine_learning/unet-gated-context-full-val-20260929.json
+-rw-r--r-- 1 sathwik sathwik 16119 Sep 29 13:51 results/machine_learning/regime-full-val-20260929.json
+-rw-r--r-- 1 sathwik sathwik  1988 Sep 29 10:14 results/machine_learning/unet-blind-rtts-full-20260929.json
+-rw-r--r-- 1 sathwik sathwik  2286 Sep 29 10:08 results/machine_learning/unet-gated-context-rtts-full-20260929.json
+-rw-r--r-- 1 sathwik sathwik  4755 Sep 27 10:25 results/machine_learning/unet-gated-context-full-val-20260927.json
+-rw-r--r-- 1 sathwik sathwik  4725 Sep 25 15:02 results/machine_learning/unet-gated-full-val-20260925.json
+-rw-r--r-- 1 sathwik sathwik  5288 Sep 25 07:27 results/machine_learning/routed-learned-full-val-20260924.json
+-rw-r--r-- 1 sathwik sathwik  5149 Sep 25 07:07 results/machine_learning/routed-oracle-full-val-20260924.json
+-rw-r--r-- 1 sathwik sathwik  4739 Sep 25 06:48 results/machine_learning/unet-blind-full-val-20260924.json

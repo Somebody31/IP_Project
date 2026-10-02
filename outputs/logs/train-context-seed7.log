@@ -1,0 +1,110 @@
+== unet-gated-context-seed7-20260929 ==
+  workers=6 nice=10 threads=2
+using whole-image context data/derived/crops/resize-512x256
+using crop cache data/derived/crops/train
+train pairs 8925 | val {'light': 10, 'medium': 10, 'heavy': 10} | params 7,771,172 | device cuda | amp False
+epoch 1/50 loss 0.1507
+epoch 2/50 loss 0.0875
+epoch 3/50 loss 0.0788
+epoch 4/50 loss 0.0718
+epoch 5/50 loss 0.0642 val_psnr 24.07 val_ssim 0.9417 d[0.885,0.912]
+epoch 6/50 loss 0.0609
+epoch 7/50 loss 0.0593
+epoch 8/50 loss 0.0566
+epoch 9/50 loss 0.0540
+epoch 10/50 loss 0.0534 val_psnr 23.60 val_ssim 0.9457 d[0.862,0.896]
+epoch 11/50 loss 0.0513
+epoch 12/50 loss 0.0503
+epoch 13/50 loss 0.0484
+epoch 14/50 loss 0.0474
+epoch 15/50 loss 0.0454 val_psnr 22.98 val_ssim 0.9531 d[0.865,0.893]
+epoch 16/50 loss 0.0446
+epoch 17/50 loss 0.0429
+epoch 18/50 loss 0.0427
+epoch 19/50 loss 0.0418
+epoch 20/50 loss 0.0410 val_psnr 28.16 val_ssim 0.9618 d[0.862,0.888]
+epoch 21/50 loss 0.0396
+epoch 22/50 loss 0.0395
+epoch 23/50 loss 0.0392
+epoch 24/50 loss 0.0376
+epoch 25/50 loss 0.0368 val_psnr 29.23 val_ssim 0.9687 d[0.860,0.884]
+epoch 26/50 loss 0.0369
+epoch 27/50 loss 0.0359
+epoch 28/50 loss 0.0353
+epoch 29/50 loss 0.0344
+epoch 30/50 loss 0.0344 val_psnr 28.80 val_ssim 0.9703 d[0.865,0.884]
+epoch 31/50 loss 0.0337
+epoch 32/50 loss 0.0329
+epoch 33/50 loss 0.0323
+epoch 34/50 loss 0.0324
+epoch 35/50 loss 0.0322 val_psnr 30.52 val_ssim 0.9737 d[0.872,0.886]
+epoch 36/50 loss 0.0317
+epoch 37/50 loss 0.0307
+epoch 38/50 loss 0.0305
+epoch 39/50 loss 0.0303
+epoch 40/50 loss 0.0300 val_psnr 31.00 val_ssim 0.9762 d[0.878,0.889]
+epoch 41/50 loss 0.0291
+epoch 42/50 loss 0.0291
+epoch 43/50 loss 0.0291
+epoch 44/50 loss 0.0288
+epoch 45/50 loss 0.0280 val_psnr 31.65 val_ssim 0.9774 d[0.882,0.891]
+epoch 46/50 loss 0.0284
+epoch 47/50 loss 0.0280
+epoch 48/50 loss 0.0281
+epoch 49/50 loss 0.0277
+epoch 50/50 loss 0.0279 val_psnr 31.95 val_ssim 0.9776 d[0.883,0.891]
+run: runs/machine_learning/unet-gated-context-seed7-20260929
+best checkpoint: outputs/checkpoints/unet-gated-context-seed7-20260929/best.pt
+== scoring unet-gated-context-seed7-20260929 on full val ==
+device: cuda
+scored 100/1500
+scored 200/1500
+scored 300/1500
+scored 400/1500
+scored 500/1500
+scored 600/1500
+scored 700/1500
+scored 800/1500
+scored 900/1500
+scored 1000/1500
+scored 1100/1500
+scored 1200/1500
+scored 1300/1500
+scored 1400/1500
+scored 1500/1500
+{
+  "n_images": 1500,
+  "n_scenes": 500,
+  "clear_reference": {
+    "identity": true,
+    "psnr": "infinity",
+    "ssim": 1.0
+  },
+  "hazy_psnr": 14.651288293377647,
+  "hazy_ssim": 0.8249684632221858,
+  "dehazed_psnr": 29.947286378213356,
+  "dehazed_ssim": 0.9676771323680877,
+  "dehazed_minus_hazy_psnr": {
+    "mean": 15.295998084835713,
+    "ci95": [
+      15.01486847599888,
+      15.565906801603765
+    ],
+    "n_scenes": 500,
+    "resamples": 2000,
+    "seed": 1729
+  },
+  "dehazed_minus_hazy_ssim": {
+    "mean": 0.142708669145902,
+    "ci95": [
+      0.13936864524980386,
+      0.145876243853569
+    ],
+    "n_scenes": 500,
+    "resamples": 2000,
+    "seed": 1729
+  }
+}
+run: runs/machine_learning/unet-gated-context-full-val-seed7
+summary: results/machine_learning/unet-gated-context-full-val-seed7.json
+== context-gated chain complete: results/machine_learning/unet-gated-context-full-val-seed7.json ==

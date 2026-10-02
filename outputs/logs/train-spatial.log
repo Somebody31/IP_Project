@@ -1,0 +1,54 @@
+using crop cache data/derived/crops/train
+train pairs 8925 | val {'light': 10, 'medium': 10, 'heavy': 10} | params 7,766,084 | device cuda | amp False
+epoch 1/50 loss 0.1193
+epoch 2/50 loss 0.0841
+epoch 3/50 loss 0.0756
+epoch 4/50 loss 0.0681
+epoch 5/50 loss 0.0619 val_psnr 23.89 val_ssim 0.9458 d[0.681,0.874]
+epoch 6/50 loss 0.0596
+epoch 7/50 loss 0.0556
+epoch 8/50 loss 0.0533
+epoch 9/50 loss 0.0504
+epoch 10/50 loss 0.0495 val_psnr 24.47 val_ssim 0.9532 d[0.555,0.833]
+epoch 11/50 loss 0.0475
+epoch 12/50 loss 0.0457
+epoch 13/50 loss 0.0426
+epoch 14/50 loss 0.0425
+epoch 15/50 loss 0.0417 val_psnr 26.83 val_ssim 0.9624 d[0.432,0.727]
+epoch 16/50 loss 0.0397
+epoch 17/50 loss 0.0377
+epoch 18/50 loss 0.0376
+epoch 19/50 loss 0.0370
+epoch 20/50 loss 0.0364 val_psnr 29.40 val_ssim 0.9720 d[0.377,0.696]
+epoch 21/50 loss 0.0349
+epoch 22/50 loss 0.0349
+epoch 23/50 loss 0.0343
+epoch 24/50 loss 0.0335
+epoch 25/50 loss 0.0323 val_psnr 28.91 val_ssim 0.9704 d[0.433,0.741]
+epoch 26/50 loss 0.0326
+epoch 27/50 loss 0.0324
+epoch 28/50 loss 0.0315
+epoch 29/50 loss 0.0306
+epoch 30/50 loss 0.0306 val_psnr 30.24 val_ssim 0.9767 d[0.366,0.681]
+epoch 31/50 loss 0.0304
+epoch 32/50 loss 0.0298
+epoch 33/50 loss 0.0290
+epoch 34/50 loss 0.0290
+epoch 35/50 loss 0.0289 val_psnr 31.23 val_ssim 0.9793 d[0.346,0.674]
+epoch 36/50 loss 0.0280
+epoch 37/50 loss 0.0273
+epoch 38/50 loss 0.0272
+epoch 39/50 loss 0.0275
+epoch 40/50 loss 0.0269 val_psnr 31.66 val_ssim 0.9802 d[0.342,0.669]
+epoch 41/50 loss 0.0263
+epoch 42/50 loss 0.0263
+epoch 43/50 loss 0.0263
+epoch 44/50 loss 0.0259
+epoch 45/50 loss 0.0256 val_psnr 32.34 val_ssim 0.9809 d[0.361,0.695]
+epoch 46/50 loss 0.0256
+epoch 47/50 loss 0.0256
+epoch 48/50 loss 0.0255
+epoch 49/50 loss 0.0249
+epoch 50/50 loss 0.0254 val_psnr 32.35 val_ssim 0.9806 d[0.366,0.696]
+run: runs/machine_learning/unet-gated-spatial-20260929
+best checkpoint: outputs/checkpoints/unet-gated-spatial-20260929/best.pt
