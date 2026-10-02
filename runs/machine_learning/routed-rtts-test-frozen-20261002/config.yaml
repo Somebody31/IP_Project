@@ -1,0 +1,13 @@
+checkpoint: outputs/checkpoints/branch-light-20260924/best.pt
+config: /home/sathwik/Dev/Projects/IP_Project/configs/traditional/dcp_rtts_detection.yaml
+dataset_split: 
+device: cuda
+inference: whole
+limit: 0
+routed_branches: [PosixPath('outputs/checkpoints/branch-light-20260924/best.pt'), PosixPath('outputs/checkpoints/branch-medium-20260924/best.pt'), PosixPath('outputs/checkpoints/branch-heavy-20260924/best.pt')]
+routed_classifier: outputs/checkpoints/density-classifier-20260924/best.pt
+run_id: routed-rtts-test-frozen-20261002
+skip_dcp: False
+skip_hazy: False
+stride: 128
+tile: 256

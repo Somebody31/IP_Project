@@ -1,0 +1,75 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_unet.py --run-id unet-gated-spatial-20260929 --model gated --gate-spatial --gate-init 0.95 --cache-dir data/derived/crops/train --size medium --epochs 50 --batch 16 --workers 6 --seed 1729 --val-scenes-per-beta 10 --val-every 5",
+  "method": "Density-gated U-Net",
+  "config": {
+    "run_id": "unet-gated-spatial-20260929",
+    "model": "gated",
+    "frozen_gate": false,
+    "gate_init": 0.95,
+    "gate_spatial": true,
+    "gate_context": false,
+    "dcp_t": false,
+    "context_dir": null,
+    "beta_class": null,
+    "size": "medium",
+    "epochs": 50,
+    "batch": 16,
+    "crop": 256,
+    "lr": 0.0002,
+    "ssim_weight": 0.2,
+    "workers": 6,
+    "val_scenes_per_beta": 10,
+    "val_every": 5,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "data/derived/crops/train",
+    "amp": false,
+    "resume": false
+  },
+  "train_pairs": 8925,
+  "n_parameters": 7766084,
+  "best": {
+    "epoch": 49,
+    "val": {
+      "psnr": 32.35431574166629,
+      "ssim": 0.9806183795134227,
+      "n_images": 30,
+      "by_beta": {
+        "heavy": {
+          "psnr": 30.60728999509319,
+          "ssim": 0.9713294625282287,
+          "n_images": 10
+        },
+        "light": {
+          "psnr": 33.856651503091015,
+          "ssim": 0.9877804279327392,
+          "n_images": 10
+        },
+        "medium": {
+          "psnr": 32.599005726814646,
+          "ssim": 0.9827452480793,
+          "n_images": 10
+        }
+      },
+      "density": {
+        "mean": 0.5170072793960572,
+        "min": 0.36630553007125854,
+        "max": 0.6959102153778076
+      }
+    }
+  },
+  "config_sha256": "ba547a52ba61f9cf953a77268a8ee3147ffedf39331968e624c295778f09e86e",
+  "source_revision": "dbf6283e1560fa3a684246e52db1e81e6713e467",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/unet-gated-spatial-20260929/best.pt",
+  "started_at": "2026-10-02T06:22:15",
+  "completed_at": "2026-10-02T09:08:17"
+}

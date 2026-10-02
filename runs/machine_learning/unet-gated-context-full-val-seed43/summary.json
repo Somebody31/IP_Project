@@ -1,0 +1,178 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id unet-gated-context-full-val-seed43 --mode gated --checkpoint outputs/checkpoints/unet-gated-context-seed43-20260929/best.pt --split val --workers 4",
+  "method": "Density-gated U-Net",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dehazed_psnr": 29.871505411738436,
+      "dehazed_ssim": 0.9675830383300781,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 15.220217118360793,
+        "ci95": [
+          14.933296954108958,
+          15.493133662813648
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.14261457510789233,
+        "ci95": [
+          0.13924639248152573,
+          0.1457745123098294
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dehazed_psnr": 31.611349903170243,
+        "dehazed_ssim": 0.979405745267868,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 13.046220803488598,
+          "ci95": [
+            12.768294667519422,
+            13.314104028669082
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.07206081652641297,
+          "ci95": [
+            0.0695217208713293,
+            0.07449162512123585
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dehazed_psnr": 30.3478922581773,
+        "dehazed_ssim": 0.9715094681978226,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 15.882811517680237,
+          "ci95": [
+            15.580991086068874,
+            16.159670702176346
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.13785268115997315,
+          "ci95": [
+            0.1343249760389328,
+            0.14119587238132955
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dehazed_psnr": 27.65527407386777,
+        "dehazed_ssim": 0.9518339015245437,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 16.731619033913542,
+          "ci95": [
+            16.39415926095319,
+            17.04952348427798
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.21793022763729095,
+          "ci95": [
+            0.21358110113441944,
+            0.22193932326436042
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": null,
+  "routing_counts": null,
+  "checkpoints": {
+    "model": "outputs/checkpoints/unet-gated-context-seed43-20260929/best.pt",
+    "classifier": null,
+    "branches": null
+  },
+  "config_sha256": "84a0b7887896c528f2456a9d0a1acc68666ab260d38a8116bf9f559ea40f53ef",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "dbf6283e1560fa3a684246e52db1e81e6713e467",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-10-02T02:48:57",
+  "completed_at": "2026-10-02T03:07:29"
+}
