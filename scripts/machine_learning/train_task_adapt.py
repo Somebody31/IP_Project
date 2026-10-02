@@ -82,6 +82,15 @@ class RttTrainSet(torch.utils.data.Dataset):
             rgb = np.asarray(handle.convert("RGB"), dtype=np.float32) / 255.0
         height, width = rgb.shape[:2]
         crop = min(self.crop, height, width)
+        if height < self.crop or width < self.crop:
+            # pad smaller images to the crop with reflection so every crop
+            # is exactly (crop, crop) and batches stack
+            padded = np.pad(rgb, ((0, max(0, self.crop - height)),
+                                  (0, max(0, self.crop - width)),
+                                  (0, 0)), mode="reflect")
+            rgb = padded[: self.crop, : self.crop]
+            height = width = self.crop
+            crop = self.crop
         top = rng.randrange(height - crop + 1)
         left = rng.randrange(width - crop + 1)
         image = rgb[top : top + crop, left : left + crop]
