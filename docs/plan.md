@@ -485,30 +485,35 @@ ablation column only.
   synthetic val and `rtts/valid`; `rtts/test` scored once, post-freeze, later
   (P4.1). Split integrity verified 2026-09-29: no filename or stem collisions
   across the three RTTS splits.
-  - ☐ **Step 0 (in progress)** — per-image damage diagnosis on 200 `rtts/train`
-    images × {hazy, ours, DCP}: per-image AP@0.5 deltas correlated against
-    input statistics (luminance, contrast, dark channel, saturation). Decides
-    whether the harm localizes (trust gate viable) or not (go to step 2).
-  - ☐ **Step 1** — trust gate: small head on distribution-stable features,
-    supervised by per-image AP deltas computed on `rtts/train`; falls back to
-    the base output when harm is predicted. Acceptance: valid AP ≥ hazy-valid
-    (never worse than doing nothing).
-  - ☐ **Step 2** — physical base + learned residual (or DCP transmission as an
-    input channel), trained on our synthetic pairs. Acceptance: in-domain
-    pooled ≥ 29.4 dB; valid AP ≥ DCP-valid.
-  - ☐ **Step 3** — task-driven fine-tune on `rtts/train` with the frozen
-    YOLOv8n in the loss (mixed synthetic-reconstruction + real-fog-detection
-    batches), selected on `rtts/valid`. **Requires a decision-record entry:**
-    it makes ours a domain-adaptation track and no longer a paper reproduction
-    (the paper trains on FogIntensity-25K only and adapts nowhere), so its
-    numbers are never merged into the paper-comparison table.
-  - ☐ **Step 4** — score the paper's routed design on RTTS (`rtts/valid`, and
-    one test touch at the end): the headline table currently judges their design
-    in-domain only while ours is scored on RW data. The routed column is
-    implemented (`evaluate_model_detection.py --routed-classifier/--routed-branches`,
-    commit `a3bbe66`).
-  - ☐ **Step 5** — single frozen `rtts/test` score of the valid-selected winner,
-    then freeze; every claim re-runs under P4.1.
+  - ☑ **Step 0 (done 2026-10-02)** — per-image damage diagnosis on 200
+    `rtts/train` images × {hazy, ours, DCP} (`probe-rtts-damage.json`,
+    198 valid rows): harm concentrated (22% of images worsened, 87% of harm
+    mass in 10% of images) but **not localizable** — every input statistic
+    correlates |r| < 0.2 with the per-image AP delta.
+  - ☑ **Step 1 (closed as measured-not-viable 2026-10-02, folded into step-2
+    evaluation per user decision)** — trust gate: ROC sweep over every
+    computed per-image signal (`trust_gate_fold_check.py`): best AUC 0.59
+    (saturation), all others ≈ 0.5; best operating point precision 0.28 at
+    recall ≥ 0.5, below the 22% base rate. A gate on these features would
+    hurt more than doing nothing. No head trained.
+  - ☑ **Step 2 (done 2026-10-02, negative result)** — DCP transmission as a
+    4th input channel: full-val pooled **25.49 dB vs baseline 29.999**
+    (−4.51 dB; acceptance ≥ 29.4 fails). Channel computed identically at
+    train and eval (`485bde1`); negative is decisive, not a plumbing
+    artifact. Reported as finding 13 in `val-comparison.md`.
+  - ☑ **Step 3 (APPROVED 2026-10-02, execution queued after the report
+    block)** — decision record approved and committed
+    (`docs/decisions/2026-10-01-rtts-train-adaptation.md`, `33c410c`);
+    separate labelled track, frozen YOLOv8n disclosed as loss and metric.
+  - ☑ **Step 4 (done 2026-10-02)** — routed system on `rtts/valid`
+    (`routed-rtts-valid-20261002.json`): routed 0.4415 — the *weakest*
+    learned column (hazy 0.4527, DCP 0.4706, ours 0.4451). The paper's own
+    design shares the transferability limitation; finding 12.
+  - ☐ **Step 5 (in progress)** — single frozen `rtts/test` score of the
+    valid-selected winner, then freeze; every claim re-runs under P4.1.
+    Valid-selected winner (in-domain + detection): **spatial-gated U-Net**
+    (best in-domain 30.40 dB; detection still negative but best learned
+    column on valid).
 - **Exit criterion:** `results/machine_learning/` has val dehazing runs +
   RTTS detection runs for **both** ML methods (gated + routed) plus the
   `d≡1` ablation, same schema as the traditional ones.
