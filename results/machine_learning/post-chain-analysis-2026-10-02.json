@@ -1,0 +1,48 @@
+{
+  "complete": false,
+  "rows": {
+    "baseline_seed1729": {
+      "pooled_psnr": 29.999,
+      "hazy_psnr": 14.651,
+      "status": "completed",
+      "n_images": 1500
+    },
+    "seed43": {
+      "pooled_psnr": 29.872,
+      "hazy_psnr": 14.651,
+      "status": "completed",
+      "n_images": 1500
+    },
+    "seed7": {
+      "pooled_psnr": 29.947,
+      "hazy_psnr": 14.651,
+      "status": "completed",
+      "n_images": 1500
+    },
+    "spatial_gate": {
+      "pooled_psnr": 30.401,
+      "hazy_psnr": 14.651,
+      "status": "completed",
+      "n_images": 1500
+    },
+    "hybrid_dcp_t": null
+  },
+  "seed_variance": {
+    "values": [
+      29.999,
+      29.947,
+      29.872
+    ],
+    "bootstrap_ci95": [
+      29.872,
+      29.999
+    ],
+    "spread_db": 0.127,
+    "verdict": "spread >= 0.1 dB: seed variance is NOT negligible; parity wording must change"
+  },
+  "in_domain_edge_over_blind": {
+    "edge_db": 0.539,
+    "vs_seed_spread_db": 0.127,
+    "survives_seeds": true
+  }
+}

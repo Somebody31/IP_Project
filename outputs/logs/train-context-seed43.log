@@ -3,6 +3,109 @@
 using whole-image context data/derived/crops/resize-512x256
 using crop cache data/derived/crops/train
 train pairs 8925 | val {'light': 10, 'medium': 10, 'heavy': 10} | params 7,771,172 | device cuda | amp False
-[W929 17:17:35.485396395 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 908066816 bytes (free: 915865600, total: 6034096128).
-epoch 1/50 loss 0.1320
-epoch 2/50 loss 0.0855
+[W1001 23:52:19.399997486 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 908066816 bytes (free: 871497728, total: 6034096128).
+epoch 1/50 loss 0.1317
+epoch 2/50 loss 0.0848
+epoch 3/50 loss 0.0748
+epoch 4/50 loss 0.0687
+epoch 5/50 loss 0.0628 val_psnr 24.92 val_ssim 0.9468 d[0.870,0.904]
+epoch 6/50 loss 0.0601
+epoch 7/50 loss 0.0585
+epoch 8/50 loss 0.0566
+epoch 9/50 loss 0.0534
+epoch 10/50 loss 0.0529 val_psnr 26.64 val_ssim 0.9580 d[0.850,0.889]
+epoch 11/50 loss 0.0512
+epoch 12/50 loss 0.0492
+epoch 13/50 loss 0.0472
+epoch 14/50 loss 0.0466
+epoch 15/50 loss 0.0450 val_psnr 25.37 val_ssim 0.9518 d[0.861,0.890]
+epoch 16/50 loss 0.0436
+epoch 17/50 loss 0.0427
+epoch 18/50 loss 0.0427
+epoch 19/50 loss 0.0418
+epoch 20/50 loss 0.0410 val_psnr 28.25 val_ssim 0.9627 d[0.846,0.877]
+epoch 21/50 loss 0.0397
+epoch 22/50 loss 0.0397
+epoch 23/50 loss 0.0394
+epoch 24/50 loss 0.0378
+epoch 25/50 loss 0.0365 val_psnr 28.36 val_ssim 0.9666 d[0.861,0.882]
+epoch 26/50 loss 0.0372
+epoch 27/50 loss 0.0367
+epoch 28/50 loss 0.0359
+epoch 29/50 loss 0.0346
+epoch 30/50 loss 0.0343 val_psnr 28.59 val_ssim 0.9666 d[0.866,0.881]
+epoch 31/50 loss 0.0341
+epoch 32/50 loss 0.0337
+epoch 33/50 loss 0.0328
+epoch 34/50 loss 0.0332
+epoch 35/50 loss 0.0324 val_psnr 30.69 val_ssim 0.9747 d[0.867,0.879]
+epoch 36/50 loss 0.0316
+epoch 37/50 loss 0.0311
+epoch 38/50 loss 0.0310
+epoch 39/50 loss 0.0307
+epoch 40/50 loss 0.0301 val_psnr 31.28 val_ssim 0.9763 d[0.872,0.881]
+epoch 41/50 loss 0.0292
+epoch 42/50 loss 0.0295
+epoch 43/50 loss 0.0294
+epoch 44/50 loss 0.0292
+epoch 45/50 loss 0.0289 val_psnr 31.82 val_ssim 0.9775 d[0.872,0.881]
+epoch 46/50 loss 0.0286
+epoch 47/50 loss 0.0286
+epoch 48/50 loss 0.0286
+epoch 49/50 loss 0.0282
+epoch 50/50 loss 0.0284 val_psnr 31.61 val_ssim 0.9770 d[0.873,0.881]
+run: runs/machine_learning/unet-gated-context-seed43-20260929
+best checkpoint: outputs/checkpoints/unet-gated-context-seed43-20260929/best.pt
+== scoring unet-gated-context-seed43-20260929 on full val ==
+device: cuda
+scored 100/1500
+scored 200/1500
+scored 300/1500
+scored 400/1500
+scored 500/1500
+scored 600/1500
+scored 700/1500
+scored 800/1500
+scored 900/1500
+scored 1000/1500
+scored 1100/1500
+scored 1200/1500
+scored 1300/1500
+scored 1400/1500
+scored 1500/1500
+{
+  "n_images": 1500,
+  "n_scenes": 500,
+  "clear_reference": {
+    "identity": true,
+    "psnr": "infinity",
+    "ssim": 1.0
+  },
+  "hazy_psnr": 14.651288293377647,
+  "hazy_ssim": 0.8249684632221858,
+  "dehazed_psnr": 29.871505411738436,
+  "dehazed_ssim": 0.9675830383300781,
+  "dehazed_minus_hazy_psnr": {
+    "mean": 15.220217118360793,
+    "ci95": [
+      14.933296954108958,
+      15.493133662813648
+    ],
+    "n_scenes": 500,
+    "resamples": 2000,
+    "seed": 1729
+  },
+  "dehazed_minus_hazy_ssim": {
+    "mean": 0.14261457510789233,
+    "ci95": [
+      0.13924639248152573,
+      0.1457745123098294
+    ],
+    "n_scenes": 500,
+    "resamples": 2000,
+    "seed": 1729
+  }
+}
+run: runs/machine_learning/unet-gated-context-full-val-seed43
+summary: results/machine_learning/unet-gated-context-full-val-seed43.json
+== context-gated chain complete: results/machine_learning/unet-gated-context-full-val-seed43.json ==
