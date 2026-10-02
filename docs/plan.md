@@ -509,11 +509,14 @@ ablation column only.
     (`routed-rtts-valid-20261002.json`): routed 0.4415 — the *weakest*
     learned column (hazy 0.4527, DCP 0.4706, ours 0.4451). The paper's own
     design shares the transferability limitation; finding 12.
-  - ☐ **Step 5 (in progress)** — single frozen `rtts/test` score of the
-    valid-selected winner, then freeze; every claim re-runs under P4.1.
-    Valid-selected winner (in-domain + detection): **spatial-gated U-Net**
-    (best in-domain 30.40 dB; detection still negative but best learned
-    column on valid).
+  - ☑ **Step 5 (done 2026-10-02)** — single frozen `rtts/test` score of the
+    valid-selected winner, then freeze. Winner: **spatial-gated U-Net**
+    (best in-domain 30.40 dB, best learned column on valid).
+    **`spatial-rtts-test-frozen-20261002.json`: AP@0.5 0.4850** vs hazy
+    0.4923 (−0.007) and DCP 0.5194 (+0.027) — DCP remains the only method
+    that helps on the frozen test split; the transferability limitation
+    stands, now stated on the frozen protocol. Test split is now burned for
+    claims; every claim re-runs under P4.1.
 - **Exit criterion:** `results/machine_learning/` has val dehazing runs +
   RTTS detection runs for **both** ML methods (gated + routed) plus the
   `d≡1` ablation, same schema as the traditional ones.

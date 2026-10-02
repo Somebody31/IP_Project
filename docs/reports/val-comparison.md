@@ -4,8 +4,9 @@ Generated 2026-09-24; method 2 (gated U-Net) added 2026-09-27; seeds,
 spatial gate, routed-on-RTTS-valid, and the hybrid negative result added
 2026-10-02. Every number comes from the shared evaluation path
 (`src/ip_dehaze/evaluation/{metrics,pair_benchmark}.py`), scene-clustered
-bootstrap with 2,000 resamples, seed 1729. No test data was touched (RTTS
-test pending the single post-freeze score, P4.1).
+bootstrap with 2,000 resamples, seed 1729. RTTS test was scored once,
+post-freeze (finding 12, step 5 / P4.1): all claims now re-runnable under
+the frozen protocol.
 
 ## Setup
 
@@ -283,8 +284,15 @@ not carry it.
     failure on real fog is not specific to our gate — every learned variant
     hurts while the classical prior helps, so the content/scene-domain
     transferability limitation (finding 9) applies to the paper's own design
-    as well. RTTS test remains untouched; the single post-freeze test score
-    (step 5) is pending.
+    as well. **The single post-freeze test score (step 5, P4.1) confirms it
+    on the untouched test split**: the valid-selected winner (spatial-gated
+    U-Net, `spatial-rtts-test-frozen-20261002.json`) scores **0.4850 AP@0.5**
+    vs hazy 0.4923 (−0.007) and DCP 0.5194 (+0.027) — the learned model still
+    trails doing nothing, by less than the context-gate variant's earlier
+    −0.018 (exploratory), and DCP remains the only method that helps. The
+    best learned system on real fog improves nothing over the hazy input;
+    the honest conclusion is the transferability limitation, stated with the
+    frozen split's number.
 
 13. **The DCP-transmission hybrid is a decisive negative.** Feeding DCP's
     per-image transmission estimate as a 4th input channel (the "physical
