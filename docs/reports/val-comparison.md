@@ -1,8 +1,11 @@
 # Validation comparison — Foggy Cityscapes val
 
-Generated 2026-09-24; method 2 (gated U-Net) added 2026-09-27. Every number comes from the shared evaluation path
+Generated 2026-09-24; method 2 (gated U-Net) added 2026-09-27; seeds,
+spatial gate, routed-on-RTTS-valid, and the hybrid negative result added
+2026-10-02. Every number comes from the shared evaluation path
 (`src/ip_dehaze/evaluation/{metrics,pair_benchmark}.py`), scene-clustered
-bootstrap with 2,000 resamples, seed 1729. No test data was touched.
+bootstrap with 2,000 resamples, seed 1729. No test data was touched (RTTS
+test pending the single post-freeze score, P4.1).
 
 ## Setup
 
@@ -25,6 +28,14 @@ bootstrap with 2,000 resamples, seed 1729. No test data was touched.
 | Routed, learned routing | 14.65 | 26.42 | +11.77 [11.48, 12.03] | +0.1233 [0.1198, 0.1264] |
 | Gated U-Net, crop gate (as trained) | 14.65 | 24.39 | +9.74 [9.55, 9.93] | +0.1145 [0.1119, 0.1170] |
 | Gated U-Net, whole-scene gate (fixed) | 14.65 | **29.63** | +14.98 [14.70, 15.25] | +0.1411 [0.1384, 0.1439] |
+| Gated U-Net, spatial gate (`--gate-spatial`) | 14.65 | **30.40** | +15.75 [15.46, 16.03] | +0.1468 [0.1434, 0.1500] |
+| Gated U-Net, context gate (seed 43) | 14.65 | 29.87 | +15.22 [14.95, 15.49] | +0.1426 [0.1392, 0.1458] |
+| Gated U-Net, context gate (seed 7) | 14.65 | 29.95 | +15.30 [15.02, 15.57] | +0.1427 [0.1394, 0.1459] |
+| Hybrid, DCP-transmission 4th channel | 14.65 | 25.49 | +10.84 [10.66, 11.01] | +0.1243 [0.1217, 0.1267] |
+
+(The seed rows and the hybrid are context-gate variants; the spatial gate is
+the same backbone with a per-pixel gate head. `post-chain-analysis-2026-10-02.json`
+holds all rows in one place.)
 
 All rows are the same 1,500 images. The 52-scene refined-subset run
 (`results/traditional/dcp-refined-val-20260923.json`, +1.25 dB, SSIM −0.138)
@@ -242,6 +253,54 @@ not carry it.
    a resynthesis target**: the axes a heavier-β or tinted-A resynthesis would
    tune are precisely the ones measured here and found not to bind.
 
+10. **Seed variance: the parity claim survives, reworded.** Three seeds of the
+    context-gated variant (1729 / 43 / 7, identical config apart from the seed,
+    all with the crop-rotation fix) score 29.999 / 29.872 / 29.947 dB pooled —
+    spread **0.127 dB**. The pre-registered "parity within noise" wording must
+    become "parity within seed spread (±0.13 dB)": seed noise is not negligible
+    at this effect size. The context gate's +0.54 dB edge over the blind model
+    is 4× the seed spread and survives (`post-chain-analysis-2026-10-02.json`,
+    `seed_variance` block).
+
+11. **The spatial gate is a genuine improvement, and the mask probe proves the
+    mechanism.** Training the gate per-pixel (`--gate-spatial`, one scalar per
+    pixel instead of one per image) reaches **30.40 dB pooled, +0.40 dB over
+    the context gate and +0.94 over the blind model** — beyond seed spread
+    (0.127 dB), consistent at every density (+0.29 / +0.38 / +0.53 dB at
+    light / medium / heavy). The mask-collapse diagnostic was run *before*
+    trusting the number, and it passes: pooled mask mean 0.550, std **0.272**,
+    12.5% of pixels > 0.9, 5.7% < 0.1 — the mask varies within images at every
+    density (per-density rows in `outputs/logs/spatial-mask-probe.log`), so
+    the gain is a real spatial adaptivity signal, not a collapsed constant.
+    This is the only adaptivity variant that improved over a plain model
+    in-domain.
+
+12. **The paper's routed design is the *worst* learned system on real fog.**
+    On RTTS-valid (865 images, frozen COCO YOLOv8n, whole-image protocol):
+    hazy 0.4527, DCP 0.4706 (**+0.018, only method that helps**), ours
+    (context-gated) 0.4451 (−0.008), routed (learned routing) **0.4415**
+    (−0.011). The routed column closes the fairness gap in finding 7: the
+    failure on real fog is not specific to our gate — every learned variant
+    hurts while the classical prior helps, so the content/scene-domain
+    transferability limitation (finding 9) applies to the paper's own design
+    as well. RTTS test remains untouched; the single post-freeze test score
+    (step 5) is pending.
+
+13. **The DCP-transmission hybrid is a decisive negative.** Feeding DCP's
+    per-image transmission estimate as a 4th input channel (the "physical
+    prior as input feature" hypothesis, step 2 of P3.7) trains fine but scores
+    **25.49 dB pooled — 4.51 dB *below* the same-gate baseline (29.999)** on
+    full val, failing the pre-registered acceptance (≥ 29.4) by ~3.9 dB. The
+    gate itself behaves (d mean 0.63, not pinned), so the deficit is the
+    channel degrading the learned representation, not gate misuse. Combined
+    with finding 12, the mechanism evidence now says: DCP helps RTTS only as
+    a *per-image estimator applied to the image itself* (classical DCP), and
+    its estimate helps neither as a residual base nor as an input channel.
+    The negative result closes the cheap physical-prior lever and motivates
+    the remaining one: task-driven adaptation on RTTS-train (approved,
+    `docs/decisions/2026-10-01-rtts-train-adaptation.md`), which targets the
+    metric directly instead of importing physics.
+
 ## Method 2 — density-gated U-Net (ours)
 
 One U-Net backbone plus a scalar gate `d` predicted from the input, output
@@ -310,11 +369,23 @@ above (run `unet-gated-context-full-val-20260927`).
   β ∈ {0.03, 0.06, 0.09}), so absolute values are not comparable to theirs.
 - Per-density branch comparisons use a 10-image selection per β and are noisy;
   the pooled 1,500-image numbers are the reliable ones.
-- Detection results (frozen YOLOv8n on RTTS) are reported separately in
-  `results/traditional/dcp-rtts-*` and are out of scope for this table.
-- The gated variants are **single runs** (one seed each), scored through the
-  same paired-bootstrap path as every other row; no seed-variance estimate
-  exists for them, so treat sub-0.2 dB differences as unresolved.
+- Detection results (frozen YOLOv8n on RTTS) come from the same eval path as
+  the dehazing table but a different protocol (no reference image): RTTS-valid
+  865-image columns for all four systems are in finding 12; the RTTS-test
+  score is deferred to the single post-freeze run (step 5, P4.1).
+- The gated variants' single-run caveat is **resolved 2026-10-02**: three
+  seeds of the context gate show 0.127 dB spread (finding 10); the spatial
+  gate's +0.40 dB margin over the context gate is 3× that spread. Sub-0.2 dB
+  differences between *different* gate variants remain unresolved until each
+  has seed replication.
+- **Hybrid negative-result caveat.** The hybrid trained with the same loader
+  settings and cache conventions as every other row; its val crash (missing
+  `dcp_t` in the full-res val set) was fixed by computing the channel
+  on-the-fly in validation with the exact `dehaze()` call sequence
+  (`485bde1`), i.e. train and eval use the same protocol. The -4.51 dB is
+  not an artifact of that fix: the fix was validated on full-res forwards
+  before resume, and the resumed run's loss curve continued the pre-crash
+  trajectory.
 - **What the blend does.** `J = d·f(P) + (1−d)·P` mixes the restored image with
   the input, so the gate chooses per image between restoration error and
   residual-haze error. Where the restoration is worse than the near-clean input
