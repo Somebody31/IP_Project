@@ -284,15 +284,16 @@ not carry it.
     failure on real fog is not specific to our gate — every learned variant
     hurts while the classical prior helps, so the content/scene-domain
     transferability limitation (finding 9) applies to the paper's own design
-    as well. **The single post-freeze test score (step 5, P4.1) confirms it
+    **The single post-freeze test score (step 5, P4.1) confirms it
     on the untouched test split**: the valid-selected winner (spatial-gated
     U-Net, `spatial-rtts-test-frozen-20261002.json`) scores **0.4850 AP@0.5**
-    vs hazy 0.4923 (−0.007) and DCP 0.5194 (+0.027) — the learned model still
-    trails doing nothing, by less than the context-gate variant's earlier
-    −0.018 (exploratory), and DCP remains the only method that helps. The
-    best learned system on real fog improves nothing over the hazy input;
-    the honest conclusion is the transferability limitation, stated with the
-    frozen split's number.
+    vs hazy 0.4923 (−0.007) and DCP 0.5194 (+0.027). The paper's design was
+    then scored on the same frozen test split (`routed-rtts-test-frozen-20261002.json`):
+    **0.4789 (−0.0134)** — the weakest learned system on test as on valid,
+    so the ordering is symmetric across both RTTS splits. The learned model
+    still trails doing nothing; DCP remains the only method that helps. The
+    honest conclusion is the transferability limitation, stated with the
+    frozen split's numbers for both methods.
 
 13. **The DCP-transmission hybrid is a decisive negative.** Feeding DCP's
     per-image transmission estimate as a 4th input channel (the "physical
@@ -308,6 +309,36 @@ not carry it.
     the remaining one: task-driven adaptation on RTTS-train (approved,
     `docs/decisions/2026-10-01-rtts-train-adaptation.md`), which targets the
     metric directly instead of importing physics.
+
+14. **Task-driven adaptation moves real-fog detection the right way, but not
+    far enough.** The approved track (P3.7 step 3,
+    `docs/decisions/2026-10-01-rtts-train-adaptation.md`): fine-tune the
+    spatial-gated winner with the frozen COCO YOLOv8n in the loss — maximize
+    detector confidence on GT-matching anchors — mixed with synthetic
+    reconstruction batches (L1+SSIM) to hold restoration. 10 epochs,
+    RTTS-train crops + synthetic pairs, selection on `rtts/valid`
+    (`adapted-rtts-valid-20261002.json`):
+
+    | RTTS-valid AP@0.5 | value |
+    |---|---|
+    | hazy (no dehazing) | 0.4527 |
+    | DCP | **0.4706** |
+    | ours, unadapted (context gate) | 0.4451 |
+    | **ours, adapted** | **0.4508** |
+
+    Adaptation is the **only lever measured in this project that moves
+    real-fog detection in the right direction** (+0.0057 over the unadapted
+    model) — every other learned variant, and the paper's design, sits
+    further below hazy. But it still lands **below doing nothing** (−0.0019)
+    and far below DCP (−0.0198), so the pre-registered acceptance
+    (`valid ≥ DCP-valid`) **fails**. The task arm engaged only late (loss
+    0.9999 → 0.9899 by epoch 8, plateauing ~0.99) while reconstruction held
+    (~0.034), i.e. the detector signal is weak per epoch at this learning
+    rate and weight. **Labelled separately** ("ours + real-fog adaptation");
+    never merged into the paper-comparison table, since the paper trains on
+    synthetic fog only (protocol asymmetry). The frozen detector is both the
+    loss and the metric — a general detection-benefit claim would need a
+    second detector.
 
 ## Method 2 — density-gated U-Net (ours)
 

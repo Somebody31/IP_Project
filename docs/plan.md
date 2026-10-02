@@ -501,10 +501,16 @@ ablation column only.
     (−4.51 dB; acceptance ≥ 29.4 fails). Channel computed identically at
     train and eval (`485bde1`); negative is decisive, not a plumbing
     artifact. Reported as finding 13 in `val-comparison.md`.
-  - ☑ **Step 3 (APPROVED 2026-10-02, execution queued after the report
-    block)** — decision record approved and committed
+  - ☑ **Step 3 (executed 2026-10-02, acceptance FAILED)** — decision record
+    approved and committed
     (`docs/decisions/2026-10-01-rtts-train-adaptation.md`, `33c410c`);
     separate labelled track, frozen YOLOv8n disclosed as loss and metric.
+    Ran 10 epochs (`train_task_adapt.py`, `unet-spatial-rtts-adapt-20261002`):
+    RTTS-valid AP@0.5 **0.4508** vs unadapted 0.4451 (+0.0057 — the only
+    lever that moved real-fog detection in the right direction) but still
+    below hazy 0.4527 and DCP 0.4706, so `valid ≥ DCP-valid` fails.
+    Task loss engaged late (0.9999 → 0.9899 by epoch 8); reconstruction held.
+    Reported as finding 14; **not** merged into the paper-comparison table.
   - ☑ **Step 4 (done 2026-10-02)** — routed system on `rtts/valid`
     (`routed-rtts-valid-20261002.json`): routed 0.4415 — the *weakest*
     learned column (hazy 0.4527, DCP 0.4706, ours 0.4451). The paper's own
