@@ -60,3 +60,107 @@ rtts-train crops 8557 | synth pairs 8925 | lr 2e-05
   epoch 1/10 step 350/400 task 0.9999 recon 0.0360
 epoch 1/10 recon 0.0362 task 0.9999 synth_val_psnr 30.17
   epoch 2/10 step 0/400 task 0.9999 recon 0.0254
+  epoch 2/10 step 50/400 task 0.9999 recon 0.0349
+  epoch 2/10 step 100/400 task 0.9999 recon 0.0338
+  epoch 2/10 step 150/400 task 0.9999 recon 0.0330
+  epoch 2/10 step 200/400 task 0.9999 recon 0.0332
+  epoch 2/10 step 250/400 task 0.9999 recon 0.0340
+  epoch 2/10 step 300/400 task 0.9999 recon 0.0342
+  epoch 2/10 step 350/400 task 0.9999 recon 0.0354
+epoch 2/10 recon 0.0354 task 0.9974 synth_val_psnr 27.48
+  epoch 3/10 step 0/400 task 0.9999 recon 0.0197
+  epoch 3/10 step 50/400 task 0.9999 recon 0.0393
+  epoch 3/10 step 100/400 task 0.9999 recon 0.0380
+  epoch 3/10 step 150/400 task 0.9933 recon 0.0370
+  epoch 3/10 step 200/400 task 0.9950 recon 0.0365
+  epoch 3/10 step 250/400 task 0.9960 recon 0.0363
+  epoch 3/10 step 300/400 task 0.9933 recon 0.0361
+  epoch 3/10 step 350/400 task 0.9942 recon 0.0361
+epoch 3/10 recon 0.0361 task 0.9949 synth_val_psnr 29.42
+  epoch 4/10 step 0/400 task 0.9999 recon 0.0421
+  epoch 4/10 step 50/400 task 0.9999 recon 0.0359
+  epoch 4/10 step 100/400 task 0.9999 recon 0.0352
+  epoch 4/10 step 150/400 task 0.9999 recon 0.0350
+  epoch 4/10 step 200/400 task 0.9999 recon 0.0350
+  epoch 4/10 step 250/400 task 0.9960 recon 0.0352
+  epoch 4/10 step 300/400 task 0.9966 recon 0.0348
+  epoch 4/10 step 350/400 task 0.9971 recon 0.0347
+epoch 4/10 recon 0.0350 task 0.9949 synth_val_psnr 29.53
+  epoch 5/10 step 0/400 task 0.9999 recon 0.0233
+  epoch 5/10 step 50/400 task 0.9999 recon 0.0334
+  epoch 5/10 step 100/400 task 0.9999 recon 0.0349
+  epoch 5/10 step 150/400 task 0.9999 recon 0.0341
+  epoch 5/10 step 200/400 task 0.9999 recon 0.0343
+  epoch 5/10 step 250/400 task 0.9999 recon 0.0345
+  epoch 5/10 step 300/400 task 0.9999 recon 0.0342
+  epoch 5/10 step 350/400 task 0.9999 recon 0.0341
+epoch 5/10 recon 0.0345 task 0.9999 synth_val_psnr 27.1
+  epoch 6/10 step 0/400 task 0.9999 recon 0.0839
+  epoch 6/10 step 50/400 task 0.9999 recon 0.0333
+  epoch 6/10 step 100/400 task 0.9900 recon 0.0354
+  epoch 6/10 step 150/400 task 0.9933 recon 0.0350
+  epoch 6/10 step 200/400 task 0.9950 recon 0.0361
+  epoch 6/10 step 250/400 task 0.9960 recon 0.0361
+  epoch 6/10 step 300/400 task 0.9933 recon 0.0356
+  epoch 6/10 step 350/400 task 0.9942 recon 0.0355
+epoch 6/10 recon 0.0353 task 0.9949 synth_val_psnr 28.1
+  epoch 7/10 step 0/400 task 0.9999 recon 0.0288
+  epoch 7/10 step 50/400 task 0.9999 recon 0.0354
+  epoch 7/10 step 100/400 task 0.9900 recon 0.0347
+  epoch 7/10 step 150/400 task 0.9933 recon 0.0363
+  epoch 7/10 step 200/400 task 0.9950 recon 0.0348
+  epoch 7/10 step 250/400 task 0.9960 recon 0.0355
+  epoch 7/10 step 300/400 task 0.9966 recon 0.0357
+  epoch 7/10 step 350/400 task 0.9971 recon 0.0352
+epoch 7/10 recon 0.0350 task 0.9974 synth_val_psnr 28.54
+  epoch 8/10 step 0/400 task 0.9999 recon 0.0299
+  epoch 8/10 step 50/400 task 0.9803 recon 0.0400
+  epoch 8/10 step 100/400 task 0.9900 recon 0.0385
+  epoch 8/10 step 150/400 task 0.9933 recon 0.0377
+  epoch 8/10 step 200/400 task 0.9950 recon 0.0369
+  epoch 8/10 step 250/400 task 0.9880 recon 0.0363
+  epoch 8/10 step 300/400 task 0.9900 recon 0.0357
+  epoch 8/10 step 350/400 task 0.9885 recon 0.0356
+epoch 8/10 recon 0.0351 task 0.9899 synth_val_psnr 28.7
+  epoch 9/10 step 0/400 task 0.9999 recon 0.0785
+  epoch 9/10 step 50/400 task 0.9999 recon 0.0395
+  epoch 9/10 step 100/400 task 0.9999 recon 0.0367
+  epoch 9/10 step 150/400 task 0.9867 recon 0.0349
+  epoch 9/10 step 200/400 task 0.9900 recon 0.0350
+  epoch 9/10 step 250/400 task 0.9920 recon 0.0339
+  epoch 9/10 step 300/400 task 0.9900 recon 0.0338
+  epoch 9/10 step 350/400 task 0.9914 recon 0.0335
+epoch 9/10 recon 0.0336 task 0.9924 synth_val_psnr 27.74
+  epoch 10/10 step 0/400 task 0.9999 recon 0.0197
+  epoch 10/10 step 50/400 task 0.9607 recon 0.0319
+  epoch 10/10 step 100/400 task 0.9801 recon 0.0316
+  epoch 10/10 step 150/400 task 0.9867 recon 0.0311
+  epoch 10/10 step 200/400 task 0.9900 recon 0.0330
+  epoch 10/10 step 250/400 task 0.9920 recon 0.0338
+  epoch 10/10 step 300/400 task 0.9933 recon 0.0336
+  epoch 10/10 step 350/400 task 0.9914 recon 0.0336
+epoch 10/10 recon 0.0337 task 0.9924 synth_val_psnr 28.17
+Traceback (most recent call last):
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_task_adapt.py", line 334, in <module>
+    main()
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/train_task_adapt.py", line 322, in main
+    (run_dir / "summary.json").write_text(json.dumps({
+                                          ^^^^^^^^^^^^
+  File "/home/sathwik/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "/home/sathwik/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py", line 202, in encode
+    chunks = list(chunks)
+             ^^^^^^^^^^^^
+  File "/home/sathwik/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/home/sathwik/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/home/sathwik/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/home/sathwik/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "/home/sathwik/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type PosixPath is not JSON serializable

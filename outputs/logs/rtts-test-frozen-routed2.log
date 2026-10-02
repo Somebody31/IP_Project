@@ -1,0 +1,73 @@
+evaluated 8/432
+[W1002 19:15:09.023239834 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 90177536 bytes (free: 104005632, total: 6034096128).
+evaluated 16/432
+evaluated 24/432
+[W1002 19:15:12.175467500 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 224395264 bytes (free: 221773824, total: 6034096128).
+evaluated 32/432
+evaluated 40/432
+evaluated 48/432
+evaluated 56/432
+evaluated 64/432
+evaluated 72/432
+evaluated 80/432
+evaluated 88/432
+[W1002 19:15:27.518593901 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 268435456 bytes (free: 100859904, total: 6034096128).
+evaluated 96/432
+evaluated 104/432
+[W1002 19:15:32.367366241 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 301989888 bytes (free: 274071552, total: 6034096128).
+[W1002 19:15:32.552110104 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 301989888 bytes (free: 210894848, total: 6034096128).
+[W1002 19:15:32.580106127 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 301989888 bytes (free: 274071552, total: 6034096128).
+[W1002 19:15:32.927173453 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 150994944 bytes (free: 36438016, total: 6034096128).
+[W1002 19:15:32.927346573 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 150994944 bytes (free: 36438016, total: 6034096128).
+Traceback (most recent call last):
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/evaluate_model_detection.py", line 369, in <module>
+    main()
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/evaluate_model_detection.py", line 265, in main
+    routed_output = dehaze_whole(branches[chosen], rgb, device)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/scripts/machine_learning/evaluate_model_detection.py", line 152, in dehaze_whole
+    restored, _ = model(tensor, context)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/src/ip_dehaze/machine_learning/models/unet.py", line 155, in forward
+    features = decoder(torch.cat([features, skip], dim=1))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/src/ip_dehaze/machine_learning/models/unet.py", line 42, in forward
+    return self.block(x)
+           ^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+           ^^^^^^^^^^^^^
+  File "/home/sathwik/Dev/Projects/IP_Project/.venv/lib/python3.12/site-packages/torch/nn/functional.py", line 2904, in batch_norm
+    return torch.batch_norm(
+           ^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 144.00 MiB. GPU 0 has a total capacity of 5.62 GiB of which 34.75 MiB is free. Process 2057 has 82.07 MiB memory in use. Process 169301 has 3.49 GiB memory in use. Including non-PyTorch memory, this process has 1.60 GiB memory in use. Of the allocated memory 1.25 GiB is allocated by PyTorch, and 237.74 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)

@@ -1,0 +1,146 @@
+evaluated 8/865
+evaluated 16/865
+evaluated 24/865
+evaluated 32/865
+evaluated 40/865
+evaluated 48/865
+evaluated 56/865
+evaluated 64/865
+evaluated 72/865
+evaluated 80/865
+evaluated 88/865
+evaluated 96/865
+evaluated 104/865
+evaluated 112/865
+evaluated 120/865
+evaluated 128/865
+evaluated 136/865
+evaluated 144/865
+evaluated 152/865
+evaluated 160/865
+evaluated 168/865
+evaluated 176/865
+evaluated 184/865
+evaluated 192/865
+evaluated 200/865
+evaluated 208/865
+evaluated 216/865
+evaluated 224/865
+evaluated 232/865
+evaluated 240/865
+evaluated 248/865
+evaluated 256/865
+evaluated 264/865
+evaluated 272/865
+evaluated 280/865
+evaluated 288/865
+evaluated 296/865
+evaluated 304/865
+evaluated 312/865
+evaluated 320/865
+evaluated 328/865
+evaluated 336/865
+evaluated 344/865
+evaluated 352/865
+evaluated 360/865
+evaluated 368/865
+evaluated 376/865
+evaluated 384/865
+evaluated 392/865
+evaluated 400/865
+evaluated 408/865
+evaluated 416/865
+evaluated 424/865
+evaluated 432/865
+evaluated 440/865
+evaluated 448/865
+evaluated 456/865
+evaluated 464/865
+evaluated 472/865
+evaluated 480/865
+evaluated 488/865
+evaluated 496/865
+evaluated 504/865
+evaluated 512/865
+evaluated 520/865
+evaluated 528/865
+evaluated 536/865
+evaluated 544/865
+evaluated 552/865
+evaluated 560/865
+evaluated 568/865
+evaluated 576/865
+evaluated 584/865
+evaluated 592/865
+evaluated 600/865
+evaluated 608/865
+evaluated 616/865
+evaluated 624/865
+evaluated 632/865
+evaluated 640/865
+evaluated 648/865
+evaluated 656/865
+evaluated 664/865
+evaluated 672/865
+evaluated 680/865
+evaluated 688/865
+evaluated 696/865
+evaluated 704/865
+evaluated 712/865
+evaluated 720/865
+evaluated 728/865
+evaluated 736/865
+evaluated 744/865
+evaluated 752/865
+evaluated 760/865
+evaluated 768/865
+evaluated 776/865
+evaluated 784/865
+evaluated 792/865
+evaluated 800/865
+evaluated 808/865
+evaluated 816/865
+evaluated 824/865
+evaluated 832/865
+evaluated 840/865
+evaluated 848/865
+evaluated 856/865
+evaluated 864/865
+evaluated 865/865
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=0.22s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=6.30s).
+Accumulating evaluation results...
+DONE (t=0.40s).
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=0.25s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=6.74s).
+Accumulating evaluation results...
+DONE (t=0.47s).
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=0.29s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=6.66s).
+Accumulating evaluation results...
+DONE (t=0.46s).
+  hazy: AP@0.5 0.4527 | AP@0.5:0.95 0.2657 | 83105 detections
+   dcp: AP@0.5 0.4706 | AP@0.5:0.95 0.2811 | 99821 detections
+  ours: AP@0.5 0.4508 | AP@0.5:0.95 0.2696 | 98432 detections
+summary: results/machine_learning/adapted-rtts-valid-20261002.json

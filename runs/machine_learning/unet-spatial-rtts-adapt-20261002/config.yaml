@@ -1,0 +1,12 @@
+batch: 8
+checkpoint: /home/sathwik/Dev/Projects/IP_Project/outputs/checkpoints/unet-gated-spatial-20260929/best.pt
+device: auto
+epochs: 10
+lr: 2e-05
+rtts_limit: 0
+rtts_per_batch: 4
+run_id: unet-spatial-rtts-adapt-20261002
+seed: 1729
+task_weight: 0.5
+val_every: 1
+workers: 4

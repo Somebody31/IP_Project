@@ -1,0 +1,14 @@
+bootstrap_resamples: 2000
+branch_heavy: outputs/checkpoints/branch-heavy-20260924/best.pt
+branch_light: outputs/checkpoints/branch-light-20260924/best.pt
+branch_medium: outputs/checkpoints/branch-medium-20260924/best.pt
+checkpoint: None
+classifier: outputs/checkpoints/density-classifier-20260924/best.pt
+device: auto
+limit: 0
+mode: routed
+routing: classifier
+run_id: routed-test-frozen-20261002
+seed: 1729
+split: test
+workers: 4

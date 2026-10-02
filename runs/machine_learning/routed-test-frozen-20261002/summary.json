@@ -1,0 +1,186 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id routed-test-frozen-20261002 --mode routed --routing classifier --classifier outputs/checkpoints/density-classifier-20260924/best.pt --branch-light outputs/checkpoints/branch-light-20260924/best.pt --branch-medium outputs/checkpoints/branch-medium-20260924/best.pt --branch-heavy outputs/checkpoints/branch-heavy-20260924/best.pt --split test --workers 4",
+  "method": "Paper-style routed system (classifier + 3 branches)",
+  "split": "test",
+  "evaluation_scope": "full_split",
+  "n_images": 4575,
+  "n_scenes": 1525,
+  "beta_counts": {
+    "0.005": 1525,
+    "0.010": 1525,
+    "0.020": 1525
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 4575,
+      "n_scenes": 1525,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.786251526797086,
+      "hazy_ssim": 0.8209337586522754,
+      "dehazed_psnr": 27.554531619741393,
+      "dehazed_ssim": 0.9557685775444156,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 12.768280092944307,
+        "ci95": [
+          12.616122740269057,
+          12.913820329057401
+        ],
+        "n_scenes": 1525,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.1348348188921402,
+        "ci95": [
+          0.1325890113209766,
+          0.13699684409007348
+        ],
+        "n_scenes": 1525,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 1525,
+        "n_scenes": 1525,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.849987711636107,
+        "hazy_ssim": 0.9064509240525668,
+        "dehazed_psnr": 29.227996417508816,
+        "dehazed_ssim": 0.9702469601396655,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 10.37800870587271,
+          "ci95": [
+            10.224957294763167,
+            10.532075070826881
+          ],
+          "n_scenes": 1525,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.06379603608709866,
+          "ci95": [
+            0.062129338806769886,
+            0.06534619660846522
+          ],
+          "n_scenes": 1525,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 1525,
+        "n_scenes": 1525,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.568597316150697,
+        "hazy_ssim": 0.8295190681785833,
+        "dehazed_psnr": 27.28892342747045,
+        "dehazed_ssim": 0.9558685862040911,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 12.720326111319748,
+          "ci95": [
+            12.555671254408455,
+            12.874273802717504
+          ],
+          "n_scenes": 1525,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.1263495180255077,
+          "ci95": [
+            0.1239790293642732,
+            0.1286233330232198
+          ],
+          "n_scenes": 1525,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 1525,
+        "n_scenes": 1525,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.940169552604445,
+        "hazy_ssim": 0.726831283725676,
+        "dehazed_psnr": 26.14667501424491,
+        "dehazed_ssim": 0.9411901862894902,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 15.206505461640463,
+          "ci95": [
+            15.016933500903903,
+            15.3899112295332
+          ],
+          "n_scenes": 1525,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.21435890256381426,
+          "ci95": [
+            0.21126535206544597,
+            0.2173347736860885
+          ],
+          "n_scenes": 1525,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": "classifier",
+  "routing_counts": {
+    "light": 2475,
+    "medium": 547,
+    "heavy": 1553
+  },
+  "checkpoints": {
+    "model": null,
+    "classifier": "outputs/checkpoints/density-classifier-20260924/best.pt",
+    "branches": {
+      "light": "outputs/checkpoints/branch-light-20260924/best.pt",
+      "medium": "outputs/checkpoints/branch-medium-20260924/best.pt",
+      "heavy": "outputs/checkpoints/branch-heavy-20260924/best.pt"
+    }
+  },
+  "config_sha256": "2bb470010aa0cd1aaf4d30b222f6fad8507118c4dcc860bb5fa33dc96b622c96",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "a717c48f3e8acb8a2164b28ebf4f6007bc04d394",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-10-02T18:06:31",
+  "completed_at": "2026-10-02T19:09:58"
+}

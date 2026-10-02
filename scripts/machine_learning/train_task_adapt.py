@@ -321,7 +321,7 @@ def main() -> None:
 
     (run_dir / "summary.json").write_text(json.dumps({
         "status": "training_complete_needs_valid_scoring",
-        "config": config,
+        "config": {k: (str(v) if isinstance(v, Path) else v) for k, v in config.items()},
         "note": "selection on rtts/valid via evaluate_model_detection.py --dataset-split valid; "
                 "rtts/test untouched",
         "source_revision": git_revision(ROOT),
