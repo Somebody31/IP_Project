@@ -82,7 +82,21 @@ def evaluate(model: torch.nn.Module, val_sets: list[FoggyPairs], device: torch.d
         name = ("light", "medium", "heavy")[int(val_set[0]["density_class"])]
         for index in range(len(val_set)):
             sample = val_set[index]
-            dcp_t = sample["dcp_t"][None].to(device) if "dcp_t" in sample else None
+            dcp_t = None
+            if getattr(model, "dcp_t", False):
+                # FoggyPairs (full-res val) carries no dcp_t; compute it from
+                # the un-cropped hazy image with the same call sequence as
+                # dehaze() — identical to the eval-time protocol.
+                from ip_dehaze.traditional.dcp import (
+                    dark_channel,
+                    estimate_atmospheric_light,
+                    estimate_transmission,
+                )
+
+                hazy_np = sample["hazy"].permute(1, 2, 0).numpy()
+                dark = dark_channel(hazy_np, 15)
+                transmission = estimate_transmission(hazy_np, estimate_atmospheric_light(hazy_np, dark))
+                dcp_t = torch.from_numpy(np.ascontiguousarray(transmission[None, None, :, :])).to(device)
             hazy = _prepare_input(model, sample["hazy"][None].to(device), dcp_t)
             clear = sample["clear"][None].to(device)
             context = None
