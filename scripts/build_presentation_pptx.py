@@ -3,7 +3,7 @@
 1. Title Slide (Standard PowerPoint Title layout)
 2. Method Overview (Standard multi-card comparison layout)
 3. Visual Results (Distinguishable characteristics with image strips)
-4. Quantitative Comparison (Standard formatted PowerPoint table)
+4. Quantitative Comparison (Standard formatted PowerPoint table with PSNR, SSIM, and Detection AP)
 5. Model Complexity & Footprint (Standard comparison table & takeaways)
 """
 from pathlib import Path
@@ -19,7 +19,6 @@ def create_deck(output_path: Path):
     prs.slide_height = Inches(7.5)
     
     # Classic Standard PowerPoint Color Palette
-    # Office Classic: Navy Accent, Charcoal Body, Subtle Warm Borders
     COLOR_BG = RGBColor(255, 255, 255)
     COLOR_NAVY = RGBColor(31, 78, 120)       # #1F4E78 Classic PPT Navy
     COLOR_NAVY_DARK = RGBColor(20, 50, 80)
@@ -31,13 +30,11 @@ def create_deck(output_path: Path):
     COLOR_ACCENT_GREEN = RGBColor(34, 112, 60)
     
     def apply_standard_slide_header(slide, title_text, category_text="REAL-WORLD IMAGE DEHAZING BENCHMARK"):
-        # Header text box
         tb = slide.shapes.add_textbox(Inches(0.8), Inches(0.45), Inches(11.733), Inches(1.1))
         tf = tb.text_frame
         tf.word_wrap = True
         tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
         
-        # Category tracking label
         p_cat = tf.paragraphs[0]
         p_cat.text = category_text.upper()
         p_cat.font.name = "Calibri"
@@ -45,7 +42,6 @@ def create_deck(output_path: Path):
         p_cat.font.bold = True
         p_cat.font.color.rgb = COLOR_NAVY
         
-        # Main slide title
         p_title = tf.add_paragraph()
         p_title.text = title_text
         p_title.font.name = "Calibri"
@@ -54,7 +50,6 @@ def create_deck(output_path: Path):
         p_title.font.color.rgb = COLOR_DARK
         p_title.space_before = Pt(3)
         
-        # Subtle accent divider line under title
         line = slide.shapes.add_shape(
             MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(1.5), Inches(11.733), Inches(0.02)
         )
@@ -62,12 +57,11 @@ def create_deck(output_path: Path):
         line.fill.fore_color.rgb = COLOR_BORDER
         line.line.color.rgb = COLOR_BORDER
         
-        # Slide number / footer placeholder
         footer = slide.shapes.add_textbox(Inches(0.8), Inches(7.0), Inches(11.733), Inches(0.35))
         ftf = footer.text_frame
         ftf.margin_left = ftf.margin_top = ftf.margin_right = ftf.margin_bottom = 0
         p_foot = ftf.paragraphs[0]
-        p_foot.text = "Real-World Dehazing Evaluation | Frozen COCO YOLOv8n | RTTS Validation Benchmark"
+        p_foot.text = "Real-World Dehazing Evaluation | Frozen COCO YOLOv8n | Foggy Cityscapes & RTTS Benchmark"
         p_foot.font.name = "Calibri"
         p_foot.font.size = Pt(9)
         p_foot.font.color.rgb = RGBColor(160, 160, 160)
@@ -75,15 +69,13 @@ def create_deck(output_path: Path):
     # =============================================================
     # SLIDE 1: Title Slide (Standard PowerPoint Title Template)
     # =============================================================
-    slide_layout = prs.slide_layouts[0] # Standard Title Slide
+    slide_layout = prs.slide_layouts[0]
     slide1 = prs.slides.add_slide(slide_layout)
     
-    # Configure slide background
     bg = slide1.background
     bg.fill.solid()
     bg.fill.fore_color.rgb = COLOR_BG
     
-    # Left accent colored bar
     accent_bar = slide1.shapes.add_shape(
         MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(2.2), Inches(0.12), Inches(2.8)
     )
@@ -91,7 +83,6 @@ def create_deck(output_path: Path):
     accent_bar.fill.fore_color.rgb = COLOR_NAVY
     accent_bar.line.color.rgb = COLOR_NAVY
     
-    # Title & Subtitle text frame
     tb1 = slide1.shapes.add_textbox(Inches(1.2), Inches(2.0), Inches(11.0), Inches(3.2))
     tf1 = tb1.text_frame
     tf1.word_wrap = True
@@ -118,13 +109,12 @@ def create_deck(output_path: Path):
     p_sub.font.color.rgb = COLOR_MUTED
     p_sub.space_before = Pt(14)
     
-    # Footer metadata
     meta_box = slide1.shapes.add_textbox(Inches(1.2), Inches(5.6), Inches(11.0), Inches(1.0))
     mtf = meta_box.text_frame
     p_meta = mtf.paragraphs[0]
-    p_meta.text = "Dataset: Real-world hazy photography (RTTS Valid, 865 images)\nDetector: Off-the-shelf YOLOv8n (COCO weights, 100% frozen)\nMetrics: VOC AP@0.50, Strict AP@0.75, COCO mAP@[0.50:0.95], Model Footprint"
+    p_meta.text = "Evaluation Protocol:\n• Image Reconstruction Fidelity: PSNR & SSIM on paired Foggy Cityscapes (1,500 scenes @ 2048x1024)\n• Real-World Detection Utility: VOC AP@0.50, Strict AP@0.75, COCO mAP on held-out RTTS Valid (865 images)\n• Impartial Perception Setup: Off-the-shelf YOLOv8n detector with 100% frozen COCO weights"
     p_meta.font.name = "Calibri"
-    p_meta.font.size = Pt(11)
+    p_meta.font.size = Pt(10.5)
     p_meta.font.color.rgb = COLOR_MUTED
 
     # =============================================================
@@ -173,14 +163,12 @@ def create_deck(output_path: Path):
     for i, (m_num, m_sub, items, is_ours) in enumerate(methods_data):
         x_pos = start_x + i * (col_w + gap)
         
-        # Outer Card
         card = slide2.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x_pos, y_pos, col_w, box_h)
         card.fill.solid()
         card.fill.fore_color.rgb = COLOR_HIGHLIGHT if is_ours else RGBColor(255, 255, 255)
         card.line.color.rgb = COLOR_NAVY if is_ours else COLOR_BORDER
         card.line.width = Pt(1.5 if is_ours else 1.0)
         
-        # Top banner for method
         banner = slide2.shapes.add_shape(MSO_SHAPE.RECTANGLE, x_pos, y_pos, col_w, Inches(0.8))
         banner.fill.solid()
         banner.fill.fore_color.rgb = COLOR_NAVY if is_ours else RGBColor(245, 247, 250)
@@ -203,7 +191,6 @@ def create_deck(output_path: Path):
         bp2.font.size = Pt(10)
         bp2.font.color.rgb = RGBColor(210, 230, 250) if is_ours else COLOR_MUTED
         
-        # Body content
         tb = slide2.shapes.add_textbox(x_pos + Inches(0.12), y_pos + Inches(0.9), col_w - Inches(0.24), box_h - Inches(1.0))
         tf = tb.text_frame
         tf.word_wrap = True
@@ -232,7 +219,6 @@ def create_deck(output_path: Path):
     slide3 = prs.slides.add_slide(prs.slide_layouts[6])
     apply_standard_slide_header(slide3, "Qualitative Comparison: Distinguishable Visual Characteristics", "Visual Results")
     
-    # 1. Direct Visual Image Strip
     tb_vis_lbl = slide3.shapes.add_textbox(Inches(0.8), Inches(1.65), Inches(11.733), Inches(0.3))
     tf_vl = tb_vis_lbl.text_frame
     tf_vl.margin_left = tf_vl.margin_top = tf_vl.margin_right = tf_vl.margin_bottom = 0
@@ -247,7 +233,6 @@ def create_deck(output_path: Path):
     if vis_path.exists():
         slide3.shapes.add_picture(str(vis_path), Inches(0.8), Inches(1.95), Inches(11.733), Inches(1.95))
         
-    # 2. Detection Result Strip
     tb_det_lbl = slide3.shapes.add_textbox(Inches(0.8), Inches(4.0), Inches(11.733), Inches(0.3))
     tf_dl = tb_det_lbl.text_frame
     tf_dl.margin_left = tf_dl.margin_top = tf_dl.margin_right = tf_dl.margin_bottom = 0
@@ -262,7 +247,6 @@ def create_deck(output_path: Path):
     if det_path.exists():
         slide3.shapes.add_picture(str(det_path), Inches(0.8), Inches(4.3), Inches(11.733), Inches(1.95))
         
-    # Visual analysis legend box
     analysis_box = slide3.shapes.add_textbox(Inches(0.8), Inches(6.35), Inches(11.733), Inches(0.65))
     atf = analysis_box.text_frame
     atf.word_wrap = True
@@ -275,28 +259,30 @@ def create_deck(output_path: Path):
     p.font.color.rgb = COLOR_MUTED
 
     # =============================================================
-    # SLIDE 4: Quantitative Comparison (Standard Formatted Table)
+    # SLIDE 4: Quantitative Comparison (PSNR, SSIM, and Detection AP)
     # =============================================================
     slide4 = prs.slides.add_slide(prs.slide_layouts[6])
-    apply_standard_slide_header(slide4, "Quantitative Evaluation: Detection Performance on Real Fog", "Empirical Evaluation")
+    apply_standard_slide_header(slide4, "Quantitative Benchmark: PSNR Fidelity & Detection Performance", "Empirical Evaluation")
     
-    rows, cols = 6, 7
-    table_x, table_y = Inches(0.8), Inches(1.75)
-    table_w, table_h = Inches(11.733), Inches(3.1)
+    rows, cols = 8, 7
+    table_x, table_y = Inches(0.8), Inches(1.72)
+    table_w, table_h = Inches(11.733), Inches(3.35)
     
     tbl_shape = slide4.shapes.add_table(rows, cols, table_x, table_y, table_w, table_h)
     tbl = tbl_shape.table
     
-    tbl.columns[0].width = Inches(2.733)
-    tbl.columns[1].width = Inches(1.4)
-    tbl.columns[2].width = Inches(1.5)
-    tbl.columns[3].width = Inches(1.5)
-    tbl.columns[4].width = Inches(1.5)
-    tbl.columns[5].width = Inches(1.5)
-    tbl.columns[6].width = Inches(1.6)
+    tbl.columns[0].width = Inches(2.933)
+    tbl.columns[1].width = Inches(1.35)
+    tbl.columns[2].width = Inches(1.45)
+    tbl.columns[3].width = Inches(1.45)
+    tbl.columns[4].width = Inches(1.45)
+    tbl.columns[5].width = Inches(1.55)
+    tbl.columns[6].width = Inches(1.55)
     
     table_data = [
         ["Evaluation Metric", "Raw Hazy", "Reference Paper", "Classical DCP", "Our Method", "Gain vs Hazy", "Gain vs Paper"],
+        ["PSNR (In-Domain Full Val, dB)", "14.65 dB", "26.42 dB", "15.79 dB", "26.71 dB", "+12.06 dB", "+0.29 dB"],
+        ["SSIM (Structural Similarity)", "0.8250", "0.9482", "0.7037", "0.9485", "+0.1235", "+0.0003"],
         ["AP@0.50 (Standard VOC)", "0.4527", "0.4415", "0.4706", "0.4891", "+0.0364", "+0.0476 (+4.8 pts)"],
         ["AP@0.75 (Strict Boundary)", "0.2593", "0.2602", "0.2825", "0.2903", "+0.0310", "+0.0301 (+11.6%)"],
         ["AP@0.95 (Ultra-Strict)", "0.0163", "0.0212", "0.0209", "0.0215", "+0.0052", "+0.0003 (+1.4%)"],
@@ -311,7 +297,6 @@ def create_deck(output_path: Path):
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE
             cell.fill.solid()
             
-            # Styling: Standard PowerPoint Table Layout
             if r_idx == 0:
                 cell.fill.fore_color.rgb = COLOR_NAVY
             elif c_idx == 4:
@@ -323,7 +308,7 @@ def create_deck(output_path: Path):
                 
             p = cell.text_frame.paragraphs[0]
             p.font.name = "Calibri"
-            p.font.size = Pt(11)
+            p.font.size = Pt(10.5)
             
             if r_idx == 0:
                 p.font.bold = True
@@ -343,16 +328,16 @@ def create_deck(output_path: Path):
     # 3 Structured Takeaway Cards below table
     card_w = Inches(3.75)
     card_gap = Inches(0.24)
-    card_y = Inches(5.05)
-    card_h = Inches(1.75)
+    card_y = Inches(5.18)
+    card_h = Inches(1.68)
     
     takeaways = [
-        ("Avoiding Negative Transfer",
-         "The reference paper reduces object detection accuracy (-0.0112 AP@0.50) compared to untreated hazy images, whereas our method reliably improves it (+0.0364 AP@0.50)."),
-        ("Surpassing Classical DCP",
-         "For over a decade, classical DCP has resisted being beaten by deep learning on real fog. Our method achieves the first statistically verified win (+0.0185 AP@0.50, +0.0113 mAP)."),
+        ("In-Domain Reconstruction (PSNR)",
+         "On 1,500 paired Foggy Cityscapes scenes @ 2048x1024, our method achieves 26.71 dB PSNR (+0.29 dB over the paper). Classical DCP yields only 15.79 dB due to unnatural texture and color distortions."),
+        ("Real Fog Task Utility (AP@0.50)",
+         "While the reference paper reduces detection accuracy on real fog (-0.0112 AP@0.50 vs raw hazy), our method provides genuine visual recovery (+0.0364 AP@0.50, beating classical DCP by +0.0185)."),
         ("Boundary Localization Precision",
-         "At strict IoU threshold (AP@0.75), our method delivers an 11.6% relative gain over the reference paper while suppressing noisy false-positive bounding boxes.")
+         "Under strict IoU criteria (AP@0.75), our method delivers an 11.6% relative gain over the reference paper (+0.0301 AP) while predicting 1,976 fewer false-positive boxes.")
     ]
     
     for t_idx, (t_title, t_desc) in enumerate(takeaways):
@@ -366,21 +351,21 @@ def create_deck(output_path: Path):
         ctf = c_shape.text_frame
         ctf.word_wrap = True
         ctf.margin_left = ctf.margin_right = Inches(0.18)
-        ctf.margin_top = Inches(0.15)
+        ctf.margin_top = Inches(0.14)
         
         cp1 = ctf.paragraphs[0]
         cp1.text = t_title
         cp1.font.name = "Calibri"
-        cp1.font.size = Pt(11.5)
+        cp1.font.size = Pt(11)
         cp1.font.bold = True
         cp1.font.color.rgb = COLOR_NAVY
         
         cp2 = ctf.add_paragraph()
         cp2.text = t_desc
         cp2.font.name = "Calibri"
-        cp2.font.size = Pt(10)
+        cp2.font.size = Pt(9.5)
         cp2.font.color.rgb = COLOR_MUTED
-        cp2.space_before = Pt(4)
+        cp2.space_before = Pt(3)
 
     # =============================================================
     # SLIDE 5: Model Complexity & Footprint (Standard Comparison Layout)
@@ -443,7 +428,6 @@ def create_deck(output_path: Path):
             if c_idx in (1, 2):
                 p.alignment = PP_ALIGN.CENTER
 
-    # 3 Deployment Feature Boxes
     f_card_w = Inches(3.75)
     f_card_gap = Inches(0.24)
     f_card_y = Inches(4.75)
@@ -485,7 +469,6 @@ def create_deck(output_path: Path):
         fp2.font.color.rgb = COLOR_MUTED
         fp2.space_before = Pt(6)
 
-    # Save to path
     output_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(output_path))
     print(f"Successfully generated PowerPoint presentation at {output_path}")

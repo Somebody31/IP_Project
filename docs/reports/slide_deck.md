@@ -48,6 +48,8 @@
 
 | Evaluation Metric | Raw Hazy Baseline | Reference Paper | Classical DCP | Our Method | Gain vs. Raw Hazy | Gain vs. Paper |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **PSNR (In-Domain Val, dB)** | 14.65 dB | 26.42 dB | 15.79 dB | **26.71 dB** | **+12.06 dB** | **+0.29 dB** |
+| **SSIM (Structural Similarity)** | 0.8250 | 0.9482 | 0.7037 | **0.9485** | **+0.1235** | **+0.0003** |
 | **AP@0.50 (Standard VOC)** | 0.4527 | 0.4415 | 0.4706 | **0.4891** | **+0.0364** | **+0.0476 (+4.8 pts)** |
 | **AP@0.75 (Strict Boundary)** | 0.2593 | 0.2602 | 0.2825 | **0.2903** | **+0.0310** | **+0.0301 (+11.6%)** |
 | **AP@0.95 (Ultra-Strict)** | 0.0163 | 0.0212 | 0.0209 | **0.0215** | **+0.0052** | **+0.0003 (+1.4%)** |
@@ -55,9 +57,10 @@
 | **Total Detections** | 83,105 | 100,073 | 99,945 | **98,097** | **+14,992** | **−1,976 (Cleaner)** |
 
 ### Key Takeaways:
-1. **Positive Task Transfer**: The reference paper degrades detection accuracy below untreated images (−0.0112 AP@0.50), whereas our method consistently improves performance (+0.0364 AP@0.50).
-2. **Beating Classical DCP**: For the first time, our neural model systematically outperforms classical DCP across every IoU threshold (+0.0185 AP@0.50, +0.0113 mAP).
-3. **Contour Precision**: At strict IoU = 0.75, our method achieves an **11.6% relative gain over the paper** while reducing false-positive clutter.
+1. **In-Domain Fidelity (PSNR/SSIM)**: On 1,500 paired Foggy Cityscapes scenes @ 2048x1024, our method reaches **26.71 dB PSNR**, beating the reference paper (26.42 dB) and far surpassing Classical DCP (15.79 dB).
+2. **Positive Task Transfer**: The reference paper degrades detection accuracy below untreated images (−0.0112 AP@0.50), whereas our method consistently improves performance (+0.0364 AP@0.50).
+3. **Beating Classical DCP**: For the first time, our neural model systematically outperforms classical DCP across every IoU threshold (+0.0185 AP@0.50, +0.0113 mAP).
+4. **Contour Precision**: At strict IoU = 0.75, our method achieves an **11.6% relative gain over the paper** while reducing false-positive clutter.
 
 ---
 
