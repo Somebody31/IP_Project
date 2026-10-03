@@ -30,6 +30,7 @@ __pycache__/
 /outputs/checkpoints/
 /outputs/predictions/
 /outputs/figures/
+/outputs/logs/
 /results/**/*.png
 /results/**/*.jpg
 /results/**/*.pt
@@ -46,4 +47,4 @@ Thumbs.db
 /data/derived/
 # ML run artifacts
 /runs/machine_learning/**/*.pt
-runs/*/detections.json
+runs/**/detections.json

@@ -1,0 +1,44 @@
+{
+  "status": "training_complete_needs_full_valid_scoring",
+  "config": {
+    "run_id": "adapt-v3-resynth-w0.01-20261003",
+    "checkpoint": "outputs/checkpoints/unet-spatial-resynth-20261003/best.pt",
+    "synth_cache": "/home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train",
+    "resynth": true,
+    "epochs": 4,
+    "steps_per_epoch": 400,
+    "rtts_batch": 4,
+    "synth_batch": 4,
+    "crop": 384,
+    "lr": 2e-05,
+    "task_weight": 0.01,
+    "valid_subset": 300,
+    "psnr_guard": 1.0,
+    "rtts_limit": 0,
+    "workers": 4,
+    "seed": 1729,
+    "device": "cuda"
+  },
+  "valid_subset": {
+    "n": 300,
+    "hazy_ap50": 0.47011144625534185,
+    "start_ap50": 0.4996029750709618
+  },
+  "start_synth_psnr": 28.10427548760974,
+  "best": {
+    "epoch": 1,
+    "valid_ap50": 0.5041607300194337,
+    "synth_psnr": 28.317806243816886
+  },
+  "checkpoint": "outputs/checkpoints/adapt-v3-resynth-w0.01-20261003/best.pt",
+  "note": "selection on a fixed rtts/valid subset; score best.pt on full rtts/valid with evaluate_model_detection.py --dataset-split valid; rtts/test untouched",
+  "source_revision": "289d0ad7224482c1661fa302166e1e05c017d402",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "completed_at": "2026-10-03T14:53:31"
+}

@@ -1,0 +1,136 @@
+{
+  "run_id": "realfog-smoke",
+  "checkpoint": "outputs/checkpoints/unet-gated-spatial-20260929/best.pt",
+  "scenes": 3,
+  "rtts_split": "valid",
+  "seed": 1729,
+  "note": "RTTS transmission estimated by DCP then resized to the Cityscapes frame; a transplant of real-fog statistics onto in-domain content, not a captured pair.",
+  "summary": {
+    "rtts_t": {
+      "psnr_mean": 25.624841243726465,
+      "psnr_std": 1.6275292980998242,
+      "hazy_psnr_mean": 7.845335640589087,
+      "lum_ratio_mean": 0.47759221990903217,
+      "lum_ratio_std": 0.09983255975699429,
+      "haze_lift_mean": 0.6191129684448242,
+      "gain_over_hazy": 17.779505603137377
+    },
+    "rtts_tA": {
+      "psnr_mean": 21.00450434005248,
+      "psnr_std": 4.2086826328168865,
+      "hazy_psnr_mean": 9.896563041621151,
+      "lum_ratio_mean": 0.4936499396959941,
+      "lum_ratio_std": 0.09437127614300118,
+      "haze_lift_mean": 0.5391702254613241,
+      "gain_over_hazy": 11.107941298431333
+    },
+    "shipped": {
+      "psnr_mean": 27.792772928194427,
+      "psnr_std": 2.640677375325545,
+      "hazy_psnr_mean": 9.7107632391058,
+      "lum_ratio_mean": 0.5291577676932017,
+      "lum_ratio_std": 0.03470042432877615,
+      "haze_lift_mean": 0.5173125664393107,
+      "gain_over_hazy": 18.08200968908863
+    }
+  },
+  "rows": [
+    {
+      "scene": "frankfurt/frankfurt_000001_051516",
+      "rtts_source": "GSGL_Bing_528_png.rf.202b1d963089989196a9d1e58a539f4a.jpg",
+      "a_rtts": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "arms": {
+        "rtts_t": {
+          "psnr": 24.319889024082624,
+          "ssim": 0.9114018082618713,
+          "hazy_lift": 0.7100179195404053,
+          "lum_ratio": 0.3897366523742676,
+          "hazy_psnr": 6.032153907745249
+        },
+        "rtts_tA": {
+          "psnr": 24.319889024082624,
+          "ssim": 0.9114018082618713,
+          "hazy_lift": 0.7100179195404053,
+          "lum_ratio": 0.3897366523742676,
+          "hazy_psnr": 6.032153907745249
+        },
+        "shipped": {
+          "psnr": 26.921517578317488,
+          "ssim": 0.9492223262786865,
+          "hazy_lift": 0.5216447114944458,
+          "lum_ratio": 0.5241283774375916,
+          "hazy_psnr": 10.080187227990585
+        }
+      }
+    },
+    {
+      "scene": "frankfurt/frankfurt_000000_008206",
+      "rtts_source": "BJ_Bing_471_png.rf.bd472a2bb23ea7c9ed660397e2ae3eca.jpg",
+      "a_rtts": [
+        0.6705882549285889,
+        0.6823529601097107,
+        0.6549019813537598
+      ],
+      "arms": {
+        "rtts_t": {
+          "psnr": 24.635336171380047,
+          "ssim": 0.9088696837425232,
+          "hazy_lift": 0.5421711206436157,
+          "lum_ratio": 0.6172323822975159,
+          "hazy_psnr": 9.839787609556916
+        },
+        "rtts_tA": {
+          "psnr": 15.065961317000351,
+          "ssim": 0.8664924502372742,
+          "hazy_lift": 0.39675480127334595,
+          "lum_ratio": 0.618135392665863,
+          "hazy_psnr": 14.307275108332366
+        },
+        "shipped": {
+          "psnr": 25.083491846536386,
+          "ssim": 0.9390602707862854,
+          "hazy_lift": 0.5573608875274658,
+          "lum_ratio": 0.5739478468894958,
+          "hazy_psnr": 8.947812855383619
+        }
+      }
+    },
+    {
+      "scene": "munster/munster_000055_000019",
+      "rtts_source": "PL_Google_665_png.rf.8b9afce9b4e9b92ef5d98118c7b920c8.jpg",
+      "a_rtts": [
+        0.9137254953384399,
+        0.8627451062202454,
+        0.800000011920929
+      ],
+      "arms": {
+        "rtts_t": {
+          "psnr": 27.919298535716717,
+          "ssim": 0.9112191200256348,
+          "hazy_lift": 0.6051498651504517,
+          "lum_ratio": 0.4258076250553131,
+          "hazy_psnr": 7.664065404465093
+        },
+        "rtts_tA": {
+          "psnr": 23.62766267907448,
+          "ssim": 0.8930532932281494,
+          "hazy_lift": 0.510737955570221,
+          "lum_ratio": 0.47307777404785156,
+          "hazy_psnr": 9.350260108785836
+        },
+        "shipped": {
+          "psnr": 31.37330935972941,
+          "ssim": 0.9740107655525208,
+          "hazy_lift": 0.4729321002960205,
+          "lum_ratio": 0.4893970787525177,
+          "hazy_psnr": 10.104289633943196
+        }
+      }
+    }
+  ],
+  "completed_at": "2026-10-03T11:29:00"
+}

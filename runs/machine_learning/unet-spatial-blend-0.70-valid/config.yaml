@@ -1,0 +1,16 @@
+checkpoint: outputs/checkpoints/unet-gated-spatial-20260929/best.pt
+config: /home/sathwik/Dev/Projects/IP_Project/configs/traditional/dcp_rtts_detection.yaml
+dataset_split: valid
+device: cuda
+inference: whole
+limit: 0
+post: blend
+post_alpha: 0.7
+routed_branches: None
+routed_classifier: None
+run_id: unet-spatial-blend-0.70-valid
+save_detections: False
+skip_dcp: True
+skip_hazy: True
+stride: 128
+tile: 256

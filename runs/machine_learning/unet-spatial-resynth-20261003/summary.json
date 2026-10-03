@@ -1,0 +1,77 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/train_unet.py --run-id unet-spatial-resynth-20261003 --model gated --gate-spatial --resynth --init-checkpoint outputs/checkpoints/unet-gated-spatial-20260929/best.pt --epochs 15 --lr 1e-4 --workers 6",
+  "method": "Density-gated U-Net",
+  "config": {
+    "run_id": "unet-spatial-resynth-20261003",
+    "model": "gated",
+    "frozen_gate": false,
+    "gate_init": null,
+    "gate_spatial": true,
+    "gate_context": false,
+    "dcp_t": false,
+    "context_dir": null,
+    "beta_class": null,
+    "size": "medium",
+    "epochs": 15,
+    "batch": 16,
+    "crop": 256,
+    "lr": 0.0001,
+    "ssim_weight": 0.2,
+    "workers": 6,
+    "val_scenes_per_beta": 20,
+    "val_every": 5,
+    "seed": 1729,
+    "device": "auto",
+    "limit": 0,
+    "cache_dir": "/home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train",
+    "amp": false,
+    "resume": false,
+    "resynth": true,
+    "init_checkpoint": "outputs/checkpoints/unet-gated-spatial-20260929/best.pt"
+  },
+  "train_pairs": 8925,
+  "n_parameters": 7766084,
+  "best": {
+    "epoch": 14,
+    "val": {
+      "psnr": 27.74110277166805,
+      "ssim": 0.9624169737100601,
+      "n_images": 60,
+      "by_beta": {
+        "heavy": {
+          "psnr": 24.689798289418896,
+          "ssim": 0.9409088850021362,
+          "n_images": 20
+        },
+        "light": {
+          "psnr": 30.9106239628536,
+          "ssim": 0.9798877000808716,
+          "n_images": 20
+        },
+        "medium": {
+          "psnr": 27.622886062731645,
+          "ssim": 0.9664543360471726,
+          "n_images": 20
+        }
+      },
+      "density": {
+        "mean": 0.4882474074761073,
+        "min": 0.32720333337783813,
+        "max": 0.6431852579116821
+      }
+    }
+  },
+  "config_sha256": "2a83a41ce1fbfc617fb57d3d2cb165f8191196529b5bb2efe5bc147dea8e9dbd",
+  "source_revision": "9db9685e09dfb764a39263d31ec618b23cfa99fd",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "checkpoint": "outputs/checkpoints/unet-spatial-resynth-20261003/best.pt",
+  "started_at": "2026-10-03T13:46:39",
+  "completed_at": "2026-10-03T14:37:42"
+}

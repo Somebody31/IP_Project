@@ -1,0 +1,178 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id adapt-v3-full-val-20261003 --mode gated --checkpoint outputs/checkpoints/adapt-v3-resynth-w0.01-20261003/best.pt --split val --workers 4",
+  "method": "Density-gated U-Net",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dehazed_psnr": 26.705511672959506,
+      "dehazed_ssim": 0.9484913453658422,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 12.054223379581867,
+        "ci95": [
+          11.81768451999251,
+          12.290432738477957
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.1235228821436564,
+        "ci95": [
+          0.12056754604081313,
+          0.12628397888938586
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dehazed_psnr": 28.966780681089194,
+        "dehazed_ssim": 0.9696859710216522,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 10.401651581407542,
+          "ci95": [
+            10.154877520725496,
+            10.643489518581376
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.06234104228019714,
+          "ci95": [
+            0.06009050783216953,
+            0.06446951379179955
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dehazed_psnr": 27.043825582395197,
+        "dehazed_ssim": 0.9539265403747559,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 12.57874484189814,
+          "ci95": [
+            12.329663364441442,
+            12.824341354709246
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.12026975333690643,
+          "ci95": [
+            0.11712478644549847,
+            0.12327963871061802
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dehazed_psnr": 24.105928755394146,
+        "dehazed_ssim": 0.9218615247011185,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 13.182273715439923,
+          "ci95": [
+            12.924204332889145,
+            13.439663652841448
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.18795785081386565,
+          "ci95": [
+            0.18401237842738627,
+            0.19162691520750522
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": null,
+  "routing_counts": null,
+  "checkpoints": {
+    "model": "outputs/checkpoints/adapt-v3-resynth-w0.01-20261003/best.pt",
+    "classifier": null,
+    "branches": null
+  },
+  "config_sha256": "006dd83736e3cd916e26d678085011766b10d192ecb2704a444c57bc5f28bca1",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "289d0ad7224482c1661fa302166e1e05c017d402",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-10-03T17:48:37",
+  "completed_at": "2026-10-03T18:08:13"
+}

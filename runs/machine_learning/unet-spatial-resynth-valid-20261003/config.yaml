@@ -1,0 +1,16 @@
+checkpoint: outputs/checkpoints/unet-spatial-resynth-20261003/best.pt
+config: /home/sathwik/Dev/Projects/IP_Project/configs/traditional/dcp_rtts_detection.yaml
+dataset_split: valid
+device: cuda
+inference: whole
+limit: 0
+post: none
+post_alpha: 0.5
+routed_branches: None
+routed_classifier: None
+run_id: unet-spatial-resynth-valid-20261003
+save_detections: False
+skip_dcp: True
+skip_hazy: False
+stride: 128
+tile: 256

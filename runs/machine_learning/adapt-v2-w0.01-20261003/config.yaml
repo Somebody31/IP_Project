@@ -1,0 +1,17 @@
+checkpoint: /home/sathwik/Dev/Projects/IP_Project/outputs/checkpoints/unet-gated-spatial-20260929/best.pt
+crop: 384
+device: cuda
+epochs: 10
+lr: 2e-05
+psnr_guard: 1.0
+resynth: False
+rtts_batch: 4
+rtts_limit: 0
+run_id: adapt-v2-w0.01-20261003
+seed: 1729
+steps_per_epoch: 400
+synth_batch: 4
+synth_cache: /home/sathwik/Dev/Projects/IP_Project/data/derived/crops/train
+task_weight: 0.01
+valid_subset: 300
+workers: 4
