@@ -197,6 +197,7 @@ Apply the best recipe to the three branch checkpoints (`outputs/checkpoints/bran
    - `docs/reports/analysis.md`: Q2 table and bottom line.
    - `docs/reports/final-evaluation.md`: adaptation row.
    - NEW `docs/decisions/2026-10-03-rtts-improvement-track.md`: this track's scope and acceptance bars.
+   - All final detection tables must report the full suite: `AP@0.5`, `AP@0.75`, `AP@0.95` (strict localization), and `AP@0.5:0.95` (COCO standard) with 95% bootstrap CIs.
 4. Run the full test suite: `.venv/bin/python -m pytest tests -q`.
 
 ---
