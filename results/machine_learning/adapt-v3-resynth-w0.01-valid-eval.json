@@ -1,0 +1,87 @@
+{
+  "status": "completed_exploratory_test_evaluation",
+  "method": "Dehazer gated (gate_context=False) + frozen YOLOv8n",
+  "test_usage_note": "Exploratory comparison on RTTS test; do not tune on this split. RTTS has no clear counterpart, so dehazing quality is only measurable through detection AP.",
+  "split": "valid",
+  "n_images": 865,
+  "n_ground_truth_boxes": 8659,
+  "inference": {
+    "mode": "whole",
+    "tile": 256,
+    "stride": 128,
+    "context": [
+      512,
+      256
+    ],
+    "batched_tiles": 8,
+    "post": "none",
+    "post_alpha": 0.5
+  },
+  "checkpoint": "outputs/checkpoints/adapt-v3-resynth-w0.01-20261003/best.pt",
+  "comparison": {
+    "hazy": {
+      "AP@0.5:0.95": 0.26574751345141323,
+      "AP@0.5": 0.45269528975689327,
+      "AP@0.75": 0.259299652035096,
+      "AP@0.95": 0.01633598937272056,
+      "n_detections": 83105
+    },
+    "ours": {
+      "AP@0.5:0.95": 0.29242422245786565,
+      "AP@0.5": 0.48913907507899723,
+      "AP@0.75": 0.29034552336098557,
+      "AP@0.95": 0.021499818556995336,
+      "n_detections": 98097
+    },
+    "delta_ours_minus_hazy": {
+      "AP@0.5": 0.03644378532210396,
+      "AP@0.75": 0.031045871325889596,
+      "AP@0.95": 0.005163829184274774,
+      "AP@0.5:0.95": 0.026676709006452415
+    },
+    "delta_dcp_minus_hazy": null,
+    "delta_ours_minus_dcp": null,
+    "delta_routed_minus_hazy": null,
+    "delta_routed_minus_ours": null
+  },
+  "routed": null,
+  "detector": {
+    "weights": "outputs/checkpoints/yolov8n.pt",
+    "sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+    "ultralytics_version": "8.4.160",
+    "torch_version": "2.14.0+cu130",
+    "device": "cuda",
+    "frozen": true,
+    "image_size": 640,
+    "confidence": 0.001,
+    "nms_iou": 0.7,
+    "max_detections": 300,
+    "class_mapping_rtts_to_coco": {
+      "bicycle": 1,
+      "bus": 5,
+      "car": 2,
+      "motorbike": 3,
+      "person": 0
+    }
+  },
+  "evaluation": {
+    "iou_thresholds": [
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "pycocotools_version": "2.0.11"
+  },
+  "provenance": {
+    "git_revision": null,
+    "config_sha256": "9984ae41c00c8f30e61e0d092e716ec7714650af8fbc958a6377e99c16c41b1a",
+    "dataset_manifest_sha256": "8620f9c985111eb30aec2c13f1d3022ee7a513ef7e029b76082d91cc4eecfb7f"
+  }
+}
