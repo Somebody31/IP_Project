@@ -356,6 +356,56 @@ not carry it.
     loss and the metric — a general detection-benefit claim would need a
     second detector.
 
+15. **Real fog over in-domain content — and the atmospheric-light *level*
+    as a binding axis.** The failure explanation in finding 9 says the model
+    misreads unfamiliar content as fog. The complementary experiment keeps
+    content in-distribution (Cityscapes clear) and transplants fog *measured
+    from real fog* (RTTS's own DCP transmission, resized to the Cityscapes
+    frame, and its own atmospheric light). 60 scenes, paired against the known
+    clear reference (`realfog-stats-on-cityscapes-20261003*.json`):
+
+    | arm (Cityscapes content) | restored PSNR | gain vs hazy | lum ratio | fog lift |
+    |---|---|---|---|---|
+    | shipped fog (training distribution, A=1) | 27.14 | +16.90 | 0.553 | 0.504 |
+    | real transmission, density-matched, A=1 | **27.46** | **+17.26** | 0.555 | 0.513 |
+    | real transmission at its own density, A=1 | 25.26 | +17.19 | 0.486 | 0.614 |
+    | shipped transmission + **real A** | **21.73** | +9.55 | 0.548 | 0.446 |
+    | real transmission + real A | 20.01 | +9.98 | 0.466 | 0.530 |
+
+    **Two readings.** (a) *Real fog's transmission structure costs nothing*
+    when the content is familiar: density-matched, it matches the
+    training-distribution control (27.46 vs 27.14 dB). So the fog-field
+    realism is not what breaks the model. (b) *The atmospheric-light level is
+    a binding axis*: keeping the training fog's own transmission and swapping
+    only `A` to real fog's level costs **5.4 dB** (27.14 → 21.73).
+
+    **Why this was missed.** The earlier probe measured RTTS's atmospheric
+    light as "neutral to within 1%" — that was the channel *ratios* (colour
+    cast) and remains correct. The absolute *level* is a different axis:
+
+    | domain | A level | channel ratios |
+    |---|---|---|
+    | Foggy Cityscapes train (training distribution) | 0.929 (sd 0.113) | ~1.00 |
+    | Foggy Cityscapes val | 0.960 | ~1.00 |
+    | RTTS valid | 0.855 | ~1.00 |
+    | RTTS test | **0.872** | ~1.00 |
+
+    Real fog is ~6–7% dimmer in `A` than the fog this model trained on, with
+    neither tint nor density accounting for it. This **corrects the P3.6
+    recommendation** in `plan.md`: a heavier-β or tinted-A resynthesis still
+    has nothing to fix, but an **A-level resynthesis** (render training fog
+    with `A` drawn from the real range) is the first resynthesis variant in
+    this project with a measured reason to exist.
+
+    *Caveats.* The transplant resizes the transmission map (structure is
+    low-frequency, but this is a transplant, not a captured pair); `A` and
+    apparent density are entangled in the "shipped transmission + real A" arm
+    (its haze lift rises to 0.446 from 0.504), which is why a
+    matched-transmission + real-A arm is included above to separate them. No
+    in-domain arm reproduces RTTS's full over-removal signature (all ratios
+    ≥ 0.466 vs RTTS's 0.449), so content still contributes on top of the A
+    level.
+
 ## Method 2 — density-gated U-Net (ours)
 
 One U-Net backbone plus a scalar gate `d` predicted from the input, output
