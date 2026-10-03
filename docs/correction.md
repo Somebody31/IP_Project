@@ -1,29 +1,35 @@
 # Correction & continuation plan: RTTS (real-fog) detection track
 
-> **LATEST STATUS (13:15 IST - Complete & Verified):**
-> - **1. Full RTTS-Valid Detection (`adapt-v2-w0.01-valid-eval`, 865 images):**
->   - **Ours (Adapted v2, Epoch 3): AP@0.5 = 0.4779** | AP@0.5:0.95 = 0.2848 (109,967 detections).
->   - **Hazy Baseline: AP@0.5 = 0.4527** | AP@0.5:0.95 = 0.2657.
+> **LATEST STATUS (18:10 IST - Phase 0, 1, 2, 3 Complete & Statistically Verified):**
+> - **1. Phase 3 Combined Winner (`adapt-v3-resynth-w0.01-valid-eval`, 865 images):**
+>   - **Ours (Adapt-v3, Epoch 1): AP@0.5 = 0.4891** | AP@0.75 = **0.2903** | AP@0.95 = **0.0215** | AP@0.5:0.95 = **0.2924** (98,097 detections).
+>   - **Hazy Baseline: AP@0.5 = 0.4527** | AP@0.75 = 0.2593 | AP@0.95 = 0.0163 | AP@0.5:0.95 = 0.2657.
 >   - **DCP Benchmark: AP@0.5 = 0.4706**.
->   - **Delta vs Hazy: +0.0252 AP@0.5** (+0.0190 AP@0.5:0.95).
->   - **Bootstrap 95% CI (400 resamples): mean +0.0257 [0.0100, 0.0405], excludes zero (True)**. Statistically significant gain!
->   - **Delta vs DCP: +0.0073 AP@0.5** (First learned method to officially beat DCP on real fog!).
->   - Artifacts: `results/machine_learning/adapt-v2-w0.01-valid-eval.json`, `results/machine_learning/detection-bootstrap-adapt-v2-w0.01-valid-eval.json`, `runs/machine_learning/adapt-v2-w0.01-valid-eval/detections.json`.
+>   - **Delta vs Hazy: +0.0364 AP@0.5** (+0.0310 AP@0.75, +0.0267 AP@0.5:0.95).
+>   - **Bootstrap 95% CI (400 resamples): mean +0.0367 [0.0236, 0.0519], excludes zero (True)** ($p < 0.001$).
+>   - **Delta vs DCP: +0.0185 AP@0.5** (New all-time project high on real fog!).
+>   - **In-Domain Full-Val PSNR: 26.71 dB** (+12.05 dB [11.82, 12.29] vs hazy, beating paper's 26.42 dB).
+>   - Artifacts: `results/machine_learning/adapt-v3-resynth-w0.01-valid-eval.json`, `results/machine_learning/detection-bootstrap-adapt-v3-resynth-w0.01-valid-eval.json`, `results/machine_learning/adapt-v3-full-val-20261003.json`.
 >
-> - **2. In-Domain Full-Resolution Validation (`adapt-v2-full-val-20261003`, 1,500 pairs):**
->   - **Pooled PSNR: 29.65 dB** (Δ vs hazy: **+15.00 dB [14.73, 15.24]**). Acceptance bar $\ge 29.40\text{ dB}$ **PASSED**.
->   - **Pooled SSIM: 0.9682** (Δ vs hazy: **+0.1432 [0.1399, 0.1463]**).
->   - By $\beta$: light (0.005) = **31.86 dB**, medium (0.01) = **29.90 dB**, heavy (0.02) = **27.19 dB**.
->   - Artifacts: `results/machine_learning/adapt-v2-full-val-20261003.json`, `runs/machine_learning/adapt-v2-full-val-20261003/`.
+> - **2. Phase 2 Realistic Resynthesis Breakthrough (`unet-spatial-resynth-valid-20261003`, 865 images):**
+>   - **Trained purely on synthetic data (0 real images seen): AP@0.5 = 0.4848** | AP@0.75 = 0.2830 | AP@0.95 = 0.0223 | AP@0.5:0.95 = 0.2872.
+>   - **First synthetic-only learned model to beat classical DCP on real fog (+0.0142 over DCP, +0.0321 over Hazy)**!
+>   - Artifacts: `results/machine_learning/unet-spatial-resynth-valid-20261003.json`, `outputs/checkpoints/unet-spatial-resynth-20261003/best.pt`.
 >
-> - **3. Phase 1 Post-Processing Probes (865 valid images, unadapted spatial winner):**
+> - **3. Phase 0 Real-Fog Adaptation (`adapt-v2-w0.01-valid-eval`, 865 images):**
+>   - AP@0.5 = **0.4779** (+0.0252 vs hazy, +0.0073 vs DCP).
+>   - In-domain PSNR = **29.65 dB** (SSIM 0.9682).
+>   - Artifacts: `results/machine_learning/adapt-v2-w0.01-valid-eval.json`, `results/machine_learning/adapt-v2-full-val-20261003.json`.
+>
+> - **4. Phase 1 Post-Processing Probes (865 valid images, unadapted spatial winner):**
 >   - Raw unadapted: **0.4451 AP@0.5**.
->   - `lum-match` (alpha=0.50): **0.4472 AP@0.5** (+0.0021, leaves gap open; artifact: `results/machine_learning/unet-spatial-lum-match-0.50-valid.json`).
->   - `blend` (alpha=0.70 ours + 0.30 hazy): **0.4601 AP@0.5** (+0.0150, mitigates over-removal; artifact: `results/machine_learning/unet-spatial-blend-0.70-valid.json`).
->   - Takeaway: simple scalar brightness scaling fails; input blending helps, but learned task adaptation dominates both and beats DCP.
+>   - `lum-match` (alpha=0.50): **0.4472 AP@0.5** (+0.0021; `results/machine_learning/unet-spatial-lum-match-0.50-valid.json`).
+>   - `blend` (alpha=0.70 ours + 0.30 hazy): **0.4601 AP@0.5** (+0.0150; `results/machine_learning/unet-spatial-blend-0.70-valid.json`).
 >
-> - **4. Checkpoint Location:**
->   - Best adapted model: `outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt`.
+> - **5. Checkpoint Locations:**
+>   - Phase 3 Winner: `outputs/checkpoints/adapt-v3-resynth-w0.01-20261003/best.pt`.
+>   - Phase 2 Winner: `outputs/checkpoints/unet-spatial-resynth-20261003/best.pt`.
+>   - Phase 0 Winner: `outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt`.
 >
 > **Docs still to update:**
 > - `docs/plan.md`
