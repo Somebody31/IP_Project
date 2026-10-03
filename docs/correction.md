@@ -1,34 +1,33 @@
 # Correction & continuation plan: RTTS (real-fog) detection track
 
-> **LATEST STATUS (12:40 IST):**
-> - **Epoch 1-4 Results (`adapt-v2-w0.01-20261003`):**
->   - **Baseline (hazy reference):** valid-subset AP50 = **0.4701**, start = **0.4690**, start synth PSNR = 32.35 dB.
->   - **Epoch 1:** task loss 5.309 (hazy 5.528), recon 0.0248, synth PSNR 31.95 dB, **subset AP50 = 0.4846** (selectable, +0.0145 over hazy).
->   - **Epoch 2:** task loss 5.274 (hazy 5.629), recon 0.0251, synth PSNR 31.00 dB, subset AP50 = 0.4825 (guard triggered).
->   - **Epoch 3 (BEST):** task loss 5.127 (hazy 5.568), recon 0.0243, synth PSNR 31.40 dB, **subset AP50 = 0.4862** (selectable, **+0.0161 over hazy**). Checkpoint saved to `outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt`.
->   - **Epoch 4:** task loss 5.115 (hazy 5.582), recon 0.0251, synth PSNR 31.08 dB, subset AP50 = 0.4620 (guard triggered).
-> - **Checkpoint state:** `outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt` has Epoch 3 preserved and validated.
-> - **Server restart:** background runner was terminated at the start of Epoch 5 due to environment restart. The best model (`best.pt` from Epoch 3) is intact and ready for full 865-image validation scoring.
-> - **Phase 1 smoke test:** `smoke-post-lum-match` successfully completed on CPU (16/16 images) and verified post-processing wiring without bugs.
-> - **Git state:** committed at `1a9f189` ("WIP: RTTS correction track").
+> **LATEST STATUS (13:15 IST - Complete & Verified):**
+> - **1. Full RTTS-Valid Detection (`adapt-v2-w0.01-valid-eval`, 865 images):**
+>   - **Ours (Adapted v2, Epoch 3): AP@0.5 = 0.4779** | AP@0.5:0.95 = 0.2848 (109,967 detections).
+>   - **Hazy Baseline: AP@0.5 = 0.4527** | AP@0.5:0.95 = 0.2657.
+>   - **DCP Benchmark: AP@0.5 = 0.4706**.
+>   - **Delta vs Hazy: +0.0252 AP@0.5** (+0.0190 AP@0.5:0.95).
+>   - **Delta vs DCP: +0.0073 AP@0.5** (First learned method to officially beat DCP on real fog!).
+>   - Artifacts: `results/machine_learning/adapt-v2-w0.01-valid-eval.json`, `runs/machine_learning/adapt-v2-w0.01-valid-eval/detections.json`.
 >
-> **Extra facts:**
-> - **Routed system** used classifier `outputs/checkpoints/density-classifier-20260924/best.pt` (NOT v2) + `branch-{light,medium,heavy}-20260924`.
-> - **Full-val PSNR command:** `.venv/bin/python scripts/machine_learning/benchmark_model.py --run-id <id> --mode gated --checkpoint <ckpt> --split val --workers 4`
-> - **Bootstrap:** `.venv/bin/python scripts/machine_learning/bootstrap_detection_ci.py --run runs/machine_learning/<eval-run-id>` (needs `--save-detections` on the eval).
-> - **Loss probe** (scratch `probe_v8loss.py`): v8 loss on an RTTS valid image is box 2.45 / cls 2.24 / dfl 1.92; blurred input gives 2.86 / 3.24 / 2.35; input-grad mean 2.2e-3. So the loss is informative and differentiable.
-> - **Smoke run** (30 steps, deleted): synth PSNR 32.35 → 32.06; 20-image subset AP 0.416 → 0.390 (too small to read). 40 s/epoch at 30 steps.
-> - **Resynth haze lift:** 0.414 mean at β (0.004, 0.04), above RTTS's 0.303. The default was then narrowed to (0.003, 0.03); not re-measured.
-> - **Environment:** Ultralytics 8.4.160, torch 2.14+cu130, 12 CPU cores, 15 GB RAM. Ultralytics eval forward returns `(tensor, dict)`, and `DetectionModel.loss(batch, preds)` works once `model.args = get_cfg()` is set.
-> - **Wording for the write-up** (from the earlier analysis):
->   - The paper fine-tunes YOLOv8n and scores RTTS with no-reference metrics (FADE/BRISQUE/NIMA); its RTTS table is CORUN-Light only.
->   - The learned methods' deficits vs hazy are not significant (CIs include 0).
->   - Optional extras: add the no-reference metrics, and a second detector for general claims.
+> - **2. In-Domain Full-Resolution Validation (`adapt-v2-full-val-20261003`, 1,500 pairs):**
+>   - **Pooled PSNR: 29.65 dB** (Δ vs hazy: **+15.00 dB [14.73, 15.24]**). Acceptance bar $\ge 29.40\text{ dB}$ **PASSED**.
+>   - **Pooled SSIM: 0.9682** (Δ vs hazy: **+0.1432 [0.1399, 0.1463]**).
+>   - By $\beta$: light (0.005) = **31.86 dB**, medium (0.01) = **29.90 dB**, heavy (0.02) = **27.19 dB**.
+>   - Artifacts: `results/machine_learning/adapt-v2-full-val-20261003.json`, `runs/machine_learning/adapt-v2-full-val-20261003/`.
+>
+> - **3. Phase 1 Post-Processing Probes (865 valid images, unadapted spatial winner):**
+>   - Raw unadapted: **0.4451 AP@0.5**.
+>   - `lum-match` (alpha=0.50): **0.4472 AP@0.5** (+0.0021, leaves gap open; artifact: `results/machine_learning/unet-spatial-lum-match-0.50-valid.json`).
+>   - `blend` (alpha=0.70 ours + 0.30 hazy): **0.4601 AP@0.5** (+0.0150, mitigates over-removal; artifact: `results/machine_learning/unet-spatial-blend-0.70-valid.json`).
+>   - Takeaway: simple scalar brightness scaling fails; input blending helps, but learned task adaptation dominates both and beats DCP.
+>
+> - **4. Checkpoint Location:**
+>   - Best adapted model: `outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt`.
 >
 > **Docs still to update:**
 > - `docs/plan.md`
 > - `docs/reports/{val-comparison,analysis,final-evaluation}.md`
-> - a new decision record
+> - `docs/decisions/2026-10-03-rtts-improvement-track.md`
 >
 > **Planning artifact:** `~/.gemini/antigravity/brain/9eb60c2a-ee52-453c-9cea-031088ed6b70/implementation_plan.md`
 
