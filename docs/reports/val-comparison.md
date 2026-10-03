@@ -284,6 +284,7 @@ not carry it.
     failure on real fog is not specific to our gate — every learned variant
     hurts while the classical prior helps, so the content/scene-domain
     transferability limitation (finding 9) applies to the paper's own design
+    as well.
     **The single post-freeze test score (step 5, P4.1) confirms it
     on the untouched test split**: the valid-selected winner (spatial-gated
     U-Net, `spatial-rtts-test-frozen-20261002.json`) scores **0.4850 AP@0.5**
@@ -294,6 +295,21 @@ not carry it.
     still trails doing nothing; DCP remains the only method that helps. The
     honest conclusion is the transferability limitation, stated with the
     frozen split's numbers for both methods.
+
+    **Bootstrapped over images** (400 resamples,
+    `detection-bootstrap-rtts-test-bootstrap-20261002.json`), the frozen
+    test deltas are:
+
+    | delta vs hazy | mean | CI95 | excludes 0 |
+    |---|---|---|---|
+    | DCP | **+0.0273** | [0.0124, 0.0424] | **yes** |
+    | ours | −0.0076 | [−0.0207, 0.0086] | no |
+    | routed | −0.0135 | [−0.0308, 0.0040] | no |
+
+    So the defensible statement is **"no learned method improves detection,
+    and their deficits are not statistically distinguishable from zero"** —
+    not "the learned models are significantly worse". DCP's gain is the only
+    one the data separates from no-op.
 
 13. **The DCP-transmission hybrid is a decisive negative.** Feeding DCP's
     per-image transmission estimate as a 4th input channel (the "physical

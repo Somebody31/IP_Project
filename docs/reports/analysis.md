@@ -42,11 +42,21 @@ COCO YOLOv8n, AP@0.5, paired per image:
 | paper's routed design | 0.4415 (−0.011) | 0.4789 (−0.013) |
 | ours + RTTS-train adaptation (separate track) | 0.4508 (−0.002) | — |
 
-Every learned system is below doing nothing on both splits; DCP is the only
-one above. The adaptation track is the only learned variant that moved in
-the right direction (+0.006 over its unadapted parent) and still missed the
-bar (acceptance: valid ≥ DCP-valid). This is the project's central negative
-result, and it is symmetric — the paper's own design is the weakest of all.
+Every learned system is at or below doing nothing on both splits; DCP is the
+only one above. **Bootstrapped over images** (400 resamples, frozen test
+split):
+
+| delta vs hazy (test) | mean | CI95 | excludes 0 |
+|---|---|---|---|
+| DCP | **+0.0273** | [0.0124, 0.0424] | **yes** |
+| ours | −0.0076 | [−0.0207, 0.0086] | no |
+| routed | −0.0135 | [−0.0308, 0.0040] | no |
+
+The statistically defensible claim is therefore **"no learned method improves
+detection; their deficits are indistinguishable from zero"** — DCP's small
+gain is the only effect the data resolves. The adaptation track is the only
+learned variant that moved in the right direction (+0.006 over its unadapted
+parent) and still missed the bar (acceptance: valid ≥ DCP-valid).
 
 ## Q3 — Does the gain vary with fog density?
 

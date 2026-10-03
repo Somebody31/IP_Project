@@ -51,6 +51,13 @@ The adaptation row is scored on `rtts/valid` (its selection split) and is a
 **separate labelled track** — the paper trains on synthetic fog only, so
 merging it into the paper-comparison table would be protocol asymmetry.
 
+Bootstrapped over images (400 resamples), the frozen-test deltas are:
+DCP **+0.0273 [0.0124, 0.0424]** (excludes zero), ours −0.0076 [−0.0207,
+0.0086] and routed −0.0135 [−0.0308, 0.0040] (both include zero). The
+defensible claim: **no learned method improves detection, and their deficits
+are not statistically distinguishable from zero**; DCP's small gain is the
+only effect the data resolves.
+
 ## Track 1 (paper's method) — Foggy Cityscapes test
 
 `results/machine_learning/routed-test-frozen-20261002.json` — the paper-style
