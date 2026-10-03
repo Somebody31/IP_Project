@@ -135,7 +135,7 @@ def infinite(loader):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--run-id", required=True)
-    parser.add_argument("--checkpoint", type=Path,
+    parser.add_argument("--checkpoint", "--init-checkpoint", dest="checkpoint", type=Path,
                         default=ROOT / "outputs/checkpoints/unet-gated-spatial-20260929/best.pt")
     parser.add_argument("--synth-cache", type=Path, default=ROOT / "data/derived/crops/train",
                         help="crop cache for the reconstruction arm (ignored with --resynth)")
