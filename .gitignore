@@ -46,3 +46,4 @@ Thumbs.db
 /data/derived/
 # ML run artifacts
 /runs/machine_learning/**/*.pt
+runs/*/detections.json

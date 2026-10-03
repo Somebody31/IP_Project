@@ -167,6 +167,8 @@ def main() -> None:
                         help="light/medium/heavy branch checkpoints for the routed column")
     parser.add_argument("--run-id", default=dt.datetime.now().strftime("model-rtts-%Y%m%d-%H%M%S"))
     parser.add_argument("--limit", type=int, default=0, help="smoke-test image limit")
+    parser.add_argument("--save-detections", action="store_true",
+                        help="also dump per-image detections for bootstrap CIs on the deltas")
     parser.add_argument("--tile", type=int, default=256)
     parser.add_argument("--stride", type=int, default=128)
     parser.add_argument("--inference", default="whole", choices=["whole", "tiled"],
@@ -359,6 +361,20 @@ def main() -> None:
     result_path = ROOT / "results" / "machine_learning" / f"{args.run_id}.json"
     result_path.parent.mkdir(parents=True, exist_ok=True)
     result_path.write_text(json.dumps(payload, indent=2) + "\n")
+    if args.save_detections:
+        # Per-image detections, so the AP deltas can be bootstrapped over
+        # images by an analysis pass (point estimates alone cannot say whether
+        # a -0.007 AP difference is real). Same schema as the COCO inputs.
+        run_dir = ROOT / "runs/machine_learning" / args.run_id
+        run_dir.mkdir(parents=True, exist_ok=True)
+        dump = {
+            "images": images,
+            "categories": categories,
+            "annotations": annotations,
+            "detections": {name: coll for name, coll in collections.items() if coll is not None},
+        }
+        (run_dir / "detections.json").write_text(json.dumps(dump))
+        print(f"detections: {run_dir.relative_to(ROOT)}/detections.json")
     for name, value in metrics.items():
         print(f"{name:>6}: AP@0.5 {value['AP@0.5']:.4f} | AP@0.5:0.95 {value['AP@0.5:0.95']:.4f} "
               f"| {value['n_detections']} detections")
