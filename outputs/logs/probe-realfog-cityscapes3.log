@@ -1,1 +1,18 @@
 scenes 60 | rtts pool 865 (valid)
+  10/60
+  20/60
+  30/60
+  40/60
+  50/60
+  60/60
+
+arm         restored    hazy    gain  lum ratio  haze lift
+rtts_t         25.26    8.07  +17.19      0.486      0.614
+rtts_matched     27.46   10.20  +17.26      0.555      0.513
+rtts_matched_A     23.34   12.15  +11.20      0.556      0.454
+rtts_tA        20.01   10.03   +9.98      0.466      0.530
+ship_A         21.73   12.18   +9.55      0.548      0.446
+shipped        27.14   10.24  +16.90      0.553      0.504
+
+reference points: in-domain healthy restoration ratio 0.48-0.52; RTTS over-removal measured 0.449
+wrote results/machine_learning/realfog-stats-on-cityscapes-20261003b.json

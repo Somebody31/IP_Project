@@ -368,16 +368,26 @@ not carry it.
     |---|---|---|---|---|
     | shipped fog (training distribution, A=1) | 27.14 | +16.90 | 0.553 | 0.504 |
     | real transmission, density-matched, A=1 | **27.46** | **+17.26** | 0.555 | 0.513 |
+    | real transmission, density-matched, **real A** | **23.34** | +11.20 | 0.556 | 0.454 |
     | real transmission at its own density, A=1 | 25.26 | +17.19 | 0.486 | 0.614 |
     | shipped transmission + **real A** | **21.73** | +9.55 | 0.548 | 0.446 |
     | real transmission + real A | 20.01 | +9.98 | 0.466 | 0.530 |
 
+    The 2×2 at **matched density** isolates the two axes cleanly:
+
+    | matched-density arm | restored PSNR | Δ vs control |
+    |---|---|---|
+    | shipped transmission, A=1 (control) | 27.14 | — |
+    | **real** transmission, A=1 | 27.46 | **+0.32** (nothing) |
+    | **real** transmission, real A | 23.34 | **−3.80** |
+    | shipped transmission, real A | 21.73 | **−5.41** |
+
     **Two readings.** (a) *Real fog's transmission structure costs nothing*
-    when the content is familiar: density-matched, it matches the
-    training-distribution control (27.46 vs 27.14 dB). So the fog-field
+    when the content is familiar: density-matched, it matches or slightly
+    beats the training-distribution control (27.46 vs 27.14 dB). Fog-field
     realism is not what breaks the model. (b) *The atmospheric-light level is
-    a binding axis*: keeping the training fog's own transmission and swapping
-    only `A` to real fog's level costs **5.4 dB** (27.14 → 21.73).
+    a binding axis*: at matched density, swapping only `A` to real fog's level
+    costs **3.8–5.4 dB** and roughly a third of the restoration gain.
 
     **Why this was missed.** The earlier probe measured RTTS's atmospheric
     light as "neutral to within 1%" — that was the channel *ratios* (colour
