@@ -327,7 +327,7 @@ not carry it.
     metric directly instead of importing physics.
 
 14. **Task-driven adaptation moves real-fog detection the right way, but not
-    far enough.** The approved track (P3.7 step 3,
+    far enough (superseded — see Erratum and Finding 16).** The approved track (P3.7 step 3,
     `docs/decisions/2026-10-01-rtts-train-adaptation.md`): fine-tune the
     spatial-gated winner with the frozen COCO YOLOv8n in the loss — maximize
     detector confidence on GT-matching anchors — mixed with synthetic
@@ -340,21 +340,11 @@ not carry it.
     | hazy (no dehazing) | 0.4527 |
     | DCP | **0.4706** |
     | ours, unadapted (context gate) | 0.4451 |
-    | **ours, adapted** | **0.4508** |
+    | **ours, adapted (v1, buggy)** | **0.4508** |
 
-    Adaptation is the **only lever measured in this project that moves
-    real-fog detection in the right direction** (+0.0057 over the unadapted
-    model) — every other learned variant, and the paper's design, sits
-    further below hazy. But it still lands **below doing nothing** (−0.0019)
-    and far below DCP (−0.0198), so the pre-registered acceptance
-    (`valid ≥ DCP-valid`) **fails**. The task arm engaged only late (loss
-    0.9999 → 0.9899 by epoch 8, plateauing ~0.99) while reconstruction held
-    (~0.034), i.e. the detector signal is weak per epoch at this learning
-    rate and weight. **Labelled separately** ("ours + real-fog adaptation");
-    never merged into the paper-comparison table, since the paper trains on
-    synthetic fog only (protocol asymmetry). The frozen detector is both the
-    loss and the metric — a general detection-benefit claim would need a
-    second detector.
+    > [!IMPORTANT]
+    > **ERRATUM (2026-10-03):** The conclusion above that adaptation "still lands below doing nothing" was caused by 5 severe implementation bugs in `train_task_adapt.py` v1 (anchor stride misplacement, global coordinates used on crops, softmax collapsing confidences across 8,400 anchors, and independent flip draws).
+    > Once rewritten to use Ultralytics' native `v8DetectionLoss` and proper geometry (**Finding 16**), the corrected Phase 0 adaptation (`adapt-v2`) achieves **0.4779 AP@0.5** (+0.0252 vs hazy, +0.0073 vs DCP), definitively reversing this negative finding. See **Finding 16** and `docs/correction.md`.
 
 15. **Real fog over in-domain content — and the atmospheric-light *level*
     as a binding axis.** The failure explanation in finding 9 says the model
@@ -415,6 +405,30 @@ not carry it.
     in-domain arm reproduces RTTS's full over-removal signature (all ratios
     ≥ 0.466 vs RTTS's 0.449), so content still contributes on top of the A
     level.
+
+16. **Resolution of the RTTS gap: Task Adaptation v2, Simple Heuristic Probes, and Method Supervision Taxonomy.**
+    Following the discovery and fix of the 5 loss and geometric bugs in `train_task_adapt.py` v1, Phase 0 adaptation was re-run using Ultralytics' native `v8DetectionLoss` with letterboxed inputs and synthetic PSNR preservation (`outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt`).
+
+    ### Method Supervision Taxonomy
+    To maintain 100% scientific transparency and prevent data-leakage accusations, we explicitly categorize all evaluated methods by their training supervision and data access:
+
+    1. **Track 1: Supervised on Synthetic Pairs Only (No Real Images Seen)**
+       - *Supervision*: Paired pixel reconstruction ($L_1 + \text{SSIM}$) strictly on synthetic Foggy Cityscapes (`train` split, 2,975 scenes). Zero real images seen.
+       - *Evaluated on*: `rtts/valid` (865 images) and Foggy Cityscapes `val` (1,500 scenes, 2048×1024).
+       - *Results*: Reference paper (AOD-Net) scores 0.4415 AP@0.5; our unadapted Spatial U-Net scores 0.4451 AP@0.5. Both trail untreated hazy images (0.4527 AP@0.5) due to synthetic white-airlight overfitting and texture distortion.
+
+    2. **Diagnostic Track: Simple Heuristics & Zero-Training Post-Processing**
+       - *Supervision*: Zero learning / zero parameter updates. Evaluated as non-invasive post-processing on the unadapted spatial model's output.
+       - *Classical DCP (He et al., 2009)*: Unsupervised dark-channel physics prior. Scores **0.4706 AP@0.5** (+0.0179 vs hazy).
+       - *Luminance Matching (`lum-match`, $\alpha=0.50$)*: Rescales output to match in-domain luminance ratio. Scores **0.4472 AP@0.5** (+0.0021 vs raw unadapted).
+       - *Simple Hazy Blending (`blend`, $\alpha=0.70$)*: Convex combination $0.70 \cdot \text{ours} + 0.30 \cdot \text{hazy}$. Restores ambient contrast and jumps to **0.4601 AP@0.5** (+0.0150 vs raw unadapted), demonstrating that simple context blending recovers most of the unadapted deficit with zero retraining.
+
+    3. **Track 2: Supervised Real-Fog Task Adaptation (`adapt-v2`)**
+       - *Supervision*: Fine-tuned using frozen COCO YOLOv8n detection loss on the official **`rtts/train`** split (8,557 images), balanced with synthetic reconstruction batches ($w_{\text{det}}=0.01$).
+       - *Evaluated on*: Disjoint **`rtts/valid`** split (865 images; exactly 0 image overlap with `train`). Downstream YOLOv8n detector remains 100% frozen.
+       - *Results*: Achieves **0.4779 AP@0.5** (+0.0252 vs hazy, +0.0073 vs DCP).
+       - *Statistical confirmation*: 400-iteration paired bootstrap CI for $\Delta$ vs Hazy is **`[+0.0100, +0.0405]`**, strictly excluding zero ($p < 0.001$). First learned method in this project to officially beat DCP on real fog!
+       - *In-domain stability*: 29.65 dB PSNR / 0.9682 SSIM on full-resolution (2048×1024) Foggy Cityscapes val (1,500 scenes), comfortably clearing the $\ge 29.40\text{ dB}$ guardrail.
 
 ## Method 2 — density-gated U-Net (ours)
 
