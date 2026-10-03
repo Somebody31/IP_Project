@@ -1,11 +1,16 @@
 # Correction & continuation plan: RTTS (real-fog) detection track
 
-> **LATEST STATUS (12:30 IST):**
-> - **First result:** `adapt-v2-w0.01-20261003` epoch 1 scored **valid-subset AP50 0.4846**, vs hazy 0.4701 and start 0.4690 (+0.0156). Synth PSNR is 31.95 (start 32.35, guard allows −1.0). This is the first learned result above hazy. It's on the 300-image subset; score it on full valid (Step A).
-> - **Process:** the run is still going (PIDs 256610/256611, log `outputs/logs/adapt-v2-w0.01-20261003.log`).
-> - **GPU memory:** 5.6/6 GB in use. Do NOT start another GPU job until it ends.
-> - **Commit:** the work-in-progress code is committed as "WIP: RTTS correction track"; run `git show HEAD --stat` to see it.
-> - **v1 code** (broken loss) can be read with `git show d18d09a:scripts/machine_learning/train_task_adapt.py` (lines ~127–169 = `detection_loss`, ~57–124 = `RttTrainSet`).
+> **LATEST STATUS (12:40 IST):**
+> - **Epoch 1-4 Results (`adapt-v2-w0.01-20261003`):**
+>   - **Baseline (hazy reference):** valid-subset AP50 = **0.4701**, start = **0.4690**, start synth PSNR = 32.35 dB.
+>   - **Epoch 1:** task loss 5.309 (hazy 5.528), recon 0.0248, synth PSNR 31.95 dB, **subset AP50 = 0.4846** (selectable, +0.0145 over hazy).
+>   - **Epoch 2:** task loss 5.274 (hazy 5.629), recon 0.0251, synth PSNR 31.00 dB, subset AP50 = 0.4825 (guard triggered).
+>   - **Epoch 3 (BEST):** task loss 5.127 (hazy 5.568), recon 0.0243, synth PSNR 31.40 dB, **subset AP50 = 0.4862** (selectable, **+0.0161 over hazy**). Checkpoint saved to `outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt`.
+>   - **Epoch 4:** task loss 5.115 (hazy 5.582), recon 0.0251, synth PSNR 31.08 dB, subset AP50 = 0.4620 (guard triggered).
+> - **Checkpoint state:** `outputs/checkpoints/adapt-v2-w0.01-20261003/best.pt` has Epoch 3 preserved and validated.
+> - **Server restart:** background runner was terminated at the start of Epoch 5 due to environment restart. The best model (`best.pt` from Epoch 3) is intact and ready for full 865-image validation scoring.
+> - **Phase 1 smoke test:** `smoke-post-lum-match` successfully completed on CPU (16/16 images) and verified post-processing wiring without bugs.
+> - **Git state:** committed at `1a9f189` ("WIP: RTTS correction track").
 >
 > **Extra facts:**
 > - **Routed system** used classifier `outputs/checkpoints/density-classifier-20260924/best.pt` (NOT v2) + `branch-{light,medium,heavy}-20260924`.
