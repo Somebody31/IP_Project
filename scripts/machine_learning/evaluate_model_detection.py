@@ -339,7 +339,8 @@ def main() -> None:
     def delta(a: str, b: str) -> dict | None:
         if a not in metrics or b not in metrics:
             return None
-        return {k: metrics[a][k] - metrics[b][k] for k in ("AP@0.5", "AP@0.5:0.95")}
+        keys = ("AP@0.5", "AP@0.75", "AP@0.95", "AP@0.5:0.95")
+        return {k: metrics[a][k] - metrics[b][k] for k in keys if k in metrics[a] and k in metrics[b]}
 
     payload = {
         "status": "completed_exploratory_test_evaluation",
@@ -411,7 +412,8 @@ def main() -> None:
         (run_dir / "detections.json").write_text(json.dumps(dump))
         print(f"detections: {run_dir.relative_to(ROOT)}/detections.json")
     for name, value in metrics.items():
-        print(f"{name:>6}: AP@0.5 {value['AP@0.5']:.4f} | AP@0.5:0.95 {value['AP@0.5:0.95']:.4f} "
+        print(f"{name:>6}: AP@0.5 {value['AP@0.5']:.4f} | AP@0.75 {value.get('AP@0.75', 0.0):.4f} "
+              f"| AP@0.95 {value.get('AP@0.95', 0.0):.4f} | AP@0.5:0.95 {value['AP@0.5:0.95']:.4f} "
               f"| {value['n_detections']} detections")
     print(f"summary: {result_path.relative_to(ROOT)}")
 

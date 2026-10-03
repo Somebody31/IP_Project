@@ -94,11 +94,23 @@ def coco_metrics(images, annotations, categories, predictions, iou_thresholds):
     precision_all = precision[:, :, :, all_area_index, max_det_index]
     valid = precision_all[precision_all > -1]
     ap5095 = float(valid.mean()) if valid.size else 0.0
-    threshold_index = int(np.argmin(np.abs(evaluator.params.iouThrs - 0.5)))
-    at50 = precision_all[threshold_index]
-    valid50 = at50[at50 > -1]
-    ap50 = float(valid50.mean()) if valid50.size else 0.0
-    return {"AP@0.5:0.95": ap5095, "AP@0.5": ap50, "n_detections": len(predictions)}
+
+    def ap_at_iou(iou_target: float) -> float:
+        idx = int(np.argmin(np.abs(evaluator.params.iouThrs - iou_target)))
+        sub = precision_all[idx]
+        val = sub[sub > -1]
+        return float(val.mean()) if val.size else 0.0
+
+    ap50 = ap_at_iou(0.50)
+    ap75 = ap_at_iou(0.75)
+    ap95 = ap_at_iou(0.95)
+    return {
+        "AP@0.5:0.95": ap5095,
+        "AP@0.5": ap50,
+        "AP@0.75": ap75,
+        "AP@0.95": ap95,
+        "n_detections": len(predictions),
+    }
 
 
 def main() -> None:
