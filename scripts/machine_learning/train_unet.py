@@ -171,6 +171,11 @@ def main() -> None:
     parser.add_argument("--amp", action="store_true",
                         help="enable fp16 autocast — measured 4x slower and NaN-prone on this GPU; off by default")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--resynth", action="store_true",
+                        help="train on realistic fog rendered on the fly (ip_dehaze.data.resynth): random "
+                             "atmospheric-light level/tint, wider density, JPEG/noise/blur/downscale")
+    parser.add_argument("--init-checkpoint", type=Path, default=None,
+                        help="start from these weights (fine-tune) instead of a fresh init")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -185,7 +190,16 @@ def main() -> None:
         raise SystemExit("--gate-spatial and --gate-context are mutually exclusive")
     if args.gate_context and args.context_dir is None:
         raise SystemExit("--gate-context requires --context-dir (a whole-image resize cache)")
-    if args.cache_dir and Path(args.cache_dir).is_dir():
+    if args.resynth:
+        if args.gate_context or args.dcp_t or args.beta_class:
+            raise SystemExit("--resynth renders its own fog; it does not support --gate-context/--dcp-t/--beta-class")
+        from ip_dehaze.data.resynth import ResynthPairs
+
+        train_set = ResynthPairs(split="train", crop=args.crop, seed=args.seed)
+        if args.limit:
+            train_set.scenes = train_set.scenes[: args.limit]
+        print("using on-the-fly realistic fog resynthesis", flush=True)
+    elif args.cache_dir and Path(args.cache_dir).is_dir():
         if args.gate_context:
             train_set = CachedCropsWithContext(
                 args.cache_dir, args.context_dir, split="train",
@@ -232,6 +246,10 @@ def main() -> None:
         gate_init=args.gate_init, gate_spatial=args.gate_spatial,
         gate_context=args.gate_context, dcp_t=args.dcp_t,
     ).to(device)
+    if args.init_checkpoint is not None and not args.resume:
+        init_state = torch.load(args.init_checkpoint, map_location=device, weights_only=False)
+        model.load_state_dict(init_state["model"])
+        print(f"initialised from {args.init_checkpoint}", flush=True)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     use_amp = args.amp and device.type == "cuda"

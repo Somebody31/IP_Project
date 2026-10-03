@@ -154,6 +154,24 @@ def dehaze_whole(
     return restored[:height, :width]
 
 
+def post_process(ours: np.ndarray, hazy: np.ndarray, mode: str, alpha: float,
+                 dcp: np.ndarray | None = None) -> np.ndarray:
+    """Inference-time corrections that test the over-removal hypothesis.
+
+    lum-match: scale the output so mean(restored)/mean(hazy) == alpha (in-domain
+    healthy restorations sit at 0.48-0.52; RTTS measured 0.449).
+    """
+    if mode == "lum-match":
+        out = ours * (alpha * hazy.mean() / max(float(ours.mean()), 1e-6))
+    elif mode == "blend":
+        out = alpha * ours + (1 - alpha) * hazy
+    elif mode == "dcp-ensemble":
+        out = alpha * ours + (1 - alpha) * dcp
+    else:
+        out = ours
+    return np.clip(out, 0.0, 1.0).astype(np.float32)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Frozen-detector AP on RTTS: hazy vs DCP vs ours")
     parser.add_argument("--config", type=Path,
@@ -178,6 +196,11 @@ def main() -> None:
                         help="skip the DCP column (it costs ~10 min of CPU)")
     parser.add_argument("--skip-hazy", action="store_true", help="skip the untreated baseline column")
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--post", default="none", choices=["none", "lum-match", "blend", "dcp-ensemble"],
+                        help="inference-time post-processing of our output (over-removal probe): "
+                             "lum-match = rescale to restored/hazy luminance ratio --post-alpha; "
+                             "blend = alpha*ours + (1-alpha)*hazy; dcp-ensemble = alpha*ours + (1-alpha)*DCP")
+    parser.add_argument("--post-alpha", type=float, default=0.5)
     args = parser.parse_args()
 
     from importlib.metadata import version
@@ -259,6 +282,17 @@ def main() -> None:
                 if args.inference == "whole"
                 else dehaze_tiled(model, rgb, device, tile=args.tile, stride=args.stride)
             )
+            if args.post != "none":
+                dcp_ref = None
+                if args.post == "dcp-ensemble":
+                    dcp_ref = (np.asarray(prepared["dcp"][-1], dtype=np.float32) / 255.0
+                               if collections["dcp"] is not None else
+                               dcp_dehaze(rgb, patch_size=config["dcp"]["patch_size"], omega=config["dcp"]["omega"],
+                                          top_fraction=config["dcp"]["atmospheric_top_fraction"],
+                                          guided_radius=config["dcp"]["guided_radius"],
+                                          guided_epsilon=config["dcp"]["guided_epsilon"],
+                                          transmission_floor=config["dcp"]["transmission_floor"]))
+                ours = post_process(ours, rgb, args.post, args.post_alpha, dcp_ref)
             prepared["ours"].append(Image.fromarray((ours * 255).round().astype(np.uint8)))
             if routed:
                 (classifier, classifier_size), branches = routed
@@ -319,7 +353,8 @@ def main() -> None:
         "n_images": len(image_paths),
         "n_ground_truth_boxes": len(annotations),
         "inference": {"mode": args.inference, "tile": args.tile, "stride": args.stride,
-                      "context": list(CONTEXT_SIZE), "batched_tiles": batch_size},
+                      "context": list(CONTEXT_SIZE), "batched_tiles": batch_size,
+                      "post": args.post, "post_alpha": args.post_alpha},
         "checkpoint": str(args.checkpoint),
         "comparison": {
             **{name: value for name, value in metrics.items()},

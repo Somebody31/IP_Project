@@ -1,4 +1,4 @@
-"""Task-driven fine-tune on RTTS-train (P3.7 step 3, approved track).
+"""Task-driven fine-tune on RTTS-train (P3.7 step 3, approved track) — v2.
 
 Trains the *dehazer* to make the frozen COCO YOLOv8n see objects better on
 real fog, while mixing synthetic-reconstruction batches to preserve
@@ -8,24 +8,26 @@ wherever the resulting numbers appear (decision record item 3).
 Data discipline (user rule 2026-09-29, unchanged):
   supervision: rtts/train images + our synthetic Foggy Cityscapes train pairs
   selection:   rtts/valid (AP@0.5) + our synthetic val
-  rtts/test:   NEVER touched here (single frozen score already done)
+  rtts/test:   NEVER touched here
 
-Loss per batch (two arms, mixed):
-  - detection arm: frozen YOLO features on the dehazed RTTS crop are scored
-    for detection confidence against GT boxes present in the crop
-  - reconstruction arm: the standard reconstruction loss on synthetic pairs
-    (same L1+SSIM as all other runs), which anchors restoration quality
-
-Disclosed simplification: the detection arm maximizes detector confidence on
-GT-matching anchors, not full AP (AP is not differentiable end-to-end at
-reasonable cost). This is the "task signal" the decision record approved.
+v2 (2026-10-03) replaces the v1 task loss, which carried almost no signal:
+  * v1 treated YOLOv8's class-probability rows as logits plus an objectness
+    row (YOLOv8 has none): it softmaxed the *person* row across all 8,400
+    anchors (~1/8400 each), so confidence was ~1e-4 and the loss sat at
+    0.9999 — exactly the logged "0.9999 -> 0.9899 plateau";
+  * v1 placed all 8,400 anchors on the stride-8 grid (anchors 6,400+ belong
+    to the stride-16/32 heads) and its GT boxes were neither crop-shifted nor
+    flipped with the image (see ip_dehaze.data.rtts_detection).
+v2 uses Ultralytics' own v8DetectionLoss (TaskAligned assignment, box + cls
++ DFL) on the frozen detector, crop-aligned COCO-class boxes, and selects the
+checkpoint on rtts/valid AP@0.5 with a synthetic-PSNR guard.
 """
 from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import json
-import math
 import random
 import sys
 import time
@@ -34,300 +36,254 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
+from torch.utils.data import DataLoader
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts" / "machine_learning"))
+sys.path.insert(0, str(ROOT / "scripts" / "traditional"))
 
-from ip_dehaze.data.dataset import FoggyPairs
-from ip_dehaze.evaluation.metrics import metrics as image_metrics
-from ip_dehaze.evaluation.provenance import environment, git_revision, sha256
-from ip_dehaze.machine_learning.losses import reconstruction_loss
-from ip_dehaze.machine_learning.models.unet import build_unet
-from ultralytics import YOLO
+from ip_dehaze.data.dataset import CachedCrops  # noqa: E402
+from ip_dehaze.data.rtts_detection import (  # noqa: E402
+    RttsDetectionCrops,
+    collate_detection,
+    to_detector_batch,
+)
+from ip_dehaze.evaluation.metrics import metrics as image_metrics  # noqa: E402
+from ip_dehaze.evaluation.provenance import environment, git_revision  # noqa: E402
+from ip_dehaze.machine_learning.losses import reconstruction_loss  # noqa: E402
+from benchmark_model import load_dehazer  # noqa: E402
+from evaluate_dcp_detection import coco_metrics, load_ground_truth  # noqa: E402
+from evaluate_model_detection import dehaze_whole  # noqa: E402
+from train_unet import build_val_set  # noqa: E402
 
-CONTEXT_SIZE = (512, 256)
+CLASS_MAP = {"bicycle": 1, "bus": 5, "car": 2, "motorbike": 3, "person": 0}
+CATEGORIES = [{"id": cid, "name": name} for name, cid in sorted(CLASS_MAP.items(), key=lambda kv: kv[1])]
+IOU_THRESHOLDS = [0.5 + 0.05 * k for k in range(10)]
 
 
-def _resize(array: np.ndarray, size: tuple[int, int]) -> np.ndarray:
-    image = Image.fromarray((array * 255).round().astype(np.uint8))
-    return np.asarray(image.resize(size, Image.BILINEAR), dtype=np.float32) / 255.0
+def freeze_batchnorm(model: torch.nn.Module) -> None:
+    """Fine-tune with frozen BN statistics: small mixed-domain batches would
+    otherwise drag the running stats away from what the synthetic val needs."""
+    for module in model.modules():
+        if isinstance(module, torch.nn.modules.batchnorm._BatchNorm):
+            module.eval()
 
 
-class RttTrainSet(torch.utils.data.Dataset):
-    """Random crops from RTTS-train images with their YOLO boxes."""
+class RttsScorer:
+    """AP@0.5 on a fixed list of RTTS images through the exact eval path
+    (dehaze_whole at native resolution -> uint8 -> YOLO.predict letterbox)."""
 
-    def __init__(self, images_dir: Path, labels_dir: Path, crop: int = 320,
-                 limit: int = 0, seed: int = 1729) -> None:
-        self.paths = sorted(images_dir.glob("*.jpg"))
-        if limit:
-            self.paths = self.paths[:limit]
-        if not self.paths:
-            raise ValueError(f"no images under {images_dir}")
-        self.labels_dir = labels_dir
-        self.crop = crop
-        self.seed = seed
-        self._epoch = 0
+    def __init__(self, paths: list[Path], labels_dir: Path, device: torch.device) -> None:
+        from ultralytics import YOLO
 
-    def set_epoch(self, epoch: int) -> None:
-        self._epoch = epoch
+        self.paths = paths
+        self.images, self.annotations, self.lookup = load_ground_truth(paths, labels_dir, CLASS_MAP)
+        self.yolo = YOLO(str(ROOT / "outputs/checkpoints/yolov8n.pt"))
+        self.device = device
+        self.rgb = []
+        for path in paths:
+            with Image.open(path) as handle:
+                self.rgb.append(np.asarray(handle.convert("RGB"), dtype=np.float32) / 255.0)
 
-    def __len__(self) -> int:
-        return len(self.paths)
-
-    def __getitem__(self, index: int) -> dict:
-        path = self.paths[index]
-        rng = random.Random(self.seed * 1_000_003 + self._epoch * 10_007 + index)
-        with Image.open(path) as handle:
-            rgb = np.asarray(handle.convert("RGB"), dtype=np.float32) / 255.0
-        height, width = rgb.shape[:2]
-        crop = min(self.crop, height, width)
-        if height < self.crop or width < self.crop:
-            # pad smaller images to the crop with reflection so every crop
-            # is exactly (crop, crop) and batches stack
-            padded = np.pad(rgb, ((0, max(0, self.crop - height)),
-                                  (0, max(0, self.crop - width)),
-                                  (0, 0)), mode="reflect")
-            rgb = padded[: self.crop, : self.crop]
-            height = width = self.crop
-            crop = self.crop
-        top = rng.randrange(height - crop + 1)
-        left = rng.randrange(width - crop + 1)
-        image = rgb[top : top + crop, left : left + crop]
-        if rng.random() < 0.5:
-            image = image[:, ::-1]
-
-        boxes: list[list[float]] = []
-        label_path = self.labels_dir / f"{path.stem}.txt"
-        if label_path.is_file():
-            for line in label_path.read_text().splitlines():
-                if not line.strip():
+    def _detect(self, images: list[np.ndarray]) -> list[dict]:
+        detections = []
+        for start in range(0, len(images), 8):
+            chunk = [Image.fromarray((im * 255).round().astype(np.uint8)) for im in images[start : start + 8]]
+            outputs = self.yolo.predict(source=chunk, imgsz=640, conf=0.001, iou=0.7, max_det=300,
+                                        device=0 if self.device.type == "cuda" else "cpu",
+                                        classes=sorted(CLASS_MAP.values()), verbose=False)
+            for path, output in zip(self.paths[start : start + 8], outputs):
+                if output.boxes is None:
                     continue
-                cls, cx, cy, bw, bh = line.split()
-                x1 = (float(cx) - float(bw) / 2) * width
-                y1 = (float(cy) - float(bh) / 2) * height
-                x2 = x1 + float(bw) * width
-                y2 = y1 + float(bh) * height
-                if rng.random() < 0.5:  # same flip coin
-                    x1, x2 = crop - x2, crop - x1
-                # clip to crop; keep if the box survives with reasonable area
-                x1, x2 = max(0.0, min(crop, x1)), max(0.0, min(crop, x2))
-                y1, y2 = max(0.0, min(crop, y1)), max(0.0, min(crop, y2))
-                if (x2 - x1) * (y2 - y1) < 8 * 8:
-                    continue
-                boxes.append([float(cls), x1, y1, x2, y2])
+                for box, score, cls in zip(output.boxes.xyxy.cpu().numpy(), output.boxes.conf.cpu().numpy(),
+                                           output.boxes.cls.cpu().numpy().astype(int)):
+                    x1, y1, x2, y2 = map(float, box)
+                    detections.append({"image_id": self.lookup[path], "category_id": int(cls),
+                                       "bbox": [x1, y1, max(0.0, x2 - x1), max(0.0, y2 - y1)],
+                                       "score": float(score)})
+        return detections
 
-        return {
-            "hazy": torch.from_numpy(np.ascontiguousarray(image.transpose(2, 0, 1))),
-            "boxes": boxes,
-            "name": path.name,
-        }
+    def score_images(self, images: list[np.ndarray]) -> float:
+        dets = self._detect(images)
+        return coco_metrics(self.images, self.annotations, CATEGORIES, dets, IOU_THRESHOLDS)["AP@0.5"]
+
+    @torch.no_grad()
+    def score_model(self, model: torch.nn.Module) -> float:
+        model.eval()
+        restored = [dehaze_whole(model, rgb, self.device) for rgb in self.rgb]
+        return self.score_images(restored)
 
 
-def detection_loss(
-    yolo: torch.nn.Module,
-    dehazed: torch.Tensor,
-    boxes_batch: list[list[list[float]]],
-    device: torch.device,
-    image_size: int = 640,
-) -> torch.Tensor:
-    """Maximize frozen-detector confidence on anchors matching GT boxes.
+@torch.no_grad()
+def synth_psnr(model: torch.nn.Module, val_sets, device: torch.device) -> float:
+    model.eval()
+    scores = []
+    for val_set in val_sets:
+        for index in range(len(val_set)):
+            sample = val_set[index]
+            out = dehaze_whole(model, sample["hazy"].permute(1, 2, 0).numpy(), device)
+            scores.append(image_metrics(out, sample["clear"].permute(1, 2, 0).numpy())["psnr"])
+    return float(np.mean(scores))
 
-    The dehazed crop is resized to YOLO's working size, pushed through the
-    frozen detector, and the raw confidence map (84, N) is gathered at the
-    anchors whose centres fall inside a GT box of the matching class. Loss
-    is 1 - mean confidence of those anchors (high conf on true objects).
-    """
-    resized = torch.nn.functional.interpolate(
-        dehazed, size=(image_size, image_size), mode="bilinear", align_corners=False
-    )
-    raw = yolo(resized)
-    pred = raw[0] if isinstance(raw, (tuple, list)) else raw  # (B, 84, N) train mode
 
-    losses = []
-    n_anchors = pred.shape[2]
-    grid = image_size // 8  # stride-8 anchor grid for the first P3 head
-    for b, boxes in enumerate(boxes_batch):
-        if not boxes:
-            continue
-        conf_all = torch.softmax(pred[b, 4:5, :], dim=1) * torch.sigmoid(pred[b, 5:, :])
-        conf = conf_all.amax(dim=0)  # (N,) best-class confidence
-        cx = (torch.arange(n_anchors, device=device) % (image_size // 8)) * (image_size / grid)
-        cy = (torch.arange(n_anchors, device=device) // (image_size // 8)) * (image_size / grid)
-        target = torch.zeros(n_anchors, device=device)
-        for cls, x1, y1, x2, y2 in boxes:
-            sx1, sy1, sx2, sy2 = (v / dehazed.shape[-1] * image_size for v in (x1, y1, x2, y2))
-            inside = (
-                (cx >= sx1) & (cx <= sx2) & (cy >= sy1) & (cy <= sy2)
-            )
-            target[inside] = 1.0
-        if target.sum() == 0:
-            continue
-        losses.append((1.0 - conf[target > 0]).mean())
-    if not losses:
-        return dehazed.sum() * 0.0
-    return torch.stack(losses).mean()
+def infinite(loader):
+    while True:
+        yield from loader
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--run-id", default="unet-spatial-rtts-adapt")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--run-id", required=True)
     parser.add_argument("--checkpoint", type=Path,
                         default=ROOT / "outputs/checkpoints/unet-gated-spatial-20260929/best.pt")
-    parser.add_argument("--rtts-limit", type=int, default=0, help="subsample rtts/train (0 = all 8,557)")
+    parser.add_argument("--synth-cache", type=Path, default=ROOT / "data/derived/crops/train",
+                        help="crop cache for the reconstruction arm (ignored with --resynth)")
+    parser.add_argument("--resynth", action="store_true",
+                        help="reconstruction arm renders realistic fog on the fly (ip_dehaze.data.resynth)")
     parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--batch", type=int, default=8)
-    parser.add_argument("--rtts-per-batch", type=int, default=4, help="RTTS crops per mixed batch")
+    parser.add_argument("--steps-per-epoch", type=int, default=400)
+    parser.add_argument("--rtts-batch", type=int, default=4)
+    parser.add_argument("--synth-batch", type=int, default=4)
+    parser.add_argument("--crop", type=int, default=384, help="native-resolution RTTS crop for the dehazer")
+    parser.add_argument("--lr", type=float, default=2e-5)
+    parser.add_argument("--task-weight", type=float, default=0.01,
+                        help="weight on the v8 detection loss (box*7.5+cls*0.5+dfl*1.5, ~5-7 at start)")
+    parser.add_argument("--valid-subset", type=int, default=300, help="rtts/valid images scored per epoch")
+    parser.add_argument("--psnr-guard", type=float, default=1.0,
+                        help="epochs whose synthetic PSNR drops more than this (dB) are not selectable")
+    parser.add_argument("--rtts-limit", type=int, default=0)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--lr", type=float, default=2e-5, help="an order below training LR: this is a fine-tune")
     parser.add_argument("--seed", type=int, default=1729)
-    parser.add_argument("--val-every", type=int, default=1)
-    parser.add_argument("--task-weight", type=float, default=0.5)
-    parser.add_argument("--device", default="auto")
+    parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
 
-    device = torch.device("cuda" if args.device == "auto" and torch.cuda.is_available() else
-                          (args.device if args.device != "auto" else "cpu"))
-
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     run_dir = ROOT / "runs" / "machine_learning" / args.run_id
-    run_dir.mkdir(parents=True, exist_ok=True)
+    run_dir.mkdir(parents=True, exist_ok=False)
     ckpt_dir = ROOT / "outputs/checkpoints" / args.run_id
     ckpt_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "config.yaml").write_text("\n".join(f"{k}: {v}" for k, v in sorted(vars(args).items())) + "\n")
 
-    # Winner checkpoint (spatial-gated U-Net).
-    state = torch.load(args.checkpoint, map_location=device, weights_only=False)
-    train_args = state.get("args", {})
-    model = build_unet(
-        train_args.get("size", "medium"),
-        gated=train_args.get("model") == "gated",
-        gate_spatial=bool(train_args.get("gate_spatial")),
-        gate_context=bool(train_args.get("gate_context")),
-        gate_init=train_args.get("gate_init"),
-    ).to(device)
-    model.load_state_dict(state["model"])
+    model, train_args = load_dehazer(args.checkpoint, device)
 
-    # Frozen detector.
-    yolo = YOLO(str(ROOT / "outputs/checkpoints/yolov8n.pt")).model.to(device)
-    for p in yolo.parameters():
+    from ultralytics import YOLO
+    from ultralytics.cfg import get_cfg
+
+    detector = YOLO(str(ROOT / "outputs/checkpoints/yolov8n.pt")).model.to(device)
+    detector.args = get_cfg()  # default hyp: box 7.5, cls 0.5, dfl 1.5
+    for p in detector.parameters():
         p.requires_grad_(False)
-    yolo.eval()
+    detector.eval()
 
-    rtts_set = RttTrainSet(ROOT / "rtts/train/images", ROOT / "rtts/train/labels",
-                           limit=args.rtts_limit, seed=args.seed)
-    synth_train = FoggyPairs("data/foggy_cityscapes", "data/cityscapes_clear", "train", crop=320)
-    synth_val = FoggyPairs("data/foggy_cityscapes", "data/cityscapes_clear", "val", crop=None)
+    rtts_set = RttsDetectionCrops(ROOT / "rtts/train/images", ROOT / "rtts/train/labels",
+                                  crop=args.crop, limit=args.rtts_limit, seed=args.seed)
+    rtts_loader = DataLoader(rtts_set, batch_size=args.rtts_batch, shuffle=True, num_workers=args.workers,
+                             collate_fn=collate_detection, drop_last=True, persistent_workers=False)
+    if args.resynth:
+        from ip_dehaze.data.resynth import ResynthPairs
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scaler = torch.amp.GradScaler("cuda")
+        synth_set = ResynthPairs(split="train", seed=args.seed)
+    else:
+        synth_set = CachedCrops(args.synth_cache, split="train", seed=args.seed)
+    synth_loader = DataLoader(synth_set, batch_size=args.synth_batch, shuffle=True, num_workers=args.workers,
+                              drop_last=True, persistent_workers=False)
 
-    config = vars(args).copy()
-    (run_dir / "config.yaml").write_text("\n".join(f"{k}: {v}" for k, v in sorted(config.items())))
+    valid_paths = sorted((ROOT / "rtts/valid/images").glob("*.jpg"))
+    subset = sorted(random.Random(args.seed).sample(valid_paths, min(args.valid_subset, len(valid_paths))))
+    scorer = RttsScorer(subset, ROOT / "rtts/valid/labels", device)
+    val_sets = build_val_set(10, args.seed)
+
+    hazy_ap = scorer.score_images(scorer.rgb)
+    start_ap = scorer.score_model(model)
+    start_psnr = synth_psnr(model, val_sets, device)
+    print(f"== {args.run_id} == rtts-train {len(rtts_set)} | synth {len(synth_set)} | "
+          f"valid subset {len(subset)}: hazy AP50 {hazy_ap:.4f}, start AP50 {start_ap:.4f}, "
+          f"start synth PSNR {start_psnr:.2f}", flush=True)
+
+    optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad],
+                                  lr=args.lr, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs * args.steps_per_epoch)
     log_path = run_dir / "log.csv"
+    fields = ["epoch", "task_loss", "task_loss_hazy", "recon_loss", "synth_psnr", "valid_ap50", "selectable",
+              "seconds"]
     with log_path.open("w", newline="") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(["epoch", "train_loss", "task_loss", "recon_loss", "synth_val_psnr",
-                         "rtts_valid_ap50", "seconds"])
+        csv.writer(handle).writerow(fields)
+        csv.writer(handle).writerow([0, "", "", "", round(start_psnr, 3), round(start_ap, 4), True, 0])
 
-    print(f"== {args.run_id} ==", flush=True)
-    print(f"rtts-train crops {len(rtts_set)} | synth pairs {len(synth_train)} | lr {args.lr}", flush=True)
-
-    rng = random.Random(args.seed)
-    steps_per_epoch = min(len(rtts_set) // args.batch, 400)
-
-    for epoch in range(args.epochs):
-        model.train()
+    best = {"epoch": 0, "valid_ap50": start_ap, "synth_psnr": start_psnr}
+    torch.save({"model": model.state_dict(), "args": {**train_args, "adapt": "v2"}, "epoch": 0},
+               ckpt_dir / "best.pt")
+    rtts_iter, synth_iter = infinite(rtts_loader), infinite(synth_loader)
+    for epoch in range(1, args.epochs + 1):
         rtts_set.set_epoch(epoch)
-        epoch_start = time.time()
-        tot_task = tot_recon = 0.0
-        for step in range(steps_per_epoch):
-            # RTTS detection arm — boxes are variable-length lists, so collate
-            # images with the default collate and keep boxes as a plain list.
-            idxs = rng.sample(range(len(rtts_set)), args.rtts_per_batch)
-            rtts_samples = [rtts_set[i] for i in idxs]
-            hazy_rtts = torch.stack([s["hazy"] for s in rtts_samples]).to(device)
-            boxes_rtts = [s["boxes"] for s in rtts_samples]
-            # whole-scene context for the context stem (RTTS crops ARE whole scenes here)
-            ctx = torch.stack([
-                torch.from_numpy(np.ascontiguousarray(
-                    _resize(hazy_rtts[b].permute(1, 2, 0).cpu().numpy(), CONTEXT_SIZE).transpose(2, 0, 1)))
-                for b in range(hazy_rtts.shape[0])]).to(device)
-            restored, _ = model(hazy_rtts, ctx)
-            task = detection_loss(yolo, restored, boxes_rtts, device)
+        if hasattr(synth_set, "set_epoch"):
+            synth_set.set_epoch(epoch)
+        model.train()
+        freeze_batchnorm(model)
+        started = time.time()
+        tot_task = tot_hazy = tot_recon = 0.0
+        for step in range(args.steps_per_epoch):
+            batch = next(rtts_iter)
+            hazy = batch["hazy"].to(device, non_blocking=True)
+            restored, _ = model(hazy, None)
+            canvas, loss_batch = to_detector_batch(restored, batch["boxes"], batch["scale"])
+            det_loss, _ = detector.loss(loss_batch, detector(canvas))
+            task = det_loss.sum() / hazy.shape[0]
+            with torch.no_grad():
+                hazy_canvas, _ = to_detector_batch(hazy, batch["boxes"], batch["scale"])
+                hazy_loss, _ = detector.loss(loss_batch, detector(hazy_canvas))
 
-            # --- synthetic reconstruction arm ---
-            synth_idxs = rng.sample(range(len(synth_train)), args.batch - args.rtts_per_batch)
-            synth = torch.utils.data.default_collate([synth_train[i] for i in synth_idxs])
-            hazy_syn = synth["hazy"].to(device)
-            clear_syn = synth["clear"].to(device)
-            ctx_syn = None
-            if model.context_stem is not None:
-                ctx_syn = torch.stack([
-                    torch.from_numpy(np.ascontiguousarray(
-                        _resize(hazy_syn[b].permute(1, 2, 0).cpu().numpy(), CONTEXT_SIZE).transpose(2, 0, 1)))
-                    for b in range(hazy_syn.shape[0])]).to(device)
-            out_syn, _ = model(hazy_syn, ctx_syn)
-            recon = reconstruction_loss(out_syn, clear_syn, ssim_weight=0.2)
+            synth = next(synth_iter)
+            out_syn, _ = model(synth["hazy"].to(device, non_blocking=True), None)
+            recon = reconstruction_loss(out_syn, synth["clear"].to(device, non_blocking=True), 0.2)
 
             loss = recon + args.task_weight * task
             optimizer.zero_grad(set_to_none=True)
-            scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
+            loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            scaler.step(optimizer)
-            scaler.update()
+            optimizer.step()
+            scheduler.step()
             tot_task += float(task.detach())
+            tot_hazy += float(hazy_loss.sum()) / hazy.shape[0]
             tot_recon += float(recon.detach())
-            if step % 50 == 0:
-                print(f"  epoch {epoch+1}/{args.epochs} step {step}/{steps_per_epoch} "
-                      f"task {tot_task/(step+1):.4f} recon {tot_recon/(step+1):.4f}", flush=True)
+            if step % 100 == 0:
+                n = step + 1
+                print(f"  epoch {epoch} step {step}/{args.steps_per_epoch} task {tot_task / n:.3f} "
+                      f"(hazy {tot_hazy / n:.3f}) recon {tot_recon / n:.4f}", flush=True)
 
-        row = {
-            "epoch": epoch + 1,
-            "train_loss": round(tot_task + tot_recon, 4),
-            "task_loss": round(tot_task / steps_per_epoch, 4),
-            "recon_loss": round(tot_recon / steps_per_epoch, 4),
-            "seconds": round(time.time() - epoch_start, 1),
-        }
-
-        if (epoch + 1) % args.val_every == 0 or epoch + 1 == args.epochs:
-            # synthetic val: restoration preserved?
-            model.eval()
-            with torch.no_grad():
-                psnrs = []
-                for i in rng.sample(range(len(synth_val)), 12):
-                    s = synth_val[i]
-                    hazy = s["hazy"][None].to(device)
-                    ctx = None
-                    if model.context_stem is not None:
-                        ctx = torch.from_numpy(np.ascontiguousarray(
-                            _resize(s["hazy"].permute(1, 2, 0).numpy(), CONTEXT_SIZE).transpose(2, 0, 1)))[None].to(device)
-                    out, _ = model(hazy, ctx)
-                    scores = image_metrics(out.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy(),
-                                           s["clear"].permute(1, 2, 0).numpy())
-                    psnrs.append(scores["psnr"])
-                row["synth_val_psnr"] = round(sum(psnrs) / len(psnrs), 2)
-            torch.save({"model": model.state_dict(), "args": {**train_args, "adapt": True}},
-                       ckpt_dir / "last.pt")
-            print(f"epoch {epoch+1}/{args.epochs} recon {row['recon_loss']:.4f} task {row['task_loss']:.4f} "
-                  f"synth_val_psnr {row.get('synth_val_psnr')}", flush=True)
-            torch.save({"model": model.state_dict(), "args": {**train_args, "adapt": True}},
-                       ckpt_dir / "best.pt")
-
+        ap = scorer.score_model(model)
+        psnr = synth_psnr(model, val_sets, device)
+        selectable = psnr >= start_psnr - args.psnr_guard
+        n = args.steps_per_epoch
+        row = [epoch, round(tot_task / n, 4), round(tot_hazy / n, 4), round(tot_recon / n, 5),
+               round(psnr, 3), round(ap, 4), selectable, round(time.time() - started, 1)]
         with log_path.open("a", newline="") as handle:
-            writer = csv.writer(handle)
-            writer.writerow([row.get(k, "") for k in
-                             ("epoch", "train_loss", "task_loss", "recon_loss", "synth_val_psnr",
-                              "rtts_valid_ap50", "seconds")])
+            csv.writer(handle).writerow(row)
+        print(f"epoch {epoch}: task {row[1]} (hazy {row[2]}) recon {row[3]} | synth PSNR {psnr:.2f} | "
+              f"valid-subset AP50 {ap:.4f} (hazy {hazy_ap:.4f}) {'' if selectable else '[guard]'}", flush=True)
+        state = {"model": model.state_dict(), "args": {**train_args, "adapt": "v2"}, "epoch": epoch}
+        torch.save(state, ckpt_dir / "last.pt")
+        if selectable and ap > best["valid_ap50"]:
+            best = {"epoch": epoch, "valid_ap50": ap, "synth_psnr": psnr}
+            torch.save(state, ckpt_dir / "best.pt")
 
     (run_dir / "summary.json").write_text(json.dumps({
-        "status": "training_complete_needs_valid_scoring",
-        "config": {k: (str(v) if isinstance(v, Path) else v) for k, v in config.items()},
-        "note": "selection on rtts/valid via evaluate_model_detection.py --dataset-split valid; "
-                "rtts/test untouched",
+        "status": "training_complete_needs_full_valid_scoring",
+        "config": {k: (str(v) if isinstance(v, Path) else v) for k, v in vars(args).items()},
+        "valid_subset": {"n": len(subset), "hazy_ap50": hazy_ap, "start_ap50": start_ap},
+        "start_synth_psnr": start_psnr,
+        "best": best,
+        "checkpoint": str((ckpt_dir / "best.pt").relative_to(ROOT)),
+        "note": "selection on a fixed rtts/valid subset; score best.pt on full rtts/valid with "
+                "evaluate_model_detection.py --dataset-split valid; rtts/test untouched",
         "source_revision": git_revision(ROOT),
         "environment": environment(),
-    }, indent=2))
-    print("done: score with evaluate_model_detection.py --dataset-split valid", flush=True)
+        "completed_at": dt.datetime.now().isoformat(timespec="seconds"),
+    }, indent=2) + "\n")
+    print(f"best: {best}", flush=True)
 
 
 if __name__ == "__main__":
