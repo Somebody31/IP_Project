@@ -6,8 +6,9 @@
 >   - **Hazy Baseline: AP@0.5 = 0.4527** | AP@0.5:0.95 = 0.2657.
 >   - **DCP Benchmark: AP@0.5 = 0.4706**.
 >   - **Delta vs Hazy: +0.0252 AP@0.5** (+0.0190 AP@0.5:0.95).
+>   - **Bootstrap 95% CI (400 resamples): mean +0.0257 [0.0100, 0.0405], excludes zero (True)**. Statistically significant gain!
 >   - **Delta vs DCP: +0.0073 AP@0.5** (First learned method to officially beat DCP on real fog!).
->   - Artifacts: `results/machine_learning/adapt-v2-w0.01-valid-eval.json`, `runs/machine_learning/adapt-v2-w0.01-valid-eval/detections.json`.
+>   - Artifacts: `results/machine_learning/adapt-v2-w0.01-valid-eval.json`, `results/machine_learning/detection-bootstrap-adapt-v2-w0.01-valid-eval.json`, `runs/machine_learning/adapt-v2-w0.01-valid-eval/detections.json`.
 >
 > - **2. In-Domain Full-Resolution Validation (`adapt-v2-full-val-20261003`, 1,500 pairs):**
 >   - **Pooled PSNR: 29.65 dB** (Δ vs hazy: **+15.00 dB [14.73, 15.24]**). Acceptance bar $\ge 29.40\text{ dB}$ **PASSED**.
