@@ -214,7 +214,7 @@ def create_deck(output_path: Path):
             pv.space_before = Pt(2)
 
     # =============================================================
-    # SLIDE 3: Visual Results (Standard Picture Comparison Template)
+    # SLIDE 3: Visual Results (Illustrative Example Strip)
     # =============================================================
     slide3 = prs.slides.add_slide(prs.slide_layouts[6])
     apply_standard_slide_header(slide3, "Qualitative Comparison: Distinguishable Visual Characteristics", "Visual Results")
@@ -223,7 +223,7 @@ def create_deck(output_path: Path):
     tf_vl = tb_vis_lbl.text_frame
     tf_vl.margin_left = tf_vl.margin_top = tf_vl.margin_right = tf_vl.margin_bottom = 0
     p = tf_vl.paragraphs[0]
-    p.text = "DEHAZED IMAGE QUALITY (LEFT TO RIGHT: RAW HAZY | REFERENCE PAPER | CLASSICAL DCP | OUR METHOD)"
+    p.text = "ILLUSTRATIVE EXAMPLE (SCENE: BD_BAIDU_383) — LEFT TO RIGHT: RAW HAZY | REFERENCE PAPER | CLASSICAL DCP | OUR METHOD"
     p.font.name = "Calibri"
     p.font.size = Pt(10)
     p.font.bold = True
@@ -237,7 +237,7 @@ def create_deck(output_path: Path):
     tf_dl = tb_det_lbl.text_frame
     tf_dl.margin_left = tf_dl.margin_top = tf_dl.margin_right = tf_dl.margin_bottom = 0
     p = tf_dl.paragraphs[0]
-    p.text = "DOWNSTREAM DETECTION OUTPUTS (YOLOV8N PREDICTIONS WITH BOUNDING BOXES)"
+    p.text = "DOWNSTREAM DETECTION OUTPUTS (FROZEN YOLOV8N PREDICTIONS WITH BOUNDING BOXES)"
     p.font.name = "Calibri"
     p.font.size = Pt(10)
     p.font.bold = True
@@ -253,10 +253,49 @@ def create_deck(output_path: Path):
     atf.margin_left = atf.margin_top = atf.margin_right = atf.margin_bottom = 0
     
     p = atf.paragraphs[0]
-    p.text = "Visual Distinctions: (a) Raw Hazy is pale and contrast-deprived; (b) Reference Paper creates blotchy sky halos and over-darkens foreground structures; (c) Classical DCP exhibits yellow/green sky posterization; (d) Our Method achieves balanced contrast and clean contours, yielding 7 valid detections vs 4-5 for other methods."
+    p.text = "Distinguishing Characteristics: (a) Raw Hazy is pale and contrast-deprived (5 detections); (b) Reference Paper creates blotchy sky halos and over-darkens foreground structures (4 detections); (c) Classical DCP exhibits yellow/green sky posterization (4 detections); (d) Our Method achieves balanced contrast and clean contours (7 detections)."
     p.font.name = "Calibri"
     p.font.size = Pt(9.5)
     p.font.color.rgb = COLOR_MUTED
+
+    # =============================================================
+    # SLIDE 3B: Unbiased Qualitative Grid (Random Multi-Scene Verification)
+    # =============================================================
+    slide3b = prs.slides.add_slide(prs.slide_layouts[6])
+    apply_standard_slide_header(slide3b, "Qualitative Verification: Multi-Scene Random Sample Grid", "Unbiased Verification")
+    
+    tb_grid_lbl = slide3b.shapes.add_textbox(Inches(0.8), Inches(1.65), Inches(11.733), Inches(0.3))
+    tf_gl = tb_grid_lbl.text_frame
+    tf_gl.margin_left = tf_gl.margin_top = tf_gl.margin_right = tf_gl.margin_bottom = 0
+    p = tf_gl.paragraphs[0]
+    p.text = "SYSTEMATIC EVALUATION OF 4 RANDOMLY SAMPLED SCENES (FIXED SEED 42) ACROSS ALL METHODS"
+    p.font.name = "Calibri"
+    p.font.size = Pt(10)
+    p.font.bold = True
+    p.font.color.rgb = COLOR_NAVY
+    
+    grid_path = Path("docs/figures/presentation/random_samples_grid.png")
+    if grid_path.exists():
+        slide3b.shapes.add_picture(str(grid_path), Inches(0.8), Inches(1.95), Inches(8.5), Inches(4.8))
+        
+    grid_box = slide3b.shapes.add_textbox(Inches(9.5), Inches(1.95), Inches(3.0), Inches(4.8))
+    gtf = grid_box.text_frame
+    gtf.word_wrap = True
+    gtf.margin_left = gtf.margin_right = gtf.margin_top = gtf.margin_bottom = 0
+    
+    gp1 = gtf.paragraphs[0]
+    gp1.text = "Non-Selective Evaluation"
+    gp1.font.name = "Calibri"
+    gp1.font.size = Pt(13)
+    gp1.font.bold = True
+    gp1.font.color.rgb = COLOR_NAVY
+    
+    gp2 = gtf.add_paragraph()
+    gp2.text = "To guarantee fair qualitative assessment without cherry-picking, 4 test scenes were selected at random with a fixed random seed (42).\n\nKey Observations across Scenes:\n• Classical DCP consistently triggers intense color shifts in sky and pavement regions.\n• Reference Paper exhibits patchy dark artifacts whenever fog varies continuously across scene depth.\n• Our Method maintains stable color temperature, natural contrast, and sharp vehicle contours across all conditions."
+    gp2.font.name = "Calibri"
+    gp2.font.size = Pt(10)
+    gp2.font.color.rgb = COLOR_DARK
+    gp2.space_before = Pt(8)
 
     # =============================================================
     # SLIDE 4: Quantitative Comparison (PSNR, SSIM, and Detection AP)
@@ -264,9 +303,9 @@ def create_deck(output_path: Path):
     slide4 = prs.slides.add_slide(prs.slide_layouts[6])
     apply_standard_slide_header(slide4, "Quantitative Benchmark: PSNR Fidelity & Detection Performance", "Empirical Evaluation")
     
-    rows, cols = 8, 7
-    table_x, table_y = Inches(0.8), Inches(1.72)
-    table_w, table_h = Inches(11.733), Inches(3.35)
+    rows, cols = 9, 7
+    table_x, table_y = Inches(0.8), Inches(1.65)
+    table_w, table_h = Inches(11.733), Inches(3.45)
     
     tbl_shape = slide4.shapes.add_table(rows, cols, table_x, table_y, table_w, table_h)
     tbl = tbl_shape.table
@@ -281,13 +320,14 @@ def create_deck(output_path: Path):
     
     table_data = [
         ["Evaluation Metric", "Raw Hazy", "Reference Paper", "Classical DCP", "Our Method", "Gain vs Hazy", "Gain vs Paper"],
-        ["PSNR (In-Domain Full Val, dB)", "14.65 dB", "26.42 dB", "15.79 dB", "26.71 dB", "+12.06 dB", "+0.29 dB"],
-        ["SSIM (Structural Similarity)", "0.8250", "0.9482", "0.7037", "0.9485", "+0.1235", "+0.0003"],
-        ["AP@0.50 (Standard VOC)", "0.4527", "0.4415", "0.4706", "0.4891", "+0.0364", "+0.0476 (+4.8 pts)"],
-        ["AP@0.75 (Strict Boundary)", "0.2593", "0.2602", "0.2825", "0.2903", "+0.0310", "+0.0301 (+11.6%)"],
-        ["AP@0.95 (Ultra-Strict)", "0.0163", "0.0212", "0.0209", "0.0215", "+0.0052", "+0.0003 (+1.4%)"],
-        ["mAP@[0.50:0.95] (COCO Mean)", "0.2657", "0.2625", "0.2811", "0.2924", "+0.0267", "+0.0299 (+11.4%)"],
-        ["Total Detections Predicted", "83,105", "100,073", "99,945", "98,097", "+14,992", "-1,976 (Cleaner)"]
+        ["PSNR: Light Fog (\u03b2 = 0.005)", "18.57 dB", "27.95 dB", "15.77 dB", "28.97 dB", "+10.40 dB", "+1.02 dB"],
+        ["PSNR: Medium Fog (\u03b2 = 0.010)", "14.47 dB", "26.16 dB", "15.93 dB", "27.04 dB", "+12.57 dB", "+0.88 dB"],
+        ["PSNR: Heavy Fog (\u03b2 = 0.020)", "10.92 dB", "25.16 dB", "15.65 dB", "24.11 dB", "+13.19 dB", "-1.05 dB"],
+        ["PSNR: Overall Full Val (1,500 scenes)", "14.65 dB", "26.42 dB", "15.79 dB", "26.71 dB", "+12.06 dB", "+0.29 dB"],
+        ["SSIM: Overall Full Val", "0.8250", "0.9482", "0.7037", "0.9485", "+0.1235", "+0.0003"],
+        ["AP@0.50 (Standard VOC, RTTS)", "0.4527", "0.4415", "0.4706", "0.4891", "+0.0364", "+0.0476 (+4.8 pts)"],
+        ["AP@0.75 (Strict Boundary, RTTS)", "0.2593", "0.2602", "0.2825", "0.2903", "+0.0310", "+0.0301 (+11.6%)"],
+        ["mAP@[0.50:0.95] (COCO Mean, RTTS)", "0.2657", "0.2625", "0.2811", "0.2924", "+0.0267", "+0.0299 (+11.4%)"]
     ]
     
     for r_idx, row in enumerate(table_data):
@@ -308,7 +348,7 @@ def create_deck(output_path: Path):
                 
             p = cell.text_frame.paragraphs[0]
             p.font.name = "Calibri"
-            p.font.size = Pt(10.5)
+            p.font.size = Pt(9.5)
             
             if r_idx == 0:
                 p.font.bold = True
@@ -318,7 +358,7 @@ def create_deck(output_path: Path):
                 p.font.color.rgb = COLOR_NAVY_DARK
             elif c_idx in (5, 6):
                 p.font.bold = True
-                p.font.color.rgb = COLOR_ACCENT_GREEN if val.startswith("+") else COLOR_MUTED
+                p.font.color.rgb = COLOR_ACCENT_GREEN if val.startswith("+") else (COLOR_MUTED if not val.startswith("-") else RGBColor(180, 40, 40))
             else:
                 p.font.color.rgb = COLOR_DARK
                 
@@ -328,16 +368,16 @@ def create_deck(output_path: Path):
     # 3 Structured Takeaway Cards below table
     card_w = Inches(3.75)
     card_gap = Inches(0.24)
-    card_y = Inches(5.18)
-    card_h = Inches(1.68)
+    card_y = Inches(5.25)
+    card_h = Inches(1.62)
     
     takeaways = [
-        ("In-Domain Reconstruction (PSNR)",
-         "On 1,500 paired Foggy Cityscapes scenes @ 2048x1024, our method achieves 26.71 dB PSNR (+0.29 dB over the paper). Classical DCP yields only 15.79 dB due to unnatural texture and color distortions."),
+        ("Reconstruction across Fog Densities",
+         "On 1,500 paired Foggy Cityscapes scenes, our model outperforms the paper on Light (+1.02 dB) and Medium (+0.88 dB) fog, but trails on Heavy fog (-1.05 dB), leading to 26.71 dB vs 26.42 dB overall."),
         ("Real Fog Task Utility (AP@0.50)",
-         "While the reference paper reduces detection accuracy on real fog (-0.0112 AP@0.50 vs raw hazy), our method provides genuine visual recovery (+0.0364 AP@0.50, beating classical DCP by +0.0185)."),
-        ("Boundary Localization Precision",
-         "Under strict IoU criteria (AP@0.75), our method delivers an 11.6% relative gain over the reference paper (+0.0301 AP) while predicting 1,976 fewer false-positive boxes.")
+         "While the reference paper reduces detection accuracy on real fog (-0.0112 AP@0.50 vs raw hazy), our method provides genuine visual recovery (+0.0364 AP@0.50 vs raw, +0.0185 vs DCP)."),
+        ("Boundary Localization Precision (AP@0.75)",
+         "Under strict IoU criteria (AP@0.75), our method delivers an 11.6% relative gain over the reference paper (+0.0301 AP) and +0.0078 over DCP, confirming high-fidelity contour preservation.")
     ]
     
     for t_idx, (t_title, t_desc) in enumerate(takeaways):
@@ -389,8 +429,8 @@ def create_deck(output_path: Path):
         ["Deployment Metric", "Reference Paper", "Our Method", "Advantage"],
         ["Total Model Parameters", "26.4 M (26,378,804)", "7.8 M (7,766,084)", "70.6% parameter reduction"],
         ["Active Models in Memory", "4 (1 Classifier + 3 Dehazers)", "1 (Single Unified Model)", "3.4x lower VRAM footprint"],
-        ["Inference Latency", "240 ms / image", "230 ms / image", "Faster runtime execution"],
-        ["Downstream Detector", "Fine-tuned / Coupled", "100% Frozen Standard", "Universal plug-and-play modularity"]
+        ["Inference Latency", "Benchmark in Progress (Phase 1)", "Benchmark in Progress (Phase 1)", "Unified single-pass execution"],
+        ["Downstream Detector", "100% Frozen Standard", "100% Frozen Standard", "Universal plug-and-play modularity"]
     ]
     
     for r_idx, row in enumerate(table_data5):
@@ -437,9 +477,9 @@ def create_deck(output_path: Path):
         ("Single Unified Backbone",
          "Instead of maintaining 4 distinct neural networks in VRAM (classifier + 3 branches), our architecture relies on a single compact spatial backbone with depth-adaptive gating."),
         ("Universal Plug-and-Play",
-         "The downstream YOLO detector is completely frozen and unmodified. Our dehazer functions as an impartial optical pre-processor compatible with any off-the-shelf vision system."),
-        ("Edge & Real-Time Viability",
-         "Delivers superior restoration and detection accuracy while reducing parameters by 70% and inference latency to 230 ms, making it feasible for embedded and automotive applications.")
+         "The downstream YOLO detector is completely frozen and unmodified for all evaluated methods. Both evaluate modular optical pre-processors compatible with any off-the-shelf vision system."),
+        ("Edge & Memory Efficiency",
+         "Delivers superior restoration and detection accuracy while reducing parameters by 70%, drastically cutting GPU VRAM requirements for embedded and automotive applications.")
     ]
     
     for f_idx, (f_title, f_desc) in enumerate(features):
