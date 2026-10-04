@@ -125,6 +125,8 @@ def main() -> None:
                         help="routed mode: use the learned classifier, or true beta as an upper bound")
     parser.add_argument("--workers", type=int, default=1,
                         help="threads for load/forward/metric; the serial path is ~5x slower")
+    parser.add_argument("--tta", default="none", choices=["none", "flip"],
+                        help="Test-time augmentation: flip (horizontal mirror average)")
     args = parser.parse_args()
 
     if args.device == "auto":
@@ -204,7 +206,14 @@ def main() -> None:
                     channel = torch.from_numpy(
                         np.ascontiguousarray(t[None, None, :, :])).to(device)
                     tensor = torch.cat([tensor, channel], dim=1)
-                output, _ = model(tensor, context)
+                if getattr(args, "tta", "none") == "flip":
+                    out_fwd, _ = model(tensor, context)
+                    tensor_flip = torch.flip(tensor, dims=[3])
+                    context_flip = torch.flip(context, dims=[3]) if context is not None else None
+                    out_flip, _ = model(tensor_flip, context_flip)
+                    output = 0.5 * (out_fwd + torch.flip(out_flip, dims=[3]))
+                else:
+                    output, _ = model(tensor, context)
         output = output.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
         hazy_scores = image_metrics(hazy, clear)
         model_scores = image_metrics(output, clear)

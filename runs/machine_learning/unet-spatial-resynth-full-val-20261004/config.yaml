@@ -1,0 +1,14 @@
+bootstrap_resamples: 2000
+branch_heavy: None
+branch_light: None
+branch_medium: None
+checkpoint: outputs/checkpoints/unet-spatial-resynth-20261003/best.pt
+classifier: None
+device: auto
+limit: 0
+mode: gated
+routing: classifier
+run_id: unet-spatial-resynth-full-val-20261004
+seed: 1729
+split: val
+workers: 4

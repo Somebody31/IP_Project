@@ -149,7 +149,15 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=2e-5)
     parser.add_argument("--task-weight", type=float, default=0.01,
                         help="weight on the v8 detection loss (box*7.5+cls*0.5+dfl*1.5, ~5-7 at start)")
-    parser.add_argument("--valid-subset", type=int, default=300, help="rtts/valid images scored per epoch")
+    parser.add_argument("--distill-weight", type=float, default=0.0,
+                        help="distillation loss weight against frozen pre-adaptation model")
+    parser.add_argument("--heavy-fraction", type=float, default=0.0,
+                        help="fraction of synthetic crops sampled specifically from heavy fog")
+    parser.add_argument("--ema-decay", type=float, default=0.0,
+                        help="exponential moving average decay for model weights (e.g. 0.999)")
+    parser.add_argument("--select-dir", type=Path, default=ROOT / "rtts/select",
+                        help="selection split directory holding images/ and labels/")
+    parser.add_argument("--valid-subset", type=int, default=300, help="selection split images scored per epoch")
     parser.add_argument("--psnr-guard", type=float, default=1.0,
                         help="epochs whose synthetic PSNR drops more than this (dB) are not selectable")
     parser.add_argument("--rtts-limit", type=int, default=0)
@@ -169,6 +177,22 @@ def main() -> None:
 
     model, train_args = load_dehazer(args.checkpoint, device)
 
+    teacher_model = None
+    if args.distill_weight > 0.0:
+        import copy
+        teacher_model = copy.deepcopy(model)
+        for p in teacher_model.parameters():
+            p.requires_grad_(False)
+        teacher_model.eval()
+
+    ema_model = None
+    if args.ema_decay > 0.0:
+        import copy
+        ema_model = copy.deepcopy(model)
+        for p in ema_model.parameters():
+            p.requires_grad_(False)
+        ema_model.eval()
+
     from ultralytics import YOLO
     from ultralytics.cfg import get_cfg
 
@@ -178,29 +202,33 @@ def main() -> None:
         p.requires_grad_(False)
     detector.eval()
 
+    select_csv = ROOT / "data/manifests/rtts_select.csv"
     rtts_set = RttsDetectionCrops(ROOT / "rtts/train/images", ROOT / "rtts/train/labels",
-                                  crop=args.crop, limit=args.rtts_limit, seed=args.seed)
+                                  crop=args.crop, limit=args.rtts_limit, seed=args.seed,
+                                  exclude=select_csv if select_csv.is_file() else None)
     rtts_loader = DataLoader(rtts_set, batch_size=args.rtts_batch, shuffle=True, num_workers=args.workers,
                              collate_fn=collate_detection, drop_last=True, persistent_workers=False)
     if args.resynth:
         from ip_dehaze.data.resynth import ResynthPairs
 
-        synth_set = ResynthPairs(split="train", seed=args.seed)
+        synth_set = ResynthPairs(split="train", heavy_fraction=args.heavy_fraction, seed=args.seed)
     else:
         synth_set = CachedCrops(args.synth_cache, split="train", seed=args.seed)
     synth_loader = DataLoader(synth_set, batch_size=args.synth_batch, shuffle=True, num_workers=args.workers,
                               drop_last=True, persistent_workers=False)
 
-    valid_paths = sorted((ROOT / "rtts/valid/images").glob("*.jpg"))
-    subset = sorted(random.Random(args.seed).sample(valid_paths, min(args.valid_subset, len(valid_paths))))
-    scorer = RttsScorer(subset, ROOT / "rtts/valid/labels", device)
+    select_img_dir = args.select_dir / "images" if args.select_dir.is_dir() else ROOT / "rtts/valid/images"
+    select_lbl_dir = args.select_dir / "labels" if args.select_dir.is_dir() else ROOT / "rtts/valid/labels"
+    select_paths = sorted(select_img_dir.glob("*.jpg"))
+    subset = sorted(random.Random(args.seed).sample(select_paths, min(args.valid_subset, len(select_paths))))
+    scorer = RttsScorer(subset, select_lbl_dir, device)
     val_sets = build_val_set(10, args.seed)
 
     hazy_ap = scorer.score_images(scorer.rgb)
     start_ap = scorer.score_model(model)
     start_psnr = synth_psnr(model, val_sets, device)
     print(f"== {args.run_id} == rtts-train {len(rtts_set)} | synth {len(synth_set)} | "
-          f"valid subset {len(subset)}: hazy AP50 {hazy_ap:.4f}, start AP50 {start_ap:.4f}, "
+          f"select subset {len(subset)}: hazy AP50 {hazy_ap:.4f}, start AP50 {start_ap:.4f}, "
           f"start synth PSNR {start_psnr:.2f}", flush=True)
 
     optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad],
@@ -214,7 +242,7 @@ def main() -> None:
         csv.writer(handle).writerow([0, "", "", "", round(start_psnr, 3), round(start_ap, 4), True, 0])
 
     best = {"epoch": 0, "valid_ap50": start_ap, "synth_psnr": start_psnr}
-    torch.save({"model": model.state_dict(), "args": {**train_args, "adapt": "v2"}, "epoch": 0},
+    torch.save({"model": model.state_dict(), "args": {**train_args, "adapt": "v3"}, "epoch": 0},
                ckpt_dir / "best.pt")
     rtts_iter, synth_iter = infinite(rtts_loader), infinite(synth_loader)
     for epoch in range(1, args.epochs + 1):
@@ -241,11 +269,23 @@ def main() -> None:
             recon = reconstruction_loss(out_syn, synth["clear"].to(device, non_blocking=True), 0.2)
 
             loss = recon + args.task_weight * task
+            if teacher_model is not None:
+                with torch.no_grad():
+                    teacher_out, _ = teacher_model(synth["hazy"].to(device, non_blocking=True), None)
+                distill_loss = torch.nn.functional.l1_loss(out_syn, teacher_out)
+                loss = loss + args.distill_weight * distill_loss
+
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             scheduler.step()
+
+            if ema_model is not None:
+                with torch.no_grad():
+                    for p_ema, p in zip(ema_model.parameters(), model.parameters()):
+                        p_ema.data.mul_(args.ema_decay).add_(p.data, alpha=1.0 - args.ema_decay)
+
             tot_task += float(task.detach())
             tot_hazy += float(hazy_loss.sum()) / hazy.shape[0]
             tot_recon += float(recon.detach())
@@ -264,11 +304,17 @@ def main() -> None:
             csv.writer(handle).writerow(row)
         print(f"epoch {epoch}: task {row[1]} (hazy {row[2]}) recon {row[3]} | synth PSNR {psnr:.2f} | "
               f"valid-subset AP50 {ap:.4f} (hazy {hazy_ap:.4f}) {'' if selectable else '[guard]'}", flush=True)
-        state = {"model": model.state_dict(), "args": {**train_args, "adapt": "v2"}, "epoch": epoch}
+        state = {"model": model.state_dict(), "args": {**train_args, "adapt": "v4"}, "epoch": epoch}
         torch.save(state, ckpt_dir / "last.pt")
+        if ema_model is not None:
+            ema_state = {"model": ema_model.state_dict(), "args": {**train_args, "adapt": "v4_ema"}, "epoch": epoch}
+            torch.save(ema_state, ckpt_dir / "last_ema.pt")
+            torch.save(ema_state, ckpt_dir / "ema.pt")
         if selectable and ap > best["valid_ap50"]:
             best = {"epoch": epoch, "valid_ap50": ap, "synth_psnr": psnr}
             torch.save(state, ckpt_dir / "best.pt")
+            if ema_model is not None:
+                torch.save(ema_state, ckpt_dir / "best_ema.pt")
 
     (run_dir / "summary.json").write_text(json.dumps({
         "status": "training_complete_needs_full_valid_scoring",

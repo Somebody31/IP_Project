@@ -20,6 +20,7 @@ __pycache__/
 /rtts/train/
 /rtts/valid/
 /rtts/test/
+/rtts/select/
 /rtts/*.zip
 /rtts/**/labels.cache
 

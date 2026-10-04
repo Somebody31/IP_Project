@@ -1,0 +1,53 @@
+{
+  "device": "NVIDIA GeForce GTX 1660 SUPER",
+  "iterations": 50,
+  "warmup": 15,
+  "resolutions": {
+    "RTTS Typical (640x480)": {
+      "our_model": {
+        "mean_ms": 31.467616157531737,
+        "median_ms": 31.167280197143555,
+        "std_ms": 1.3673261368991048,
+        "p95_ms": 33.17800998687744,
+        "min_ms": 29.646751403808594,
+        "max_ms": 33.45414352416992,
+        "peak_vram_mb": 397.7333984375
+      },
+      "paper_classifier": {
+        "mean_ms": 0.48868416011333465,
+        "median_ms": 0.48548799753189087,
+        "std_ms": 0.01373933110273659,
+        "p95_ms": 0.5089071780443192,
+        "min_ms": 0.4529919922351837,
+        "max_ms": 0.5614399909973145
+      },
+      "paper_branches_avg_ms": 35.91575829823812,
+      "paper_pipeline_total_ms": 36.404442458351454,
+      "paper_peak_vram_mb": 531.93359375,
+      "speedup_vs_paper": 1.1568859323853833
+    },
+    "Foggy Cityscapes (2048x1024)": {
+      "our_model": {
+        "mean_ms": 203.6167236328125,
+        "median_ms": 200.42639923095703,
+        "std_ms": 6.614204166364611,
+        "p95_ms": 215.76898422241212,
+        "min_ms": 197.20303344726562,
+        "max_ms": 218.3040008544922,
+        "peak_vram_mb": 1925.0771484375
+      },
+      "paper_classifier": {
+        "mean_ms": 2.9161459255218505,
+        "median_ms": 2.8708640336990356,
+        "std_ms": 0.25435871274456356,
+        "p95_ms": 3.2666863322257993,
+        "min_ms": 2.6203200817108154,
+        "max_ms": 3.441663980484009
+      },
+      "paper_branches_avg_ms": 242.57000478108725,
+      "paper_pipeline_total_ms": 245.4861507066091,
+      "paper_peak_vram_mb": 2805.24609375,
+      "speedup_vs_paper": 1.2056286258161233
+    }
+  }
+}

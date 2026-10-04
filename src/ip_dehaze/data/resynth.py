@@ -72,7 +72,7 @@ class ResynthPairs(Dataset):
                  beta_range: tuple[float, float] = (0.003, 0.03),
                  airlight_min: float = 0.70, tint: float = 0.03,
                  downscale_prob: float = 0.5, downscale_range: tuple[float, float] = (0.25, 0.6),
-                 degrade_prob: float = 0.8, seed: int = 1729) -> None:
+                 degrade_prob: float = 0.8, heavy_fraction: float = 0.0, seed: int = 1729) -> None:
         pairs = index_pairs(ROOT / "data/foggy_cityscapes", ROOT / "data/cityscapes_clear", split)
         self.scenes = sorted({(p.city, p.image_id, str(p.clear_path)) for p in pairs})
         if not self.scenes:
@@ -86,6 +86,7 @@ class ResynthPairs(Dataset):
         self.downscale_prob = downscale_prob
         self.downscale_range = downscale_range
         self.degrade_prob = degrade_prob
+        self.heavy_fraction = heavy_fraction
         self.seed = seed
         self._epoch = multiprocessing.Value("i", 0)
         self._zip: zipfile.ZipFile | None = None
@@ -134,8 +135,11 @@ class ResynthPairs(Dataset):
         t_source = np.asarray(t_img.crop(box), dtype=np.float32)
         t_source = (t_source[..., 0] if t_source.ndim == 3 else t_source) / 255.0
 
-        low, high = self.beta_range
-        beta = math.exp(rng.uniform(math.log(low), math.log(high)))
+        if self.heavy_fraction > 0 and rng.random() < self.heavy_fraction:
+            beta = rng.uniform(0.018, 0.024)
+        else:
+            low, high = self.beta_range
+            beta = math.exp(rng.uniform(math.log(low), math.log(high)))
         level = rng.uniform(self.airlight_min, 1.0)
         airlight = np.clip(level * np.array([rng.uniform(1 - self.tint, 1 + self.tint) for _ in range(3)],
                                             dtype=np.float32), 0, 1)

@@ -1,0 +1,178 @@
+{
+  "status": "completed",
+  "command": "scripts/machine_learning/benchmark_model.py --run-id unet-spatial-resynth-full-val-20261004 --mode gated --checkpoint outputs/checkpoints/unet-spatial-resynth-20261003/best.pt --split val --workers 4",
+  "method": "Density-gated U-Net",
+  "split": "val",
+  "evaluation_scope": "full_split",
+  "n_images": 1500,
+  "n_scenes": 500,
+  "beta_counts": {
+    "0.005": 500,
+    "0.010": 500,
+    "0.020": 500
+  },
+  "comparison": [
+    "clear_reference",
+    "hazy",
+    "dehazed"
+  ],
+  "metrics": [
+    "PSNR",
+    "SSIM"
+  ],
+  "summary": {
+    "pooled": {
+      "n_images": 1500,
+      "n_scenes": 500,
+      "clear_reference": {
+        "identity": true,
+        "psnr": "infinity",
+        "ssim": 1.0
+      },
+      "hazy_psnr": 14.651288293377647,
+      "hazy_ssim": 0.8249684632221858,
+      "dehazed_psnr": 26.771456363395313,
+      "dehazed_ssim": 0.9531346971193949,
+      "dehazed_minus_hazy_psnr": {
+        "mean": 12.120168070017666,
+        "ci95": [
+          11.852301386521585,
+          12.364743148453067
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      },
+      "dehazed_minus_hazy_ssim": {
+        "mean": 0.12816623389720916,
+        "ci95": [
+          0.12504203902184963,
+          0.13111227818727497
+        ],
+        "n_scenes": 500,
+        "resamples": 2000,
+        "seed": 1729
+      }
+    },
+    "by_beta": {
+      "0.005": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 18.56512909968165,
+        "hazy_ssim": 0.9073449287414551,
+        "dehazed_psnr": 29.815507244966263,
+        "dehazed_ssim": 0.974633971452713,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 11.250378145284616,
+          "ci95": [
+            10.985377207112382,
+            11.502698413654624
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.06728904271125793,
+          "ci95": [
+            0.06494128557443618,
+            0.06947879517376422
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.010": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 14.465080740497065,
+        "hazy_ssim": 0.8336567870378494,
+        "dehazed_psnr": 26.957727941132266,
+        "dehazed_ssim": 0.9586641465425492,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 12.4926472006352,
+          "ci95": [
+            12.216885484754027,
+            12.740423602596703
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.1250073595046997,
+          "ci95": [
+            0.12171649429500103,
+            0.1281439531892538
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      },
+      "0.020": {
+        "n_images": 500,
+        "n_scenes": 500,
+        "clear_reference": {
+          "identity": true,
+          "psnr": "infinity",
+          "ssim": 1.0
+        },
+        "hazy_psnr": 10.923655039954225,
+        "hazy_ssim": 0.7339036738872529,
+        "dehazed_psnr": 23.541133904087403,
+        "dehazed_ssim": 0.9261059733629227,
+        "dehazed_minus_hazy_psnr": {
+          "mean": 12.61747886413318,
+          "ci95": [
+            12.327316017488581,
+            12.883123826333302
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        },
+        "dehazed_minus_hazy_ssim": {
+          "mean": 0.19220229947566986,
+          "ci95": [
+            0.18797253164052963,
+            0.1961724447697401
+          ],
+          "n_scenes": 500,
+          "resamples": 2000,
+          "seed": 1729
+        }
+      }
+    }
+  },
+  "routing": null,
+  "routing_counts": null,
+  "checkpoints": {
+    "model": "outputs/checkpoints/unet-spatial-resynth-20261003/best.pt",
+    "classifier": null,
+    "branches": null
+  },
+  "config_sha256": "fcac1710e70cba442294fe4353e83a4112faeb398b68601afc0a91ed00599cad",
+  "dataset_manifest_sha256": "18dff02425e495c2dbb734a5cd5f4c6a3b50b07f18138a698f7858c4e856f001",
+  "source_revision": "01421a46cf0cbe19b9425e79042746ce219dbe6b",
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "torch": "2.14.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "started_at": "2026-10-04T09:26:12",
+  "completed_at": "2026-10-04T09:47:10"
+}

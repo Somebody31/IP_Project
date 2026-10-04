@@ -122,36 +122,54 @@ def dehaze_whole(
     model: torch.nn.Module,
     image: np.ndarray,
     device: torch.device,
+    tta: str = "none",
 ) -> np.ndarray:
-    """Single forward pass at native resolution — the protocol the val benchmark used.
-
-    The network is fully convolutional, so one pass is valid; padding to a
-    multiple of 16 keeps the four downsamplings aligned. This is the faithful
-    mode for small images (RTTS is 480x320 up to 896x504), where tiling would
-    shrink the field of view below anything seen in training.
-    """
+    """Single forward pass at native resolution with optional Test-Time Augmentation."""
     height, width = image.shape[:2]
-    context = None
-    if model.context_stem is not None:
-        whole = _resize(image, CONTEXT_SIZE)
-        context = torch.from_numpy(np.ascontiguousarray(whole.transpose(2, 0, 1)))[None].to(device)
-    pad_h, pad_w = (-height) % 16, (-width) % 16
-    padded = np.pad(image, ((0, pad_h), (0, pad_w), (0, 0)), mode="reflect")
-    tensor = torch.from_numpy(np.ascontiguousarray(padded.transpose(2, 0, 1)))[None].to(device)
-    if getattr(model, "dcp_t", False):
-        from ip_dehaze.traditional.dcp import (
-            dark_channel,
-            estimate_atmospheric_light,
-            estimate_transmission,
-        )
 
-        dark = dark_channel(image, 15)
-        t = estimate_transmission(image, estimate_atmospheric_light(image, dark))
-        channel = torch.from_numpy(np.ascontiguousarray(t[None, None, :, :])).to(device)
-        tensor = torch.cat([tensor, channel], dim=1)
-    restored, _ = model(tensor, context)
-    restored = restored.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
-    return restored[:height, :width]
+    def _forward_single(img_in: np.ndarray) -> np.ndarray:
+        h, w = img_in.shape[:2]
+        context = None
+        if model.context_stem is not None:
+            whole = _resize(img_in, CONTEXT_SIZE)
+            context = torch.from_numpy(np.ascontiguousarray(whole.transpose(2, 0, 1)))[None].to(device)
+        pad_h, pad_w = (-h) % 16, (-w) % 16
+        padded = np.pad(img_in, ((0, pad_h), (0, pad_w), (0, 0)), mode="reflect")
+        tensor = torch.from_numpy(np.ascontiguousarray(padded.transpose(2, 0, 1)))[None].to(device)
+        if getattr(model, "dcp_t", False):
+            from ip_dehaze.traditional.dcp import (
+                dark_channel,
+                estimate_atmospheric_light,
+                estimate_transmission,
+            )
+
+            dark = dark_channel(img_in, 15)
+            t = estimate_transmission(img_in, estimate_atmospheric_light(img_in, dark))
+            channel = torch.from_numpy(np.ascontiguousarray(t[None, None, :, :])).to(device)
+            tensor = torch.cat([tensor, channel], dim=1)
+        restored, _ = model(tensor, context)
+        restored = restored.clamp(0, 1)[0].permute(1, 2, 0).cpu().numpy()
+        return restored[:h, :w]
+
+    out_normal = _forward_single(image)
+    if tta == "none":
+        return out_normal
+    elif tta == "flip":
+        img_flipped = np.ascontiguousarray(image[:, ::-1, :])
+        out_flipped = _forward_single(img_flipped)
+        out_unflipped = np.ascontiguousarray(out_flipped[:, ::-1, :])
+        return (0.5 * (out_normal + out_unflipped)).astype(np.float32)
+    elif tta == "multiscale":
+        scales = [0.75, 1.25]
+        accum = out_normal.astype(np.float32)
+        for s in scales:
+            sh, sw = int(round(height * s)), int(round(width * s))
+            img_scaled = _resize(image, (sw, sh))
+            out_scaled = _forward_single(img_scaled)
+            out_rescaled = _resize(out_scaled, (width, height))
+            accum += out_rescaled
+        return (accum / (1.0 + len(scales))).astype(np.float32)
+    return out_normal
 
 
 def post_process(ours: np.ndarray, hazy: np.ndarray, mode: str, alpha: float,
@@ -192,6 +210,8 @@ def main() -> None:
     parser.add_argument("--inference", default="whole", choices=["whole", "tiled"],
                         help="whole = single native-resolution pass (the val protocol); "
                              "tiled = 256 windows averaged in overlaps")
+    parser.add_argument("--tta", default="none", choices=["none", "flip", "multiscale"],
+                        help="Test-time augmentation: flip (horizontal mirror avg), multiscale (0.75x, 1x, 1.25x)")
     parser.add_argument("--skip-dcp", action="store_true",
                         help="skip the DCP column (it costs ~10 min of CPU)")
     parser.add_argument("--skip-hazy", action="store_true", help="skip the untreated baseline column")
@@ -278,7 +298,7 @@ def main() -> None:
                 )
                 prepared["dcp"].append(Image.fromarray((restored * 255).round().astype(np.uint8)))
             ours = (
-                dehaze_whole(model, rgb, device)
+                dehaze_whole(model, rgb, device, tta=args.tta)
                 if args.inference == "whole"
                 else dehaze_tiled(model, rgb, device, tile=args.tile, stride=args.stride)
             )

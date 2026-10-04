@@ -1,0 +1,17 @@
+checkpoint: outputs/checkpoints/adapt-v4-heavy-distill/best.pt
+config: /home/sathwik/Dev/Projects/IP_Project/configs/traditional/dcp_rtts_detection.yaml
+dataset_split: select
+device: cuda
+inference: whole
+limit: 0
+post: dcp-ensemble
+post_alpha: 0.8
+routed_branches: None
+routed_classifier: None
+run_id: select-candidate-3a-dcp-alpha0.8
+save_detections: True
+skip_dcp: False
+skip_hazy: True
+stride: 128
+tile: 256
+tta: none

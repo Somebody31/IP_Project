@@ -80,8 +80,22 @@ class RttsDetectionCrops(Dataset):
 
     def __init__(self, images_dir: Path, labels_dir: Path, crop: int = 384,
                  det_size: int = 640, object_bias: float = 0.8,
-                 limit: int = 0, seed: int = 1729) -> None:
-        self.paths = sorted(Path(images_dir).glob("*.jpg"))
+                 limit: int = 0, seed: int = 1729,
+                 exclude: set[str] | Path | None = None) -> None:
+        exclude_set = set()
+        if isinstance(exclude, (str, Path)):
+            exclude_path = Path(exclude)
+            if exclude_path.is_file():
+                if exclude_path.suffix == ".csv":
+                    import csv
+                    with open(exclude_path) as f:
+                        exclude_set = {r["name"] for r in csv.DictReader(f) if "name" in r}
+                else:
+                    exclude_set = {line.strip() for line in exclude_path.read_text().splitlines() if line.strip()}
+        elif isinstance(exclude, (set, list, tuple)):
+            exclude_set = set(exclude)
+
+        self.paths = [p for p in sorted(Path(images_dir).glob("*.jpg")) if p.name not in exclude_set]
         if limit:
             self.paths = self.paths[:limit]
         if not self.paths:

@@ -1,0 +1,16 @@
+checkpoint: outputs/checkpoints/adapt-v3-resynth-w0.01-20261003/best.pt
+config: /home/sathwik/Dev/Projects/IP_Project/configs/traditional/dcp_rtts_detection.yaml
+dataset_split: valid
+device: cuda
+inference: whole
+limit: 0
+post: none
+post_alpha: 0.5
+routed_branches: [PosixPath('outputs/checkpoints/branch-light-20260924/best.pt'), PosixPath('outputs/checkpoints/branch-medium-20260924/best.pt'), PosixPath('outputs/checkpoints/branch-heavy-20260924/best.pt')]
+routed_classifier: outputs/checkpoints/density-classifier-20260924/best.pt
+run_id: paired-all-methods-valid-20261004
+save_detections: True
+skip_dcp: False
+skip_hazy: False
+stride: 128
+tile: 256

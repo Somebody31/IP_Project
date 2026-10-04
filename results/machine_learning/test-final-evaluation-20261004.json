@@ -1,0 +1,133 @@
+{
+  "status": "completed_exploratory_test_evaluation",
+  "method": "Dehazer gated (gate_context=False) + frozen YOLOv8n",
+  "test_usage_note": "Exploratory comparison on RTTS test; do not tune on this split. RTTS has no clear counterpart, so dehazing quality is only measurable through detection AP.",
+  "split": "test",
+  "n_images": 432,
+  "n_ground_truth_boxes": 4134,
+  "inference": {
+    "mode": "whole",
+    "tile": 256,
+    "stride": 128,
+    "context": [
+      512,
+      256
+    ],
+    "batched_tiles": 8,
+    "post": "dcp-ensemble",
+    "post_alpha": 0.8
+  },
+  "checkpoint": "outputs/checkpoints/adapt-v4-heavy-distill/best.pt",
+  "comparison": {
+    "hazy": {
+      "AP@0.5:0.95": 0.2928670096616624,
+      "AP@0.5": 0.4923219045741099,
+      "AP@0.75": 0.2996255634334981,
+      "AP@0.95": 0.014984717051666527,
+      "n_detections": 41386
+    },
+    "dcp": {
+      "AP@0.5:0.95": 0.30396061833661875,
+      "AP@0.5": 0.5193749497399527,
+      "AP@0.75": 0.3023974926352946,
+      "AP@0.95": 0.018174259736009297,
+      "n_detections": 49842
+    },
+    "ours": {
+      "AP@0.5:0.95": 0.3208209081630769,
+      "AP@0.5": 0.5337115976370493,
+      "AP@0.75": 0.3275329641289989,
+      "AP@0.95": 0.015529496781695979,
+      "n_detections": 49121
+    },
+    "routed": {
+      "AP@0.5:0.95": 0.2884419103861252,
+      "AP@0.5": 0.4789417921641486,
+      "AP@0.75": 0.29675597078774685,
+      "AP@0.95": 0.016285304748815378,
+      "n_detections": 50187
+    },
+    "delta_ours_minus_hazy": {
+      "AP@0.5": 0.04138969306293944,
+      "AP@0.75": 0.027907400695500795,
+      "AP@0.95": 0.0005447797300294523,
+      "AP@0.5:0.95": 0.027953898501414498
+    },
+    "delta_dcp_minus_hazy": {
+      "AP@0.5": 0.027053045165842782,
+      "AP@0.75": 0.0027719292017964747,
+      "AP@0.95": 0.00318954268434277,
+      "AP@0.5:0.95": 0.011093608674956346
+    },
+    "delta_ours_minus_dcp": {
+      "AP@0.5": 0.014336647897096655,
+      "AP@0.75": 0.02513547149370432,
+      "AP@0.95": -0.0026447629543133178,
+      "AP@0.5:0.95": 0.016860289826458152
+    },
+    "delta_routed_minus_hazy": {
+      "AP@0.5": -0.013380112409961287,
+      "AP@0.75": -0.002869592645751262,
+      "AP@0.95": 0.0013005876971488514,
+      "AP@0.5:0.95": -0.004425099275537192
+    },
+    "delta_routed_minus_ours": {
+      "AP@0.5": -0.05476980547290072,
+      "AP@0.75": -0.030776993341252057,
+      "AP@0.95": 0.0007558079671193992,
+      "AP@0.5:0.95": -0.03237899777695169
+    }
+  },
+  "routed": {
+    "classifier": "outputs/checkpoints/density-classifier-20260924/best.pt",
+    "branches": {
+      "light": "outputs/checkpoints/branch-light-20260924/best.pt",
+      "medium": "outputs/checkpoints/branch-medium-20260924/best.pt",
+      "heavy": "outputs/checkpoints/branch-heavy-20260924/best.pt"
+    },
+    "routing_counts": {
+      "0": 218,
+      "1": 51,
+      "2": 163
+    }
+  },
+  "detector": {
+    "weights": "outputs/checkpoints/yolov8n.pt",
+    "sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+    "ultralytics_version": "8.4.160",
+    "torch_version": "2.14.0+cu130",
+    "device": "cuda",
+    "frozen": true,
+    "image_size": 640,
+    "confidence": 0.001,
+    "nms_iou": 0.7,
+    "max_detections": 300,
+    "class_mapping_rtts_to_coco": {
+      "bicycle": 1,
+      "bus": 5,
+      "car": 2,
+      "motorbike": 3,
+      "person": 0
+    }
+  },
+  "evaluation": {
+    "iou_thresholds": [
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "pycocotools_version": "2.0.11"
+  },
+  "provenance": {
+    "git_revision": null,
+    "config_sha256": "9984ae41c00c8f30e61e0d092e716ec7714650af8fbc958a6377e99c16c41b1a",
+    "dataset_manifest_sha256": "b53b3b49e3b9933228ab7432236127a5172a1ce879223f77551cd2587ea6692a"
+  }
+}
